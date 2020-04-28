@@ -1,0 +1,102 @@
+package avro
+
+import (
+	"bytes"
+	"reflect"
+	"testing"
+	"unsafe"
+
+	"github.com/google/go-cmp/cmp"
+)
+
+func TestMapCodec(t *testing.T) {
+
+	tests := []struct {
+		name string
+		data []byte
+		exp  map[string][]byte
+	}{
+		{
+			name: "1 simple block",
+			data: []byte{
+				// block count
+				2, // meaning 1
+				// no block size for positive count
+				// key
+				6, 'f', 'o', 'o',
+				// value
+				8, 1, 2, 3, 4,
+				// zero block
+				0,
+			},
+			exp: map[string][]byte{
+				"foo": []byte{1, 2, 3, 4},
+			},
+		},
+		{
+			name: "1 simple block, 2 vals",
+			data: []byte{
+				// block count
+				4, // meaning 2
+				// no block size for positive count
+				// key
+				6, 'f', 'o', 'o',
+				// value
+				8, 1, 2, 3, 4,
+				// key
+				6, 'b', 'a', 'r',
+				// value
+				8, 4, 3, 2, 1,
+				// zero block
+				0,
+			},
+			exp: map[string][]byte{
+				"foo": []byte{1, 2, 3, 4},
+				"bar": []byte{4, 3, 2, 1},
+			},
+		},
+		{
+			name: "2 simple blocks",
+			data: []byte{
+				// block count
+				2, // meaning 1
+				// no block size for positive count
+				// key
+				6, 'f', 'o', 'o',
+				// value
+				8, 1, 2, 3, 4,
+				// Next block
+				2, // meaning 1
+				// no block size for positive count
+				// key
+				6, 'b', 'a', 'r',
+				// value
+				8, 4, 3, 2, 1,
+				// zero block
+				0,
+			},
+			exp: map[string][]byte{
+				"foo": []byte{1, 2, 3, 4},
+				"bar": []byte{4, 3, 2, 1},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var m map[string][]byte
+			typ := reflect.TypeOf(m)
+			c := mapCodec{rtype: typ, valueCodec: bytesCodec{}}
+
+			r := bytes.NewReader(test.data)
+
+			if err := c.Read(r, unsafe.Pointer(&m)); err != nil {
+				t.Fatal(err)
+			}
+
+			if diff := cmp.Diff(test.exp, m); diff != "" {
+				t.Fatalf("map not as expected. %s", diff)
+			}
+		})
+	}
+}
