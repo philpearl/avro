@@ -87,7 +87,7 @@ func buildPointerCodec(schema Schema, typ reflect.Type) (Codec, error) {
 
 func buildBoolCodec(schema Schema, typ reflect.Type) (Codec, error) {
 	if typ != nil && typ.Kind() != reflect.Bool {
-		return nil, fmt.Errorf("type for bool must be a bool, not %s", typ)
+		return nil, fmt.Errorf("type for boolean must be a bool, not %s", typ)
 	}
 
 	return BoolCodec{}, nil
@@ -107,7 +107,7 @@ func buildLongCodec(schema Schema, typ reflect.Type) (Codec, error) {
 	}
 
 	switch typ.Kind() {
-	case reflect.Int64:
+	case reflect.Int64, reflect.Int:
 		return Int64Codec{}, nil
 	case reflect.Int32:
 		return Int32Codec{}, nil
@@ -115,7 +115,7 @@ func buildLongCodec(schema Schema, typ reflect.Type) (Codec, error) {
 		return Int32Codec{}, nil
 	}
 
-	return nil, fmt.Errorf("type %s not supported for long codec", typ)
+	return nil, fmt.Errorf("type %s (kind %s) not supported for long codec", typ, typ.Kind())
 }
 
 func buildFloatCodec(schema Schema, typ reflect.Type) (Codec, error) {
@@ -169,7 +169,7 @@ func buildBytesCodec(schema Schema, typ reflect.Type) (Codec, error) {
 
 func buildStringCodec(schema Schema, typ reflect.Type) (Codec, error) {
 	if typ != nil && typ.Kind() != reflect.String {
-		return nil, fmt.Errorf("type for string must be a string")
+		return nil, fmt.Errorf("type for string must be a string, not %s", typ)
 	}
 	return StringCodec{}, nil
 }
@@ -178,14 +178,14 @@ func buildArrayCodec(schema Schema, typ reflect.Type) (Codec, error) {
 	var itemType reflect.Type
 	if typ != nil {
 		if typ.Kind() != reflect.Slice {
-			return nil, fmt.Errorf("type for an array must be a slice")
+			return nil, fmt.Errorf("type for an array must be a slice, not %s", typ)
 		}
 		itemType = typ.Elem()
 	}
 
 	itemCodec, err := buildCodec(schema.Object.Items, itemType)
 	if err != nil {
-		return nil, fmt.Errorf("could not build array item codec. %w", err)
+		return nil, fmt.Errorf("could not build array item codec: %w", err)
 	}
 
 	return arrayCodec{itemCodec: itemCodec, itemType: itemType}, nil
@@ -202,7 +202,7 @@ func buildMapCodec(schema Schema, typ reflect.Type) (Codec, error) {
 
 	valueCodec, err := buildCodec(schema.Object.Values, valueType)
 	if err != nil {
-		return nil, fmt.Errorf("could not build map value codec. %w", err)
+		return nil, fmt.Errorf("could not build map value codec: %w", err)
 	}
 
 	return MapCodec{valueCodec: valueCodec, rtype: typ}, nil
@@ -217,7 +217,7 @@ func buildUnionCodec(schema Schema, typ reflect.Type) (Codec, error) {
 	for i, u := range schema.Union {
 		sc, err := buildCodec(u, typ)
 		if err != nil {
-			return nil, fmt.Errorf("failed to build union sub-codec %q. %w", u.Type, err)
+			return nil, fmt.Errorf("failed to build union sub-codec %q: %w", u.Type, err)
 		}
 		c.codecs[i] = sc
 	}
@@ -271,7 +271,7 @@ func buildRecordCodec(schema Schema, typ reflect.Type) (Codec, error) {
 
 		codec, err := buildCodec(schemaf.Type, fieldType)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get codec for field %q. %w", schemaf.Name, err)
+			return nil, fmt.Errorf("failed to get codec for field %q: %w", schemaf.Name, err)
 		}
 
 		rc.fields = append(rc.fields, recordCodecField{

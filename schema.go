@@ -54,6 +54,7 @@ func (schemaCodec) Decode(ptr unsafe.Pointer, iter *jsoniter.Iterator) {
 		s.Object = &SchemaObject{}
 		iter.ReadVal(s.Object)
 		s.Type = s.Object.Type
+		s.Object.Type = ""
 	default:
 		iter.ReportError("Decode schema", "must be string, array or object")
 	}

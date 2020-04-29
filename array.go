@@ -1,6 +1,7 @@
 package avro
 
 import (
+	"encoding/binary"
 	"fmt"
 	"reflect"
 	"unsafe"
@@ -12,15 +13,12 @@ type arrayCodec struct {
 }
 
 func (rc arrayCodec) Read(r Reader, p unsafe.Pointer) error {
-	if p == nil {
-		return fmt.Errorf("nil pointer reading an array")
-	}
 	sh := (*sliceHeader)(p)
 
 	// Blocks can be repeated
 	for {
-		var count int64
-		if err := readInt64(r, unsafe.Pointer(&count)); err != nil {
+		count, err := binary.ReadVarint(r)
+		if err != nil {
 			return fmt.Errorf("failed to read count for array. %w", err)
 		}
 		if count == 0 {
@@ -30,8 +28,7 @@ func (rc arrayCodec) Read(r Reader, p unsafe.Pointer) error {
 			// negative length means there's a block size, which is only really
 			// useful for skipping.
 			count = -count
-			var bs int64
-			if err := readInt64(r, unsafe.Pointer(&bs)); err != nil {
+			if _, err := binary.ReadUvarint(r); err != nil {
 				return fmt.Errorf("failed to read block size for array. %w", err)
 			}
 		}
@@ -54,8 +51,8 @@ func (rc arrayCodec) Read(r Reader, p unsafe.Pointer) error {
 
 func (rc arrayCodec) Skip(r Reader) error {
 	for {
-		var count int64
-		if err := readInt64(r, unsafe.Pointer(&count)); err != nil {
+		count, err := binary.ReadVarint(r)
+		if err != nil {
 			return fmt.Errorf("failed to read count for array. %w", err)
 		}
 		if count == 0 {
@@ -64,9 +61,8 @@ func (rc arrayCodec) Skip(r Reader) error {
 		if count < 0 {
 			// negative count means there's a block size we can use to skip the
 			// rest of this block
-			count = -count
-			var bs int64
-			if err := readInt64(r, unsafe.Pointer(&bs)); err != nil {
+			bs, err := binary.ReadVarint(r)
+			if err != nil {
 				return fmt.Errorf("failed to read block size for array. %w", err)
 			}
 			if err := skip(r, bs); err != nil {

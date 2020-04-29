@@ -1,6 +1,7 @@
 package avro
 
 import (
+	"encoding/binary"
 	"fmt"
 	"unsafe"
 )
@@ -10,8 +11,8 @@ type unionCodec struct {
 }
 
 func (u unionCodec) Read(r Reader, p unsafe.Pointer) error {
-	var index int64
-	if err := readInt64(r, unsafe.Pointer(&index)); err != nil {
+	index, err := binary.ReadVarint(r)
+	if err != nil {
 		return fmt.Errorf("failed reading union selector. %w", err)
 	}
 	if index < 0 || index >= int64(len(u.codecs)) {
@@ -23,8 +24,8 @@ func (u unionCodec) Read(r Reader, p unsafe.Pointer) error {
 }
 
 func (u unionCodec) Skip(r Reader) error {
-	var index int64
-	if err := readInt64(r, unsafe.Pointer(&index)); err != nil {
+	index, err := binary.ReadVarint(r)
+	if err != nil {
 		return fmt.Errorf("failed reading union selector. %w", err)
 	}
 	if index < 0 || index >= int64(len(u.codecs)) {

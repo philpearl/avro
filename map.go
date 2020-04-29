@@ -1,12 +1,13 @@
 package avro
 
 import (
+	"encoding/binary"
 	"fmt"
 	"reflect"
 	"unsafe"
 )
 
-// TODO: should we just do some specific map codecs?
+// MapCodec is a decoder for map types. The key must always be string
 type MapCodec struct {
 	valueCodec Codec
 	rtype      reflect.Type
@@ -21,8 +22,8 @@ func (m MapCodec) Read(r Reader, p unsafe.Pointer) error {
 
 	// Blocks are repeated until there's a zero count block
 	for {
-		var count int64
-		if err := readInt64(r, unsafe.Pointer(&count)); err != nil {
+		count, err := binary.ReadVarint(r)
+		if err != nil {
 			return fmt.Errorf("failed to read count of map block. %w", err)
 		}
 		if count == 0 {
@@ -32,8 +33,7 @@ func (m MapCodec) Read(r Reader, p unsafe.Pointer) error {
 		if count < 0 {
 			count = -count
 			// Block size is more useful if we're skipping over the map
-			var bs int64
-			if err := readInt64(r, unsafe.Pointer(&bs)); err != nil {
+			if _, err := binary.ReadVarint(r); err != nil {
 				return fmt.Errorf("failed to read block size of map block. %w", err)
 			}
 		}
@@ -60,8 +60,8 @@ func (m MapCodec) Read(r Reader, p unsafe.Pointer) error {
 
 func (m MapCodec) Skip(r Reader) error {
 	for {
-		var count int64
-		if err := readInt64(r, unsafe.Pointer(&count)); err != nil {
+		count, err := binary.ReadVarint(r)
+		if err != nil {
 			return fmt.Errorf("failed to read count of map block. %w", err)
 		}
 
@@ -70,8 +70,8 @@ func (m MapCodec) Skip(r Reader) error {
 		}
 
 		if count < 0 {
-			var bs int64
-			if err := readInt64(r, unsafe.Pointer(&bs)); err != nil {
+			bs, err := binary.ReadVarint(r)
+			if err != nil {
 				return fmt.Errorf("failed to read block size of map block. %w", err)
 			}
 			if err := skip(r, bs); err != nil {

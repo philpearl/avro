@@ -4,8 +4,13 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"reflect"
+	"time"
+	"unsafe"
 
 	"github.com/philpearl/avro"
+	"github.com/philpearl/avro/null"
+	"github.com/unravelin/core/feature-extraction-service/profile"
 )
 
 func main() {
@@ -19,12 +24,42 @@ func run() error {
 	}
 	defer f.Close()
 
-	type hat struct {
-		Cheese string `json:"cheese"`
+	null.RegisterCodecs()
+	avro.Register(reflect.TypeOf(time.Time{}), buildTimeCodec)
+
+	var count int
+	start := time.Now()
+	defer func() {
+		println(count, time.Since(start).String())
+	}()
+	return avro.ReadFile(bufio.NewReader(f), profile.Profile{}, func(val unsafe.Pointer) error {
+		count++
+		return nil
+	})
+}
+
+func buildTimeCodec(schema avro.Schema, typ reflect.Type) (avro.Codec, error) {
+	if schema.Type != "string" {
+		return nil, fmt.Errorf("time.Time codec works only with string schema, not %q", schema.Type)
 	}
+	return TimeCodec{}, nil
+}
 
-	var h hat
+type TimeCodec struct{ avro.StringCodec }
 
-	return avro.ReadFile(bufio.NewReader(f), &h)
+func (c TimeCodec) Read(r avro.Reader, p unsafe.Pointer) error {
+	var s string
+	if err := c.StringCodec.Read(r, unsafe.Pointer(&s)); err != nil {
+		return err
+	}
+	t, err := time.Parse(time.RFC3339, s)
+	if err != nil {
+		return fmt.Errorf("failed to parse time: %w", err)
+	}
+	*(*time.Time)(p) = t
+	return nil
+}
 
+func (c TimeCodec) New() unsafe.Pointer {
+	return unsafe.Pointer(&time.Time{})
 }

@@ -1,17 +1,19 @@
 package avro
 
 import (
+	"encoding/binary"
 	"fmt"
 	"io"
 	"unsafe"
 )
 
+// StringCodec is a decoder for strings
 type StringCodec struct{}
 
 func (StringCodec) Read(r Reader, ptr unsafe.Pointer) error {
 	// ptr is a *string
-	var l int64
-	if err := readInt64(r, unsafe.Pointer(&l)); err != nil {
+	l, err := binary.ReadVarint(r)
+	if err != nil {
 		return fmt.Errorf("failed to read length of string. %w", err)
 	}
 	b := make([]byte, l)
@@ -23,8 +25,8 @@ func (StringCodec) Read(r Reader, ptr unsafe.Pointer) error {
 }
 
 func (StringCodec) Skip(r Reader) error {
-	var l int64
-	if err := readInt64(r, unsafe.Pointer(&l)); err != nil {
+	l, err := binary.ReadVarint(r)
+	if err != nil {
 		return fmt.Errorf("failed to read length of string. %w", err)
 	}
 	return skip(r, l)

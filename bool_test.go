@@ -4,44 +4,45 @@ import (
 	"bytes"
 	"testing"
 	"unsafe"
-
-	"github.com/google/go-cmp/cmp"
 )
 
-func TestBytesCodec(t *testing.T) {
+func TestBoolCodec(t *testing.T) {
 	tests := []struct {
 		name string
 		data []byte
-		exp  []byte
+		exp  bool
 	}{
 		{
-			name: "empty",
-			data: []byte{0},
+			name: "true",
+			data: []byte{1},
+			exp:  true,
 		},
 		{
-			name: "small", // 10 is 5
-			data: []byte{10, 1, 2, 3, 4, 5},
-			exp:  []byte{1, 2, 3, 4, 5},
+			name: "false",
+			data: []byte{0},
+			exp:  false,
 		},
 	}
-	var c BytesCodec
+
+	c := BoolCodec{}
+
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
+			var actual bool
 			r := bytes.NewReader(test.data)
-			var actual []byte
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
 			}
-
-			if diff := cmp.Diff(test.exp, actual); diff != "" {
-				t.Fatalf("result not as expected. %s", diff)
+			if actual != test.exp {
+				t.Fatalf("got %t, expected %t", actual, test.exp)
 			}
 			if r.Len() != 0 {
-				t.Fatalf("unread data %d", r.Len())
+				t.Fatalf("%d bytes left", r.Len())
 			}
 		})
+
 		t.Run(test.name+" skip", func(t *testing.T) {
 			t.Parallel()
 			r := bytes.NewReader(test.data)
@@ -49,9 +50,8 @@ func TestBytesCodec(t *testing.T) {
 				t.Fatal(err)
 			}
 			if r.Len() != 0 {
-				t.Fatalf("unread data %d", r.Len())
+				t.Fatalf("%d bytes left", r.Len())
 			}
 		})
-
 	}
 }

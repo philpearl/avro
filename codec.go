@@ -17,21 +17,3 @@ type Codec interface {
 	Skip(r Reader) error
 	New() unsafe.Pointer
 }
-
-type avroBinaryTypes int
-
-const (
-	avroTypeNull avroBinaryTypes = iota
-	avroTypeBool
-	avroTypeInt
-	avroTypeLong
-	avroTypeFloat
-	avroTypeBytes
-	avroTypeString
-	avroTypeRecord
-	avroTypeEnum
-	avroTypeArray
-	avroTypeMap
-	avroTypeUnion
-	avroTypeFixed
-)

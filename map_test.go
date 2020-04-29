@@ -34,6 +34,24 @@ func TestMapCodec(t *testing.T) {
 			},
 		},
 		{
+			name: "block with size",
+			data: []byte{
+				// block count
+				1,
+				18,
+				// key
+				6, 'f', 'o', 'o',
+				// value
+				8, 1, 2, 3, 4,
+				// zero block
+				0,
+			},
+			exp: map[string][]byte{
+				"foo": []byte{1, 2, 3, 4},
+			},
+		},
+
+		{
 			name: "1 simple block, 2 vals",
 			data: []byte{
 				// block count

@@ -22,7 +22,9 @@ func TestFixed(t *testing.T) {
 	}
 
 	for _, test := range tests {
+		test := test
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			c := fixedCodec{Size: 3}
 			b := bytes.NewReader(test.data)
 			var actual [3]byte
@@ -37,6 +39,7 @@ func TestFixed(t *testing.T) {
 			}
 		})
 		t.Run(test.name+" skip", func(t *testing.T) {
+			t.Parallel()
 			c := fixedCodec{Size: 3}
 			b := bytes.NewReader(test.data)
 			if err := c.Skip(b); err != nil {

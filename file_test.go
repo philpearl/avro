@@ -74,13 +74,13 @@ func TestReadFileAlt(t *testing.T) {
 	defer f.Close()
 
 	type obj struct {
-		Typ  string  `json:"typ,omitempty"`
-		Size float32 `json:"size,omitempty"`
+		Typ  string   `json:"typ,omitempty"`
+		Size *float32 `json:"size,omitempty"`
 	}
 	type entry struct {
-		Name   string `json:"name,omitempty"`
-		Number *int32 `json:"number"`
-		Owns   []*obj `json:"owns,omitempty"`
+		Name   *string `json:"name,omitempty"`
+		Number **int32 `json:"number"`
+		Owns   *[]*obj `json:"owns,omitempty"`
 	}
 
 	var actual []entry
@@ -91,32 +91,37 @@ func TestReadFileAlt(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	intptr := func(v int32) *int32 {
+	strptr := func(v string) *string {
 		return &v
 	}
+	floatptr := func(v float32) *float32 {
+		return &v
+	}
+	var one int32 = 1
+	oneptr := &one
 
 	exp := []entry{
 		{
-			Name:   "jim",
-			Number: intptr(1),
-			Owns: []*obj{
+			Name:   strptr("jim"),
+			Number: &oneptr,
+			Owns: &[]*obj{
 				{
 					Typ:  "hat",
-					Size: 1,
+					Size: floatptr(1),
 				},
 				{
 					Typ:  "shoe",
-					Size: 42,
+					Size: floatptr(42),
 				},
 			},
 		},
 		{
-			Name:   "fred",
-			Number: intptr(1),
-			Owns: []*obj{
+			Name:   strptr("fred"),
+			Number: &oneptr,
+			Owns: &[]*obj{
 				{
 					Typ:  "bag",
-					Size: 3.7,
+					Size: floatptr(3.7),
 				},
 			},
 		},
