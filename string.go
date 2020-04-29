@@ -6,10 +6,9 @@ import (
 	"unsafe"
 )
 
-type stringCodec struct {
-}
+type StringCodec struct{}
 
-func (stringCodec) Read(r Reader, ptr unsafe.Pointer) error {
+func (StringCodec) Read(r Reader, ptr unsafe.Pointer) error {
 	// ptr is a *string
 	var l int64
 	if err := readInt64(r, unsafe.Pointer(&l)); err != nil {
@@ -23,7 +22,7 @@ func (stringCodec) Read(r Reader, ptr unsafe.Pointer) error {
 	return nil
 }
 
-func (stringCodec) Skip(r Reader) error {
+func (StringCodec) Skip(r Reader) error {
 	var l int64
 	if err := readInt64(r, unsafe.Pointer(&l)); err != nil {
 		return fmt.Errorf("failed to read length of string. %w", err)
@@ -31,7 +30,7 @@ func (stringCodec) Skip(r Reader) error {
 	return skip(r, l)
 }
 
-func (stringCodec) New() unsafe.Pointer {
+func (StringCodec) New() unsafe.Pointer {
 	var v string
 	return unsafe.Pointer(&v)
 }

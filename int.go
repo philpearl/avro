@@ -7,26 +7,29 @@ import (
 	"unsafe"
 )
 
-type int64Codec struct{}
+// Int64Codec is an avro codec for int64
+type Int64Codec struct{}
 
-func (int64Codec) Read(r Reader, p unsafe.Pointer) error {
+func (Int64Codec) Read(r Reader, p unsafe.Pointer) error {
 	i, err := binary.ReadVarint(r)
 	*(*int64)(p) = i
 	return err
 }
 
-func (int64Codec) Skip(r Reader) error {
+// Skip skips over an int
+func (Int64Codec) Skip(r Reader) error {
 	_, err := binary.ReadVarint(r)
 	return err
 }
 
-func (int64Codec) New() unsafe.Pointer {
+// New creates a pointer to a new int64
+func (Int64Codec) New() unsafe.Pointer {
 	return unsafe.Pointer(new(int64))
 }
 
-type int32Codec struct{}
+type Int32Codec struct{}
 
-func (int32Codec) Read(r Reader, p unsafe.Pointer) error {
+func (Int32Codec) Read(r Reader, p unsafe.Pointer) error {
 	i, err := binary.ReadVarint(r)
 	if i > math.MaxInt32 || i < math.MinInt32 {
 		return fmt.Errorf("value %d will not fit in int32", i)
@@ -35,18 +38,18 @@ func (int32Codec) Read(r Reader, p unsafe.Pointer) error {
 	return err
 }
 
-func (int32Codec) Skip(r Reader) error {
+func (Int32Codec) Skip(r Reader) error {
 	_, err := binary.ReadVarint(r)
 	return err
 }
 
-func (int32Codec) New() unsafe.Pointer {
+func (Int32Codec) New() unsafe.Pointer {
 	return unsafe.Pointer(new(int32))
 }
 
-type int16Codec struct{}
+type Int16Codec struct{}
 
-func (int16Codec) Read(r Reader, p unsafe.Pointer) error {
+func (Int16Codec) Read(r Reader, p unsafe.Pointer) error {
 	i, err := binary.ReadVarint(r)
 	if i > math.MaxInt16 || i < math.MinInt16 {
 		return fmt.Errorf("value %d will not fit in int16", i)
@@ -55,11 +58,11 @@ func (int16Codec) Read(r Reader, p unsafe.Pointer) error {
 	return err
 }
 
-func (int16Codec) Skip(r Reader) error {
+func (Int16Codec) Skip(r Reader) error {
 	_, err := binary.ReadVarint(r)
 	return err
 }
 
-func (int16Codec) New() unsafe.Pointer {
+func (Int16Codec) New() unsafe.Pointer {
 	return unsafe.Pointer(new(int16))
 }

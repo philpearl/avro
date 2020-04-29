@@ -21,7 +21,7 @@ type recordCodec struct {
 	fields []recordCodecField
 }
 
-func (rc *recordCodec) Read(r Reader, p unsafe.Pointer) error {
+func (rc recordCodec) Read(r Reader, p unsafe.Pointer) error {
 	if p == nil {
 		return fmt.Errorf("pointer is nil")
 	}
@@ -39,7 +39,7 @@ func (rc *recordCodec) Read(r Reader, p unsafe.Pointer) error {
 	return nil
 }
 
-func (rc *recordCodec) Skip(r Reader) error {
+func (rc recordCodec) Skip(r Reader) error {
 	for i, f := range rc.fields {
 		if err := f.codec.Skip(r); err != nil {
 			return fmt.Errorf("failed to skip field %d %q of record. %w", i, f.name, err)
@@ -48,6 +48,6 @@ func (rc *recordCodec) Skip(r Reader) error {
 	return nil
 }
 
-func (rc *recordCodec) New() unsafe.Pointer {
+func (rc recordCodec) New() unsafe.Pointer {
 	return unsafe.Pointer(reflect.New(rc.rtype).Pointer())
 }

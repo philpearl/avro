@@ -5,15 +5,42 @@ import (
 	"math"
 	"reflect"
 	"strings"
+	"sync"
 )
+
+// CodecBuildFunc is the function signature for a codec builder. If you want to
+// customise AVRO decoding for a type register a CodecBuildFunc via the Register
+// call
+type CodecBuildFunc func(schema Schema, typ reflect.Type) (Codec, error)
+
+var (
+	registryMutex sync.RWMutex
+	registry      = make(map[reflect.Type]CodecBuildFunc)
+)
+
+// Register is used to set a custom codec builder for a type
+func Register(typ reflect.Type, f CodecBuildFunc) {
+	registryMutex.Lock()
+	defer registryMutex.Unlock()
+	registry[typ] = f
+}
 
 // buildCodec builds a codec for use with a schema and type. Note that typ can
 // be nil, in which case we still need a codec to know how to skip over the
 // field
 func buildCodec(schema Schema, typ reflect.Type) (Codec, error) {
 
-	if typ != nil && typ.Kind() == reflect.Ptr && schema.Type != "union" {
-		return buildPointerCodec(schema, typ)
+	if schema.Type != "union" && schema.Type != "null" && typ != nil {
+		if typ.Kind() == reflect.Ptr {
+			return buildPointerCodec(schema, typ)
+		}
+
+		registryMutex.RLock()
+		cf, ok := registry[typ]
+		registryMutex.RUnlock()
+		if ok {
+			return cf(schema, typ)
+		}
 	}
 
 	switch schema.Type {
@@ -63,7 +90,7 @@ func buildBoolCodec(schema Schema, typ reflect.Type) (Codec, error) {
 		return nil, fmt.Errorf("type for bool must be a bool, not %s", typ)
 	}
 
-	return boolCodec{}, nil
+	return BoolCodec{}, nil
 }
 
 func buildIntCodec(schema Schema, typ reflect.Type) (Codec, error) {
@@ -76,16 +103,16 @@ func buildLongCodec(schema Schema, typ reflect.Type) (Codec, error) {
 	// TODO: unsigned types?
 	// It's likely BQ will specify this type even for smaller integer types.
 	if typ == nil {
-		return int64Codec{}, nil
+		return Int64Codec{}, nil
 	}
 
 	switch typ.Kind() {
 	case reflect.Int64:
-		return int64Codec{}, nil
+		return Int64Codec{}, nil
 	case reflect.Int32:
-		return int32Codec{}, nil
+		return Int32Codec{}, nil
 	case reflect.Int16:
-		return int32Codec{}, nil
+		return Int32Codec{}, nil
 	}
 
 	return nil, fmt.Errorf("type %s not supported for long codec", typ)
@@ -96,19 +123,19 @@ func buildFloatCodec(schema Schema, typ reflect.Type) (Codec, error) {
 		return nil, fmt.Errorf("type for float codec must be a 32 bit float, not %s", typ)
 	}
 
-	return floatCodec{}, nil
+	return FloatCodec{}, nil
 }
 
 func buildDoubleCodec(schema Schema, typ reflect.Type) (Codec, error) {
 	if typ == nil {
-		return doubleCodec{}, nil
+		return DoubleCodec{}, nil
 	}
 
 	switch typ.Kind() {
 	case reflect.Float32:
-		return float32DoubleCodec{}, nil
+		return Float32DoubleCodec{}, nil
 	case reflect.Float64:
-		return doubleCodec{}, nil
+		return DoubleCodec{}, nil
 	}
 
 	return nil, fmt.Errorf("type %s not supported for double codec", typ)
@@ -137,14 +164,14 @@ func buildBytesCodec(schema Schema, typ reflect.Type) (Codec, error) {
 			return nil, fmt.Errorf("type for bytes must be a byte slice, not %s", typ)
 		}
 	}
-	return bytesCodec{}, nil
+	return BytesCodec{}, nil
 }
 
 func buildStringCodec(schema Schema, typ reflect.Type) (Codec, error) {
 	if typ != nil && typ.Kind() != reflect.String {
 		return nil, fmt.Errorf("type for string must be a string")
 	}
-	return stringCodec{}, nil
+	return StringCodec{}, nil
 }
 
 func buildArrayCodec(schema Schema, typ reflect.Type) (Codec, error) {
@@ -161,7 +188,7 @@ func buildArrayCodec(schema Schema, typ reflect.Type) (Codec, error) {
 		return nil, fmt.Errorf("could not build array item codec. %w", err)
 	}
 
-	return &arrayCodec{itemCodec: itemCodec, itemType: itemType}, nil
+	return arrayCodec{itemCodec: itemCodec, itemType: itemType}, nil
 }
 
 func buildMapCodec(schema Schema, typ reflect.Type) (Codec, error) {
@@ -178,7 +205,7 @@ func buildMapCodec(schema Schema, typ reflect.Type) (Codec, error) {
 		return nil, fmt.Errorf("could not build map value codec. %w", err)
 	}
 
-	return &mapCodec{valueCodec: valueCodec, rtype: typ}, nil
+	return MapCodec{valueCodec: valueCodec, rtype: typ}, nil
 }
 
 func buildUnionCodec(schema Schema, typ reflect.Type) (Codec, error) {
@@ -194,7 +221,7 @@ func buildUnionCodec(schema Schema, typ reflect.Type) (Codec, error) {
 		}
 		c.codecs[i] = sc
 	}
-	return &c, nil
+	return c, nil
 }
 
 func buildRecordCodec(schema Schema, typ reflect.Type) (Codec, error) {
@@ -254,5 +281,5 @@ func buildRecordCodec(schema Schema, typ reflect.Type) (Codec, error) {
 		})
 	}
 
-	return &rc, nil
+	return rc, nil
 }

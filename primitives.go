@@ -34,9 +34,9 @@ func readBytes(r reader, ptr unsafe.Pointer) error {
 	return nil
 }
 
-type boolCodec struct{}
+type BoolCodec struct{}
 
-func (boolCodec) Read(r Reader, p unsafe.Pointer) error {
+func (BoolCodec) Read(r Reader, p unsafe.Pointer) error {
 	b, err := r.ReadByte()
 	if err != nil {
 		return err
@@ -46,10 +46,10 @@ func (boolCodec) Read(r Reader, p unsafe.Pointer) error {
 	return nil
 }
 
-func (boolCodec) Skip(r Reader) error {
+func (BoolCodec) Skip(r Reader) error {
 	return skip(r, 1)
 }
 
-func (boolCodec) New() unsafe.Pointer {
+func (BoolCodec) New() unsafe.Pointer {
 	return unsafe.Pointer(new(bool))
 }

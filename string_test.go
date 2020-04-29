@@ -24,12 +24,10 @@ func TestStringCodec(t *testing.T) {
 			exp:  "hello",
 		},
 	}
-
+	c := StringCodec{}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			r := bytes.NewReader(test.data)
-			c := stringCodec{}
-
 			var actual string
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
@@ -44,7 +42,6 @@ func TestStringCodec(t *testing.T) {
 
 		t.Run(test.name+" skip", func(t *testing.T) {
 			r := bytes.NewReader(test.data)
-			c := stringCodec{}
 
 			if err := c.Skip(r); err != nil {
 				t.Fatal(err)

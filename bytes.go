@@ -6,9 +6,9 @@ import (
 	"unsafe"
 )
 
-type bytesCodec struct{}
+type BytesCodec struct{}
 
-func (bytesCodec) Read(r Reader, ptr unsafe.Pointer) error {
+func (BytesCodec) Read(r Reader, ptr unsafe.Pointer) error {
 	var l int64
 	if err := readInt64(r, unsafe.Pointer(&l)); err != nil {
 		return fmt.Errorf("failed to read length of bytes. %w", err)
@@ -24,7 +24,7 @@ func (bytesCodec) Read(r Reader, ptr unsafe.Pointer) error {
 	return nil
 }
 
-func (bytesCodec) Skip(r Reader) error {
+func (BytesCodec) Skip(r Reader) error {
 	var l int64
 	if err := readInt64(r, unsafe.Pointer(&l)); err != nil {
 		return fmt.Errorf("failed to read length of bytes. %w", err)
@@ -32,6 +32,6 @@ func (bytesCodec) Skip(r Reader) error {
 	return skip(r, l)
 }
 
-func (bytesCodec) New() unsafe.Pointer {
+func (BytesCodec) New() unsafe.Pointer {
 	return unsafe.Pointer(&[]byte{})
 }

@@ -75,13 +75,13 @@ func TestArrayCodec(t *testing.T) {
 		},
 	}
 
+	c := arrayCodec{
+		itemCodec: StringCodec{},
+		itemType:  reflect.TypeOf(""),
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			c := arrayCodec{
-				itemCodec: stringCodec{},
-				itemType:  reflect.TypeOf(""),
-			}
-
 			buf := bytes.NewReader(test.data)
 
 			if err := c.Read(buf, unsafe.Pointer(&test.out)); err != nil {
@@ -96,10 +96,6 @@ func TestArrayCodec(t *testing.T) {
 			}
 		})
 		t.Run(test.name+"_skip", func(t *testing.T) {
-			c := arrayCodec{
-				itemCodec: stringCodec{},
-			}
-
 			buf := bytes.NewReader(test.data)
 
 			if err := c.Skip(buf); err != nil {
@@ -170,7 +166,7 @@ func TestArrayCodecInt(t *testing.T) {
 	}
 
 	c := arrayCodec{
-		itemCodec: int32Codec{},
+		itemCodec: Int32Codec{},
 		itemType:  reflect.TypeOf(int32(0)),
 	}
 

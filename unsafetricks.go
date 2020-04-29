@@ -13,3 +13,7 @@ func unsafe_NewArray(rtype unsafe.Pointer, length int) unsafe.Pointer
 //go:linkname typedslicecopy reflect.typedslicecopy
 //go:noescape
 func typedslicecopy(elemType unsafe.Pointer, dst, src sliceHeader) int
+
+//go:linkname mapassign reflect.mapassign
+//go:noescape
+func mapassign(typ unsafe.Pointer, hmap unsafe.Pointer, key, val unsafe.Pointer)

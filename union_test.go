@@ -8,7 +8,7 @@ import (
 
 func TestUnionCodec(t *testing.T) {
 	c := unionCodec{
-		codecs: []Codec{nullCodec{}, stringCodec{}},
+		codecs: []Codec{nullCodec{}, StringCodec{}},
 	}
 
 	tests := []struct {

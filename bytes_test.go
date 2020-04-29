@@ -24,10 +24,10 @@ func TestBytesCodec(t *testing.T) {
 			exp:  []byte{1, 2, 3, 4, 5},
 		},
 	}
-
+	var c BytesCodec
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var c bytesCodec
+			t.Parallel()
 			r := bytes.NewReader(test.data)
 			var actual []byte
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
@@ -42,7 +42,7 @@ func TestBytesCodec(t *testing.T) {
 			}
 		})
 		t.Run(test.name+" skip", func(t *testing.T) {
-			var c bytesCodec
+			t.Parallel()
 			r := bytes.NewReader(test.data)
 			if err := c.Skip(r); err != nil {
 				t.Fatal(err)

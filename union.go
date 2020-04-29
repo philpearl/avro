@@ -9,7 +9,7 @@ type unionCodec struct {
 	codecs []Codec
 }
 
-func (u *unionCodec) Read(r Reader, p unsafe.Pointer) error {
+func (u unionCodec) Read(r Reader, p unsafe.Pointer) error {
 	var index int64
 	if err := readInt64(r, unsafe.Pointer(&index)); err != nil {
 		return fmt.Errorf("failed reading union selector. %w", err)
@@ -22,7 +22,7 @@ func (u *unionCodec) Read(r Reader, p unsafe.Pointer) error {
 	return c.Read(r, p)
 }
 
-func (u *unionCodec) Skip(r Reader) error {
+func (u unionCodec) Skip(r Reader) error {
 	var index int64
 	if err := readInt64(r, unsafe.Pointer(&index)); err != nil {
 		return fmt.Errorf("failed reading union selector. %w", err)
@@ -35,6 +35,6 @@ func (u *unionCodec) Skip(r Reader) error {
 	return c.Skip(r)
 }
 
-func (u *unionCodec) New() unsafe.Pointer {
+func (u unionCodec) New() unsafe.Pointer {
 	return nil
 }

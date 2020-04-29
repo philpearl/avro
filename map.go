@@ -7,12 +7,12 @@ import (
 )
 
 // TODO: should we just do some specific map codecs?
-type mapCodec struct {
+type MapCodec struct {
 	valueCodec Codec
 	rtype      reflect.Type
 }
 
-func (m *mapCodec) Read(r Reader, p unsafe.Pointer) error {
+func (m MapCodec) Read(r Reader, p unsafe.Pointer) error {
 	// p is a pointer to a map pointer
 	if *(*unsafe.Pointer)(p) == nil {
 		*(*unsafe.Pointer)(p) = m.New()
@@ -38,7 +38,7 @@ func (m *mapCodec) Read(r Reader, p unsafe.Pointer) error {
 			}
 		}
 
-		var sc stringCodec
+		var sc StringCodec
 		for ; count > 0; count-- {
 			var key string
 			if err := sc.Read(r, unsafe.Pointer(&key)); err != nil {
@@ -58,7 +58,7 @@ func (m *mapCodec) Read(r Reader, p unsafe.Pointer) error {
 	return nil
 }
 
-func (m *mapCodec) Skip(r Reader) error {
+func (m MapCodec) Skip(r Reader) error {
 	for {
 		var count int64
 		if err := readInt64(r, unsafe.Pointer(&count)); err != nil {
@@ -80,7 +80,7 @@ func (m *mapCodec) Skip(r Reader) error {
 			continue
 		}
 
-		var sc stringCodec
+		var sc StringCodec
 		for ; count > 0; count-- {
 			if err := sc.Skip(r); err != nil {
 				return fmt.Errorf("failed to skip key for map. %w", err)
@@ -95,10 +95,6 @@ func (m *mapCodec) Skip(r Reader) error {
 	return nil
 }
 
-func (m *mapCodec) New() unsafe.Pointer {
+func (m MapCodec) New() unsafe.Pointer {
 	return unsafe.Pointer(reflect.MakeMap(m.rtype).Pointer())
 }
-
-//go:linkname mapassign reflect.mapassign
-//go:noescape
-func mapassign(typ unsafe.Pointer, hmap unsafe.Pointer, key, val unsafe.Pointer)

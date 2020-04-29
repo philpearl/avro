@@ -11,7 +11,7 @@ type arrayCodec struct {
 	itemType  reflect.Type
 }
 
-func (rc *arrayCodec) Read(r Reader, p unsafe.Pointer) error {
+func (rc arrayCodec) Read(r Reader, p unsafe.Pointer) error {
 	if p == nil {
 		return fmt.Errorf("nil pointer reading an array")
 	}
@@ -52,7 +52,7 @@ func (rc *arrayCodec) Read(r Reader, p unsafe.Pointer) error {
 	return nil
 }
 
-func (rc *arrayCodec) Skip(r Reader) error {
+func (rc arrayCodec) Skip(r Reader) error {
 	for {
 		var count int64
 		if err := readInt64(r, unsafe.Pointer(&count)); err != nil {
@@ -85,12 +85,12 @@ func (rc *arrayCodec) Skip(r Reader) error {
 	return nil
 }
 
-func (rc *arrayCodec) New() unsafe.Pointer {
+func (rc arrayCodec) New() unsafe.Pointer {
 	return unsafe.Pointer(&sliceHeader{})
 }
 
 // resizeSlice increases the length of the slice by len entries
-func (rc *arrayCodec) resizeSlice(in sliceHeader, len int) sliceHeader {
+func (rc arrayCodec) resizeSlice(in sliceHeader, len int) sliceHeader {
 	if in.Len+len <= in.Cap {
 		return in
 	}

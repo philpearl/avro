@@ -86,7 +86,7 @@ func TestMapCodec(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			var m map[string][]byte
 			typ := reflect.TypeOf(m)
-			c := mapCodec{rtype: typ, valueCodec: bytesCodec{}}
+			c := MapCodec{rtype: typ, valueCodec: BytesCodec{}}
 
 			r := bytes.NewReader(test.data)
 
@@ -104,7 +104,7 @@ func TestMapCodec(t *testing.T) {
 		})
 
 		t.Run(test.name+" skip", func(t *testing.T) {
-			c := mapCodec{valueCodec: bytesCodec{}}
+			c := MapCodec{valueCodec: BytesCodec{}}
 			r := bytes.NewReader(test.data)
 			if err := c.Skip(r); err != nil {
 				t.Fatal(err)
