@@ -4,51 +4,51 @@ import (
 	"bytes"
 	"testing"
 	"unsafe"
-
-	"github.com/google/go-cmp/cmp"
 )
 
-func TestBytesCodec(t *testing.T) {
+func TestUnionCodec(t *testing.T) {
+	c := unionCodec{
+		codecs: []Codec{nullCodec{}, stringCodec{}},
+	}
+
 	tests := []struct {
 		name string
 		data []byte
-		exp  []byte
+		exp  string
 	}{
 		{
-			name: "empty",
+			name: "null",
 			data: []byte{0},
+			exp:  "",
 		},
 		{
-			name: "small", // 10 is 5
-			data: []byte{10, 1, 2, 3, 4, 5},
-			exp:  []byte{1, 2, 3, 4, 5},
+			name: "string",
+			data: []byte{2, 6, 'f', 'o', 'o'},
+			exp:  "foo",
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var c bytesCodec
 			r := bytes.NewReader(test.data)
-			var actual []byte
+			var actual string
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
 			}
-
-			if diff := cmp.Diff(test.exp, actual); diff != "" {
-				t.Fatalf("result not as expected. %s", diff)
+			if actual != test.exp {
+				t.Fatalf("result %q does not match expected %q", actual, test.exp)
 			}
 			if r.Len() != 0 {
-				t.Fatalf("unread data %d", r.Len())
+				t.Fatalf("%d bytes unread", r.Len())
 			}
 		})
 		t.Run(test.name+" skip", func(t *testing.T) {
-			var c bytesCodec
 			r := bytes.NewReader(test.data)
 			if err := c.Skip(r); err != nil {
 				t.Fatal(err)
 			}
 			if r.Len() != 0 {
-				t.Fatalf("unread data %d", r.Len())
+				t.Fatalf("%d bytes unread", r.Len())
 			}
 		})
 

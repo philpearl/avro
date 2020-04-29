@@ -59,4 +59,14 @@ func TestRecordCodec(t *testing.T) {
 	if buf.Len() != 0 {
 		t.Fatalf("unread data (%d)", buf.Len())
 	}
+
+	// Now test skip
+	buf.Reset(data)
+	if err := c.Skip(buf); err != nil {
+		t.Fatal(err)
+	}
+	if buf.Len() != 0 {
+		t.Fatalf("unread data (%d)", buf.Len())
+	}
+
 }

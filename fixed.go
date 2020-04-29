@@ -2,6 +2,7 @@ package avro
 
 import (
 	"io"
+	"reflect"
 	"unsafe"
 )
 
@@ -31,6 +32,5 @@ func (f fixedCodec) Skip(r Reader) error {
 }
 
 func (f fixedCodec) New() unsafe.Pointer {
-	b := make([]byte, f.Size)
-	return (*sliceHeader)(unsafe.Pointer(&b)).Data
+	return unsafe_NewArray(unpackEFace(reflect.TypeOf(byte(0))).data, f.Size)
 }

@@ -13,6 +13,7 @@ type recordCodecField struct {
 	// offset of this field within the struct representing the record. -1 if this
 	// field is not in the struct and therefore should be skipped
 	offset uintptr
+	name   string
 }
 
 type recordCodec struct {
@@ -27,11 +28,11 @@ func (rc *recordCodec) Read(r Reader, p unsafe.Pointer) error {
 	for i, f := range rc.fields {
 		if f.offset == math.MaxUint64 {
 			if err := f.codec.Skip(r); err != nil {
-				return fmt.Errorf("failed to skip field %d of record. %w", i, err)
+				return fmt.Errorf("failed to skip field %d %q of record. %w", i, f.name, err)
 			}
 		} else {
 			if err := f.codec.Read(r, unsafe.Pointer(uintptr(p)+f.offset)); err != nil {
-				return fmt.Errorf("failed reading field %d of record. %w", i, err)
+				return fmt.Errorf("failed reading field %d %q of record. %w", i, f.name, err)
 			}
 		}
 	}
@@ -41,7 +42,7 @@ func (rc *recordCodec) Read(r Reader, p unsafe.Pointer) error {
 func (rc *recordCodec) Skip(r Reader) error {
 	for i, f := range rc.fields {
 		if err := f.codec.Skip(r); err != nil {
-			return fmt.Errorf("failed to skip field %d of record. %w", i, err)
+			return fmt.Errorf("failed to skip field %d %q of record. %w", i, f.name, err)
 		}
 	}
 	return nil

@@ -40,10 +40,10 @@ func (rc *arrayCodec) Read(r Reader, p unsafe.Pointer) error {
 		*sh = rc.resizeSlice(*sh, int(count))
 
 		itemSize := rc.itemType.Size()
-		for ; count > 0; count-- {
+		for i := int64(0); i < count; i++ {
 			cursor := unsafe.Pointer(uintptr(sh.Data) + uintptr(sh.Len)*itemSize)
 			if err := rc.itemCodec.Read(r, cursor); err != nil {
-				return fmt.Errorf("failed to decode array entry. %w", err)
+				return fmt.Errorf("failed to decode array entry %d. %w", i, err)
 			}
 			sh.Len++
 		}
@@ -107,12 +107,3 @@ func (rc *arrayCodec) resizeSlice(in sliceHeader, len int) sliceHeader {
 	}
 	return out
 }
-
-//go:linkname unsafe_NewArray reflect.unsafe_NewArray
-func unsafe_NewArray(rtype unsafe.Pointer, length int) unsafe.Pointer
-
-// typedslicecopy copies a slice of elemType values from src to dst,
-// returning the number of elements copied.
-//go:linkname typedslicecopy reflect.typedslicecopy
-//go:noescape
-func typedslicecopy(elemType unsafe.Pointer, dst, src sliceHeader) int

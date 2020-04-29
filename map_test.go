@@ -97,6 +97,21 @@ func TestMapCodec(t *testing.T) {
 			if diff := cmp.Diff(test.exp, m); diff != "" {
 				t.Fatalf("map not as expected. %s", diff)
 			}
+
+			if r.Len() != 0 {
+				t.Fatalf("unread bytes. %d", r.Len())
+			}
+		})
+
+		t.Run(test.name+" skip", func(t *testing.T) {
+			c := mapCodec{valueCodec: bytesCodec{}}
+			r := bytes.NewReader(test.data)
+			if err := c.Skip(r); err != nil {
+				t.Fatal(err)
+			}
+			if r.Len() != 0 {
+				t.Fatalf("unread bytes. %d", r.Len())
+			}
 		})
 	}
 }

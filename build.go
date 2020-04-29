@@ -11,13 +11,24 @@ import (
 // be nil, in which case we still need a codec to know how to skip over the
 // field
 func buildCodec(schema Schema, typ reflect.Type) (Codec, error) {
+
+	if typ != nil && typ.Kind() == reflect.Ptr && schema.Type != "union" {
+		return buildPointerCodec(schema, typ)
+	}
+
 	switch schema.Type {
 	case "null":
+		return buildNullCodec(schema, typ)
 	case "boolean":
+		return buildBoolCodec(schema, typ)
 	case "int":
+		return buildIntCodec(schema, typ)
 	case "long":
+		return buildLongCodec(schema, typ)
 	case "float":
+		return buildFloatCodec(schema, typ)
 	case "double":
+		return buildDoubleCodec(schema, typ)
 	case "bytes":
 		return buildBytesCodec(schema, typ)
 	case "string":
@@ -25,16 +36,87 @@ func buildCodec(schema Schema, typ reflect.Type) (Codec, error) {
 	case "record":
 		return buildRecordCodec(schema, typ)
 	case "enum":
+		return nil, fmt.Errorf("enum not currently supported")
 	case "array":
 		return buildArrayCodec(schema, typ)
 	case "map":
 		return buildMapCodec(schema, typ)
 	case "union":
+		return buildUnionCodec(schema, typ)
 	case "fixed":
 		return buildFixedCodec(schema, typ)
 	}
 
-	return nil, nil
+	return nil, fmt.Errorf("%s not currently supported", schema.Type)
+}
+
+func buildPointerCodec(schema Schema, typ reflect.Type) (Codec, error) {
+	c, err := buildCodec(schema, typ.Elem())
+	if err != nil {
+		return nil, err
+	}
+	return pointerCodec{Codec: c}, nil
+}
+
+func buildBoolCodec(schema Schema, typ reflect.Type) (Codec, error) {
+	if typ != nil && typ.Kind() != reflect.Bool {
+		return nil, fmt.Errorf("type for bool must be a bool, not %s", typ)
+	}
+
+	return boolCodec{}, nil
+}
+
+func buildIntCodec(schema Schema, typ reflect.Type) (Codec, error) {
+	// We can actually use the same codecs as long ints. We might want to
+	// separate them if we do encoding.
+	return buildLongCodec(schema, typ)
+}
+
+func buildLongCodec(schema Schema, typ reflect.Type) (Codec, error) {
+	// TODO: unsigned types?
+	// It's likely BQ will specify this type even for smaller integer types.
+	if typ == nil {
+		return int64Codec{}, nil
+	}
+
+	switch typ.Kind() {
+	case reflect.Int64:
+		return int64Codec{}, nil
+	case reflect.Int32:
+		return int32Codec{}, nil
+	case reflect.Int16:
+		return int32Codec{}, nil
+	}
+
+	return nil, fmt.Errorf("type %s not supported for long codec", typ)
+}
+
+func buildFloatCodec(schema Schema, typ reflect.Type) (Codec, error) {
+	if typ != nil && typ.Kind() != reflect.Float32 {
+		return nil, fmt.Errorf("type for float codec must be a 32 bit float, not %s", typ)
+	}
+
+	return floatCodec{}, nil
+}
+
+func buildDoubleCodec(schema Schema, typ reflect.Type) (Codec, error) {
+	if typ == nil {
+		return doubleCodec{}, nil
+	}
+
+	switch typ.Kind() {
+	case reflect.Float32:
+		return float32DoubleCodec{}, nil
+	case reflect.Float64:
+		return doubleCodec{}, nil
+	}
+
+	return nil, fmt.Errorf("type %s not supported for double codec", typ)
+
+}
+
+func buildNullCodec(schema Schema, typ reflect.Type) (Codec, error) {
+	return nullCodec{}, nil
 }
 
 func buildFixedCodec(schema Schema, typ reflect.Type) (Codec, error) {
@@ -79,7 +161,7 @@ func buildArrayCodec(schema Schema, typ reflect.Type) (Codec, error) {
 		return nil, fmt.Errorf("could not build array item codec. %w", err)
 	}
 
-	return &arrayCodec{itemCodec: itemCodec, itemType: typ}, nil
+	return &arrayCodec{itemCodec: itemCodec, itemType: itemType}, nil
 }
 
 func buildMapCodec(schema Schema, typ reflect.Type) (Codec, error) {
@@ -97,6 +179,22 @@ func buildMapCodec(schema Schema, typ reflect.Type) (Codec, error) {
 	}
 
 	return &mapCodec{valueCodec: valueCodec, rtype: typ}, nil
+}
+
+func buildUnionCodec(schema Schema, typ reflect.Type) (Codec, error) {
+	var c unionCodec
+	c.codecs = make([]Codec, len(schema.Union))
+
+	// We're only really expecting unions that are unions of a thing and null,
+	// so we can only cope with pointers for now
+	for i, u := range schema.Union {
+		sc, err := buildCodec(u, typ)
+		if err != nil {
+			return nil, fmt.Errorf("failed to build union sub-codec %q. %w", u.Type, err)
+		}
+		c.codecs[i] = sc
+	}
+	return &c, nil
 }
 
 func buildRecordCodec(schema Schema, typ reflect.Type) (Codec, error) {
@@ -136,24 +234,23 @@ func buildRecordCodec(schema Schema, typ reflect.Type) (Codec, error) {
 
 	// The schema is in the driving-seat here
 	for _, schemaf := range schema.Object.Fields {
-		fmt.Printf("look for field with name %s\n", schemaf.Name)
 		var offset = uintptr(math.MaxUint64)
 		var fieldType reflect.Type
 		sf, ok := ntf[schemaf.Name]
 		if ok {
-			fmt.Printf(" name is present in struct\n")
 			offset = sf.Offset
 			fieldType = sf.Type
 		}
 
 		codec, err := buildCodec(schemaf.Type, fieldType)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get codec for field %s. %w", schemaf.Name, err)
+			return nil, fmt.Errorf("failed to get codec for field %q. %w", schemaf.Name, err)
 		}
 
 		rc.fields = append(rc.fields, recordCodecField{
 			codec:  codec,
 			offset: offset,
+			name:   schemaf.Name,
 		})
 	}
 
