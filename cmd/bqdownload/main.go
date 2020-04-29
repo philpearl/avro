@@ -21,9 +21,9 @@ func main() {
 }
 
 var (
-	projectID = "ravelin-1043"
-	dataSet   = "auto_temp_eu"
-	tableName = "a20ed210_59ee_4888_46f2_3d021fe808b5"
+	projectID = ""
+	dataSet   = ""
+	tableName = ""
 )
 
 func run() error {
