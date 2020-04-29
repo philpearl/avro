@@ -1,5 +1,7 @@
+# avro 
 
-We want to load AVRO data directly into Go structs, using names specified via json struct tags
+[![GoDoc](https://godoc.org/github.com/philpearl/avro?status.svg)](https://godoc.org/github.com/philpearl/avro) 
 
-auto_temp_eu
-a20ed210_59ee_4888_46f2_3d021fe808b5
+avro is a decoder for Apache AVRO that decodes directly into Go structs and follows naming from JSON tags. It is intended primarily for decoding output from Google's Big Query. 
+
+https://avro.apache.org/docs/1.8.1/spec.html

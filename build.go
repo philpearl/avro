@@ -10,7 +10,8 @@ import (
 
 // CodecBuildFunc is the function signature for a codec builder. If you want to
 // customise AVRO decoding for a type register a CodecBuildFunc via the Register
-// call
+// call. Schema is the AVRO schema for the type to build. typ should match the
+// type the function was registered under.
 type CodecBuildFunc func(schema Schema, typ reflect.Type) (Codec, error)
 
 var (

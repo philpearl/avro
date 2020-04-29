@@ -65,6 +65,19 @@ var avroFileSchema = Schema{
 	},
 }
 
+// ReadFile reads from an AVRO file. The records in the file are decoded into
+// structs of the type indicated by out. These are fed back to the application
+// via the cb callback. ReadFile calls cb with a pointer to the struct. The
+// pointer is converted to an unsafe.Pointer. The pointer should not be retained
+// by the application past the return of cb.
+//
+//  var records []myrecord
+//  if err := ReadFile(f, myrecord{}, func(val unsafe.Pointer) error {
+//      records = append(records, *(*record)(val))
+//      return nil
+//  }); err != nil {
+//	    return err
+//  }
 func ReadFile(r Reader, out interface{}, cb func(val unsafe.Pointer) error) error {
 	fh, err := readFileHeader(r)
 	if err != nil {
