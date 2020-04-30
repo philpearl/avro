@@ -7,13 +7,13 @@ import (
 )
 
 func skip(r Reader, l int64) error {
-	if r, ok := r.(io.Seeker); ok {
-		_, err := r.Seek(l, io.SeekCurrent)
+	if r, ok := r.(*bufio.Reader); ok {
+		_, err := r.Discard(int(l))
 		return err
 	}
 
-	if r, ok := r.(*bufio.Reader); ok {
-		_, err := r.Discard(int(l))
+	if r, ok := r.(io.Seeker); ok {
+		_, err := r.Seek(l, io.SeekCurrent)
 		return err
 	}
 

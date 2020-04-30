@@ -1,7 +1,6 @@
 package avro
 
 import (
-	"encoding/binary"
 	"fmt"
 	"io"
 	"unsafe"
@@ -10,7 +9,7 @@ import (
 type BytesCodec struct{}
 
 func (BytesCodec) Read(r Reader, ptr unsafe.Pointer) error {
-	l, err := binary.ReadVarint(r)
+	l, err := readVarint(r)
 	if err != nil {
 		return fmt.Errorf("failed to read length of bytes. %w", err)
 	}
@@ -26,7 +25,7 @@ func (BytesCodec) Read(r Reader, ptr unsafe.Pointer) error {
 }
 
 func (BytesCodec) Skip(r Reader) error {
-	l, err := binary.ReadVarint(r)
+	l, err := readVarint(r)
 	if err != nil {
 		return fmt.Errorf("failed to read length of bytes. %w", err)
 	}

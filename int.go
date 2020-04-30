@@ -1,7 +1,6 @@
 package avro
 
 import (
-	"encoding/binary"
 	"fmt"
 	"math"
 	"unsafe"
@@ -11,14 +10,14 @@ import (
 type Int64Codec struct{}
 
 func (Int64Codec) Read(r Reader, p unsafe.Pointer) error {
-	i, err := binary.ReadVarint(r)
+	i, err := readVarint(r)
 	*(*int64)(p) = i
 	return err
 }
 
 // Skip skips over an int
 func (Int64Codec) Skip(r Reader) error {
-	_, err := binary.ReadVarint(r)
+	_, err := readVarint(r)
 	return err
 }
 
@@ -30,7 +29,7 @@ func (Int64Codec) New() unsafe.Pointer {
 type Int32Codec struct{}
 
 func (Int32Codec) Read(r Reader, p unsafe.Pointer) error {
-	i, err := binary.ReadVarint(r)
+	i, err := readVarint(r)
 	if i > math.MaxInt32 || i < math.MinInt32 {
 		return fmt.Errorf("value %d will not fit in int32", i)
 	}
@@ -39,7 +38,7 @@ func (Int32Codec) Read(r Reader, p unsafe.Pointer) error {
 }
 
 func (Int32Codec) Skip(r Reader) error {
-	_, err := binary.ReadVarint(r)
+	_, err := readVarint(r)
 	return err
 }
 
@@ -50,7 +49,7 @@ func (Int32Codec) New() unsafe.Pointer {
 type Int16Codec struct{}
 
 func (Int16Codec) Read(r Reader, p unsafe.Pointer) error {
-	i, err := binary.ReadVarint(r)
+	i, err := readVarint(r)
 	if i > math.MaxInt16 || i < math.MinInt16 {
 		return fmt.Errorf("value %d will not fit in int16", i)
 	}
@@ -59,7 +58,7 @@ func (Int16Codec) Read(r Reader, p unsafe.Pointer) error {
 }
 
 func (Int16Codec) Skip(r Reader) error {
-	_, err := binary.ReadVarint(r)
+	_, err := readVarint(r)
 	return err
 }
 

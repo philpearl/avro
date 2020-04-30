@@ -1,7 +1,8 @@
 package avro
 
 import (
-	"encoding/binary"
+	"bufio"
+	"compress/flate"
 	"errors"
 	"fmt"
 	"io"
@@ -86,6 +87,16 @@ func ReadFile(r Reader, out interface{}, cb func(val unsafe.Pointer) error) erro
 		return err
 	}
 
+	var zr io.ReadCloser
+	var zbuf *bufio.Reader
+	if compress, ok := fh.Meta["avro.codec"]; ok {
+		if string(compress) != "deflate" {
+			return fmt.Errorf("compression codec %s not supported", string(compress))
+		}
+		zr = flate.NewReader(nil)
+		zbuf = bufio.NewReaderSize(nil, 1024*1024)
+	}
+
 	schema, err := fh.schema()
 	if err != nil {
 		return err
@@ -104,24 +115,34 @@ func ReadFile(r Reader, out interface{}, cb func(val unsafe.Pointer) error) erro
 	rtyp := unpackEFace(out).rtype
 	p := unpackEFace(out).data
 	for {
-		count, err := binary.ReadVarint(r)
+		count, err := readVarint(r)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				return nil
 			}
 			return fmt.Errorf("failed to read item count. %w", err)
 		}
-		dataLength, err := binary.ReadVarint(r)
+		dataLength, err := readVarint(r)
 		if err != nil {
 			return fmt.Errorf("failed to read data block length. %w", err)
 		}
 		_ = dataLength
 
+		var ar Reader
+		if zr != nil {
+			// We don't want the deflate reader to read past the block
+			zr.(flate.Resetter).Reset(io.LimitReader(r, dataLength), nil)
+			zbuf.Reset(zr)
+			ar = zbuf
+		} else {
+			ar = r
+		}
+
 		for i := int64(0); i < count; i++ {
 			// TODO: might be better to allocate vals in blocks
 			// Zero the data
 			typedmemclr(rtyp, p)
-			if err := codec.Read(r, p); err != nil {
+			if err := codec.Read(ar, p); err != nil {
 				return fmt.Errorf("failed to read item %d in file. %w", i, err)
 			}
 
@@ -137,7 +158,7 @@ func ReadFile(r Reader, out interface{}, cb func(val unsafe.Pointer) error) erro
 			return fmt.Errorf("failed reading block signature. %w", err)
 		}
 		if sig != fh.Sync {
-			return fmt.Errorf("sync block does not match")
+			return fmt.Errorf("sync block does not match. Have %X, want %X", sig, fh.Sync)
 		}
 	}
 }

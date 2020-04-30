@@ -1,7 +1,6 @@
 package avro
 
 import (
-	"encoding/binary"
 	"fmt"
 	"reflect"
 	"unsafe"
@@ -22,7 +21,7 @@ func (m MapCodec) Read(r Reader, p unsafe.Pointer) error {
 
 	// Blocks are repeated until there's a zero count block
 	for {
-		count, err := binary.ReadVarint(r)
+		count, err := readVarint(r)
 		if err != nil {
 			return fmt.Errorf("failed to read count of map block. %w", err)
 		}
@@ -33,7 +32,7 @@ func (m MapCodec) Read(r Reader, p unsafe.Pointer) error {
 		if count < 0 {
 			count = -count
 			// Block size is more useful if we're skipping over the map
-			if _, err := binary.ReadVarint(r); err != nil {
+			if _, err := readVarint(r); err != nil {
 				return fmt.Errorf("failed to read block size of map block. %w", err)
 			}
 		}
@@ -60,7 +59,7 @@ func (m MapCodec) Read(r Reader, p unsafe.Pointer) error {
 
 func (m MapCodec) Skip(r Reader) error {
 	for {
-		count, err := binary.ReadVarint(r)
+		count, err := readVarint(r)
 		if err != nil {
 			return fmt.Errorf("failed to read count of map block. %w", err)
 		}
@@ -70,7 +69,7 @@ func (m MapCodec) Skip(r Reader) error {
 		}
 
 		if count < 0 {
-			bs, err := binary.ReadVarint(r)
+			bs, err := readVarint(r)
 			if err != nil {
 				return fmt.Errorf("failed to read block size of map block. %w", err)
 			}
