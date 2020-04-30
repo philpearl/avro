@@ -2,7 +2,9 @@ package avro
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
+	"io"
 	"reflect"
 	"unsafe"
 
@@ -99,40 +101,45 @@ func ReadFile(r Reader, out interface{}, cb func(val unsafe.Pointer) error) erro
 		return fmt.Errorf("failed to build codec. %w", err)
 	}
 
-	count, err := binary.ReadVarint(r)
-	if err != nil {
-		return fmt.Errorf("failed to read item count. %w", err)
-	}
-	dataLength, err := binary.ReadVarint(r)
-	if err != nil {
-		return fmt.Errorf("failed to read data block length. %w", err)
-	}
-	_ = dataLength
-
 	rtyp := unpackEFace(out).rtype
-	for i := int64(0); i < count; i++ {
-		// TODO: might be better to allocate vals in blocks
-		val := unsafe_New(rtyp)
-		if err := codec.Read(r, val); err != nil {
-			return fmt.Errorf("failed to read item %d in file. %w", i, err)
+	p := unpackEFace(out).data
+	for {
+		count, err := binary.ReadVarint(r)
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				return nil
+			}
+			return fmt.Errorf("failed to read item count. %w", err)
+		}
+		dataLength, err := binary.ReadVarint(r)
+		if err != nil {
+			return fmt.Errorf("failed to read data block length. %w", err)
+		}
+		_ = dataLength
+
+		for i := int64(0); i < count; i++ {
+			// TODO: might be better to allocate vals in blocks
+			// Zero the data
+			typedmemclr(rtyp, p)
+			if err := codec.Read(r, p); err != nil {
+				return fmt.Errorf("failed to read item %d in file. %w", i, err)
+			}
+
+			if err := cb(p); err != nil {
+				return err
+			}
 		}
 
-		if err := cb(val); err != nil {
-			return err
+		// Check the signature.
+		var sig [16]byte
+		fc := fixedCodec{Size: 16}
+		if err := fc.Read(r, unsafe.Pointer(&sig)); err != nil {
+			return fmt.Errorf("failed reading block signature. %w", err)
+		}
+		if sig != fh.Sync {
+			return fmt.Errorf("sync block does not match")
 		}
 	}
-
-	// Check the signature.
-	var sig [16]byte
-	fc := fixedCodec{Size: 16}
-	if err := fc.Read(r, unsafe.Pointer(&sig)); err != nil {
-		return fmt.Errorf("failed reading block signature. %w", err)
-	}
-	if sig != fh.Sync {
-		return fmt.Errorf("sync block does not match")
-	}
-
-	return nil
 }
 
 func readFileHeader(r Reader) (fh FileHeader, err error) {

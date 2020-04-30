@@ -17,3 +17,8 @@ func typedslicecopy(elemType unsafe.Pointer, dst, src sliceHeader) int
 //go:linkname mapassign reflect.mapassign
 //go:noescape
 func mapassign(typ unsafe.Pointer, hmap unsafe.Pointer, key, val unsafe.Pointer)
+
+// typedmemclr zeros the value at ptr of type t.
+//go:linkname typedmemclr reflect.typedmemclr
+//go:noescape
+func typedmemclr(typ, ptr unsafe.Pointer)
