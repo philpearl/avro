@@ -8,6 +8,7 @@ import (
 	"unsafe"
 
 	"github.com/philpearl/avro"
+	avrotime "github.com/philpearl/avro/time"
 	"github.com/unravelin/null"
 )
 
@@ -127,5 +128,22 @@ func (c nullStringCodec) New() unsafe.Pointer {
 }
 
 func buildNullTimeCodec(schema avro.Schema, typ reflect.Type) (avro.Codec, error) {
-	return nil, fmt.Errorf("null.Time is not yet supported")
+	if schema.Type != "string" {
+		return nil, fmt.Errorf("null.Time is only supported for string, not for %s", schema.Type)
+	}
+	return nullTimeCodec{}, nil
+}
+
+type nullTimeCodec struct {
+	avrotime.StringCodec
+}
+
+func (c nullTimeCodec) Read(data avro.Reader, ptr unsafe.Pointer) error {
+	nt := (*null.Time)(ptr)
+	nt.Valid = true
+	return c.StringCodec.Read(data, unsafe.Pointer(&nt.Time))
+}
+
+func (c nullTimeCodec) New() unsafe.Pointer {
+	return unsafe.Pointer(&null.Time{})
 }
