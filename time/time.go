@@ -2,7 +2,10 @@
 package time
 
 import (
+	"bufio"
+	"encoding/binary"
 	"fmt"
+	"io"
 	"reflect"
 	"time"
 	"unsafe"
@@ -28,10 +31,31 @@ func buildTimeCodec(schema avro.Schema, typ reflect.Type) (avro.Codec, error) {
 type StringCodec struct{ avro.StringCodec }
 
 func (c StringCodec) Read(r avro.Reader, p unsafe.Pointer) error {
-	var s string
-	if err := c.StringCodec.Read(r, unsafe.Pointer(&s)); err != nil {
-		return err
+	// Can we do better than using the underlying string codec?
+
+	l, err := binary.ReadVarint(r)
+	if err != nil {
+		return fmt.Errorf("failed to read length of time: %w", err)
 	}
+	var data []byte
+	if br, ok := r.(*bufio.Reader); ok {
+		// We expect this to be a common case. Here we can get access to the
+		// data without an allocation.
+		data, err = br.Peek(int(l))
+		if err != nil {
+			return fmt.Errorf("failed to read Time data: %w", err)
+		}
+		if _, err := br.Discard(int(l)); err != nil {
+			return fmt.Errorf("failed to read Time data: %w", err)
+		}
+	} else {
+		data = make([]byte, int(l))
+		if _, err := io.ReadFull(r, data); err != nil {
+			return fmt.Errorf("failed to read %d bytes of time string body: %w", l, err)
+		}
+	}
+
+	s := *(*string)(unsafe.Pointer(&data))
 	t, err := time.Parse(time.RFC3339, s)
 	if err != nil {
 		return fmt.Errorf("failed to parse time: %w", err)
