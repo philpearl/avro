@@ -83,7 +83,7 @@ func buildPointerCodec(schema Schema, typ reflect.Type) (Codec, error) {
 	if err != nil {
 		return nil, err
 	}
-	return pointerCodec{Codec: c}, nil
+	return &pointerCodec{Codec: c}, nil
 }
 
 func buildBoolCodec(schema Schema, typ reflect.Type) (Codec, error) {
@@ -156,7 +156,7 @@ func buildFixedCodec(schema Schema, typ reflect.Type) (Codec, error) {
 			return nil, fmt.Errorf("array for fixed of size %d is %d", schema.Object.Size, typ.Len())
 		}
 	}
-	return fixedCodec{Size: schema.Object.Size}, nil
+	return &fixedCodec{Size: schema.Object.Size}, nil
 }
 
 func buildBytesCodec(schema Schema, typ reflect.Type) (Codec, error) {
@@ -189,7 +189,7 @@ func buildArrayCodec(schema Schema, typ reflect.Type) (Codec, error) {
 		return nil, fmt.Errorf("could not build array item codec: %w", err)
 	}
 
-	return arrayCodec{itemCodec: itemCodec, itemType: itemType}, nil
+	return &arrayCodec{itemCodec: itemCodec, itemType: itemType}, nil
 }
 
 func buildMapCodec(schema Schema, typ reflect.Type) (Codec, error) {
@@ -206,7 +206,7 @@ func buildMapCodec(schema Schema, typ reflect.Type) (Codec, error) {
 		return nil, fmt.Errorf("could not build map value codec: %w", err)
 	}
 
-	return MapCodec{valueCodec: valueCodec, rtype: typ}, nil
+	return &MapCodec{valueCodec: valueCodec, rtype: typ}, nil
 }
 
 func buildUnionCodec(schema Schema, typ reflect.Type) (Codec, error) {
@@ -222,10 +222,10 @@ func buildUnionCodec(schema Schema, typ reflect.Type) (Codec, error) {
 				return nil, fmt.Errorf("failed to build union sub-codec %q: %w", u.Type, err)
 			}
 			if _, ok := sc.(StringCodec); ok {
-				return unionNullString{codec: StringCodec{}, nonNull: c.nonNull}, nil
+				return &unionNullString{codec: StringCodec{}, nonNull: c.nonNull}, nil
 			}
 			c.codec = sc
-			return c, nil
+			return &c, nil
 		}
 	}
 
@@ -241,7 +241,7 @@ func buildUnionCodec(schema Schema, typ reflect.Type) (Codec, error) {
 		}
 		c.codecs[i] = sc
 	}
-	return c, nil
+	return &c, nil
 }
 
 func buildRecordCodec(schema Schema, typ reflect.Type) (Codec, error) {
@@ -301,5 +301,5 @@ func buildRecordCodec(schema Schema, typ reflect.Type) (Codec, error) {
 		})
 	}
 
-	return rc, nil
+	return &rc, nil
 }

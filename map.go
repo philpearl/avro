@@ -12,7 +12,7 @@ type MapCodec struct {
 	rtype      reflect.Type
 }
 
-func (m MapCodec) Read(r Reader, p unsafe.Pointer) error {
+func (m *MapCodec) Read(r Reader, p unsafe.Pointer) error {
 	// p is a pointer to a map pointer
 	if *(*unsafe.Pointer)(p) == nil {
 		*(*unsafe.Pointer)(p) = m.New()
@@ -57,7 +57,7 @@ func (m MapCodec) Read(r Reader, p unsafe.Pointer) error {
 	return nil
 }
 
-func (m MapCodec) Skip(r Reader) error {
+func (m *MapCodec) Skip(r Reader) error {
 	for {
 		count, err := readVarint(r)
 		if err != nil {
@@ -94,6 +94,6 @@ func (m MapCodec) Skip(r Reader) error {
 	return nil
 }
 
-func (m MapCodec) New() unsafe.Pointer {
+func (m *MapCodec) New() unsafe.Pointer {
 	return unsafe.Pointer(reflect.MakeMap(m.rtype).Pointer())
 }

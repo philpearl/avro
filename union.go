@@ -9,7 +9,7 @@ type unionCodec struct {
 	codecs []Codec
 }
 
-func (u unionCodec) Read(r Reader, p unsafe.Pointer) error {
+func (u *unionCodec) Read(r Reader, p unsafe.Pointer) error {
 	index, err := readVarint(r)
 	if err != nil {
 		return fmt.Errorf("failed reading union selector. %w", err)
@@ -22,7 +22,7 @@ func (u unionCodec) Read(r Reader, p unsafe.Pointer) error {
 	return c.Read(r, p)
 }
 
-func (u unionCodec) Skip(r Reader) error {
+func (u *unionCodec) Skip(r Reader) error {
 	index, err := readVarint(r)
 	if err != nil {
 		return fmt.Errorf("failed reading union selector. %w", err)
@@ -35,7 +35,7 @@ func (u unionCodec) Skip(r Reader) error {
 	return c.Skip(r)
 }
 
-func (u unionCodec) New() unsafe.Pointer {
+func (u *unionCodec) New() unsafe.Pointer {
 	return nil
 }
 
@@ -44,7 +44,7 @@ type unionOneAndNullCodec struct {
 	nonNull int64
 }
 
-func (u unionOneAndNullCodec) Read(r Reader, p unsafe.Pointer) error {
+func (u *unionOneAndNullCodec) Read(r Reader, p unsafe.Pointer) error {
 	index, err := readVarint(r)
 	if err != nil {
 		return fmt.Errorf("failed reading union selector. %w", err)
@@ -59,7 +59,7 @@ func (u unionOneAndNullCodec) Read(r Reader, p unsafe.Pointer) error {
 	return nil
 }
 
-func (u unionOneAndNullCodec) Skip(r Reader) error {
+func (u *unionOneAndNullCodec) Skip(r Reader) error {
 	index, err := readVarint(r)
 	if err != nil {
 		return fmt.Errorf("failed reading union selector. %w", err)
@@ -74,7 +74,7 @@ func (u unionOneAndNullCodec) Skip(r Reader) error {
 	return nil
 }
 
-func (u unionOneAndNullCodec) New() unsafe.Pointer {
+func (u *unionOneAndNullCodec) New() unsafe.Pointer {
 	return nil
 }
 
@@ -83,7 +83,7 @@ type unionNullString struct {
 	nonNull int64
 }
 
-func (u unionNullString) Read(r Reader, p unsafe.Pointer) error {
+func (u *unionNullString) Read(r Reader, p unsafe.Pointer) error {
 	index, err := readVarint(r)
 	if err != nil {
 		return fmt.Errorf("failed reading union selector. %w", err)
@@ -98,7 +98,7 @@ func (u unionNullString) Read(r Reader, p unsafe.Pointer) error {
 	return nil
 }
 
-func (u unionNullString) Skip(r Reader) error {
+func (u *unionNullString) Skip(r Reader) error {
 	index, err := readVarint(r)
 	if err != nil {
 		return fmt.Errorf("failed reading union selector. %w", err)
@@ -113,6 +113,6 @@ func (u unionNullString) Skip(r Reader) error {
 	return nil
 }
 
-func (u unionNullString) New() unsafe.Pointer {
+func (u *unionNullString) New() unsafe.Pointer {
 	return nil
 }
