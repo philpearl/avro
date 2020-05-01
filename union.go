@@ -41,15 +41,18 @@ func (u *unionCodec) New() unsafe.Pointer {
 
 type unionOneAndNullCodec struct {
 	codec   Codec
-	nonNull int64
+	nonNull uint8
 }
 
 func (u *unionOneAndNullCodec) Read(r Reader, p unsafe.Pointer) error {
-	index, err := readVarint(r)
+	// index must be less than 1 byte in this case.
+	// The result should be 2 or 4
+	index, err := r.ReadByte()
 	if err != nil {
 		return fmt.Errorf("failed reading union selector. %w", err)
 	}
-	if index < 0 || index > 1 {
+	index /= 2
+	if (index)&0xFE != 0 {
 		return fmt.Errorf("union selector %d out of range (2 types)", index)
 	}
 
@@ -60,11 +63,13 @@ func (u *unionOneAndNullCodec) Read(r Reader, p unsafe.Pointer) error {
 }
 
 func (u *unionOneAndNullCodec) Skip(r Reader) error {
-	index, err := readVarint(r)
+	// index must be less than 1 byte in this case
+	index, err := r.ReadByte()
 	if err != nil {
 		return fmt.Errorf("failed reading union selector. %w", err)
 	}
-	if index < 0 || index > 1 {
+	index /= 2
+	if (index)&0xFE != 0 {
 		return fmt.Errorf("union selector %d out of range (2 types)", index)
 	}
 
@@ -80,15 +85,17 @@ func (u *unionOneAndNullCodec) New() unsafe.Pointer {
 
 type unionNullString struct {
 	codec   StringCodec
-	nonNull int64
+	nonNull byte
 }
 
 func (u *unionNullString) Read(r Reader, p unsafe.Pointer) error {
-	index, err := readVarint(r)
+	// index must be less than 1 byte in this case
+	index, err := r.ReadByte()
 	if err != nil {
 		return fmt.Errorf("failed reading union selector. %w", err)
 	}
-	if index < 0 || index > 1 {
+	index /= 2
+	if (index)&0xFE != 0 {
 		return fmt.Errorf("union selector %d out of range (2 types)", index)
 	}
 
@@ -99,11 +106,13 @@ func (u *unionNullString) Read(r Reader, p unsafe.Pointer) error {
 }
 
 func (u *unionNullString) Skip(r Reader) error {
-	index, err := readVarint(r)
+	// index must be less than 1 byte in this case
+	index, err := r.ReadByte()
 	if err != nil {
 		return fmt.Errorf("failed reading union selector. %w", err)
 	}
-	if index < 0 || index > 1 {
+	index /= 2
+	if (index)&0xFE != 0 {
 		return fmt.Errorf("union selector %d out of range (2 types)", index)
 	}
 
