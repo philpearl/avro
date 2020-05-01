@@ -210,6 +210,22 @@ func buildMapCodec(schema Schema, typ reflect.Type) (Codec, error) {
 }
 
 func buildUnionCodec(schema Schema, typ reflect.Type) (Codec, error) {
+	if len(schema.Union) == 2 {
+		if schema.Union[0].Type == "null" || schema.Union[1].Type == "null" {
+			var c unionOneAndNullCodec
+			if schema.Union[0].Type == "null" {
+				c.nonNull = 1
+			}
+			u := schema.Union[c.nonNull]
+			sc, err := buildCodec(u, typ)
+			if err != nil {
+				return nil, fmt.Errorf("failed to build union sub-codec %q: %w", u.Type, err)
+			}
+			c.codec = sc
+			return c, nil
+		}
+	}
+
 	var c unionCodec
 	c.codecs = make([]Codec, len(schema.Union))
 

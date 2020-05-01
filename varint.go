@@ -29,10 +29,6 @@ func readUvarint(r Reader) (uint64, error) {
 
 // readVarint reads an encoded signed integer from r and returns it as an int64.
 func readVarint(r Reader) (int64, error) {
-	ux, err := readUvarint(r) // ok to continue in presence of error
-	x := int64(ux >> 1)
-	if ux&1 != 0 {
-		x = ^x
-	}
-	return x, err
+	v, err := readUvarint(r) // ok to continue in presence of error
+	return int64(v>>1) ^ -int64(v&1), err
 }
