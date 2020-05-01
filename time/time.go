@@ -2,7 +2,6 @@
 package time
 
 import (
-	"encoding/binary"
 	"fmt"
 	"reflect"
 	"time"
@@ -30,7 +29,7 @@ type StringCodec struct{ avro.StringCodec }
 
 func (c StringCodec) Read(r *avro.Buffer, p unsafe.Pointer) error {
 	// Can we do better than using the underlying string codec?
-	l, err := binary.ReadVarint(r)
+	l, err := r.Varint()
 	if err != nil {
 		return fmt.Errorf("failed to read length of time: %w", err)
 	}

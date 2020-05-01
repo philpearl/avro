@@ -10,7 +10,7 @@ type unionCodec struct {
 }
 
 func (u *unionCodec) Read(r *Buffer, p unsafe.Pointer) error {
-	index, err := readVarint(r)
+	index, err := r.Varint()
 	if err != nil {
 		return fmt.Errorf("failed reading union selector. %w", err)
 	}
@@ -23,7 +23,7 @@ func (u *unionCodec) Read(r *Buffer, p unsafe.Pointer) error {
 }
 
 func (u *unionCodec) Skip(r *Buffer) error {
-	index, err := readVarint(r)
+	index, err := r.Varint()
 	if err != nil {
 		return fmt.Errorf("failed reading union selector. %w", err)
 	}

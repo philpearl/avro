@@ -10,14 +10,14 @@ import (
 type Int64Codec struct{}
 
 func (Int64Codec) Read(r *Buffer, p unsafe.Pointer) error {
-	i, err := readVarint(r)
+	i, err := r.Varint()
 	*(*int64)(p) = i
 	return err
 }
 
 // Skip skips over an int
 func (Int64Codec) Skip(r *Buffer) error {
-	_, err := readVarint(r)
+	_, err := r.Varint()
 	return err
 }
 
@@ -29,7 +29,7 @@ func (Int64Codec) New() unsafe.Pointer {
 type Int32Codec struct{}
 
 func (Int32Codec) Read(r *Buffer, p unsafe.Pointer) error {
-	i, err := readVarint(r)
+	i, err := r.Varint()
 	if i > math.MaxInt32 || i < math.MinInt32 {
 		return fmt.Errorf("value %d will not fit in int32", i)
 	}
@@ -38,7 +38,7 @@ func (Int32Codec) Read(r *Buffer, p unsafe.Pointer) error {
 }
 
 func (Int32Codec) Skip(r *Buffer) error {
-	_, err := readVarint(r)
+	_, err := r.Varint()
 	return err
 }
 
@@ -49,7 +49,7 @@ func (Int32Codec) New() unsafe.Pointer {
 type Int16Codec struct{}
 
 func (Int16Codec) Read(r *Buffer, p unsafe.Pointer) error {
-	i, err := readVarint(r)
+	i, err := r.Varint()
 	if i > math.MaxInt16 || i < math.MinInt16 {
 		return fmt.Errorf("value %d will not fit in int16", i)
 	}
@@ -58,7 +58,7 @@ func (Int16Codec) Read(r *Buffer, p unsafe.Pointer) error {
 }
 
 func (Int16Codec) Skip(r *Buffer) error {
-	_, err := readVarint(r)
+	_, err := r.Varint()
 	return err
 }
 

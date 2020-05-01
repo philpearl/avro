@@ -8,7 +8,7 @@ import (
 type BytesCodec struct{}
 
 func (BytesCodec) Read(r *Buffer, ptr unsafe.Pointer) error {
-	l, err := readVarint(r)
+	l, err := r.Varint()
 	if err != nil {
 		return fmt.Errorf("failed to read length of bytes. %w", err)
 	}
@@ -27,7 +27,7 @@ func (BytesCodec) Read(r *Buffer, ptr unsafe.Pointer) error {
 }
 
 func (BytesCodec) Skip(r *Buffer) error {
-	l, err := readVarint(r)
+	l, err := r.Varint()
 	if err != nil {
 		return fmt.Errorf("failed to read length of bytes. %w", err)
 	}

@@ -21,7 +21,7 @@ func (m *MapCodec) Read(r *Buffer, p unsafe.Pointer) error {
 
 	// Blocks are repeated until there's a zero count block
 	for {
-		count, err := readVarint(r)
+		count, err := r.Varint()
 		if err != nil {
 			return fmt.Errorf("failed to read count of map block. %w", err)
 		}
@@ -32,7 +32,7 @@ func (m *MapCodec) Read(r *Buffer, p unsafe.Pointer) error {
 		if count < 0 {
 			count = -count
 			// Block size is more useful if we're skipping over the map
-			if _, err := readVarint(r); err != nil {
+			if _, err := r.Varint(); err != nil {
 				return fmt.Errorf("failed to read block size of map block. %w", err)
 			}
 		}
@@ -59,7 +59,7 @@ func (m *MapCodec) Read(r *Buffer, p unsafe.Pointer) error {
 
 func (m *MapCodec) Skip(r *Buffer) error {
 	for {
-		count, err := readVarint(r)
+		count, err := r.Varint()
 		if err != nil {
 			return fmt.Errorf("failed to read count of map block. %w", err)
 		}
@@ -69,7 +69,7 @@ func (m *MapCodec) Skip(r *Buffer) error {
 		}
 
 		if count < 0 {
-			bs, err := readVarint(r)
+			bs, err := r.Varint()
 			if err != nil {
 				return fmt.Errorf("failed to read block size of map block. %w", err)
 			}

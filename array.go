@@ -16,7 +16,7 @@ func (rc *arrayCodec) Read(r *Buffer, p unsafe.Pointer) error {
 
 	// Blocks can be repeated
 	for {
-		count, err := readVarint(r)
+		count, err := r.Varint()
 		if err != nil {
 			return fmt.Errorf("failed to read count for array. %w", err)
 		}
@@ -27,7 +27,7 @@ func (rc *arrayCodec) Read(r *Buffer, p unsafe.Pointer) error {
 			// negative length means there's a block size, which is only really
 			// useful for skipping.
 			count = -count
-			if _, err := readVarint(r); err != nil {
+			if _, err := r.Varint(); err != nil {
 				return fmt.Errorf("failed to read block size for array. %w", err)
 			}
 		}
@@ -50,7 +50,7 @@ func (rc *arrayCodec) Read(r *Buffer, p unsafe.Pointer) error {
 
 func (rc *arrayCodec) Skip(r *Buffer) error {
 	for {
-		count, err := readVarint(r)
+		count, err := r.Varint()
 		if err != nil {
 			return fmt.Errorf("failed to read count for array. %w", err)
 		}
@@ -60,7 +60,7 @@ func (rc *arrayCodec) Skip(r *Buffer) error {
 		if count < 0 {
 			// negative count means there's a block size we can use to skip the
 			// rest of this block
-			bs, err := readVarint(r)
+			bs, err := r.Varint()
 			if err != nil {
 				return fmt.Errorf("failed to read block size for array. %w", err)
 			}

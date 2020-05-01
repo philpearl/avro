@@ -1,6 +1,9 @@
 package avro
 
-import "io"
+import (
+	"errors"
+	"io"
+)
 
 // Buffer is a very simple replacement for bytes.Reader that avoids data copies
 type Buffer struct {
@@ -43,4 +46,31 @@ func (d *Buffer) ReadByte() (byte, error) {
 // Len returns the length of unread data in the buffer
 func (d *Buffer) Len() int {
 	return len(d.buf) - d.i
+}
+
+// Varint reads a varint from the buffer
+func (d *Buffer) Varint() (int64, error) {
+	v, err := d.uvarint() // ok to continue in presence of error
+	return int64(v>>1) ^ -int64(v&1), err
+}
+
+var errOverflow = errors.New("varint overflows a 64-bit integer")
+
+func (d *Buffer) uvarint() (uint64, error) {
+	var x uint64
+	var s uint
+	for i := 0; ; i++ {
+		b, err := d.ReadByte()
+		if err != nil {
+			return x, err
+		}
+		if b < 0x80 {
+			if i > 9 || i == 9 && b > 1 {
+				return x, errOverflow
+			}
+			return x | uint64(b)<<s, nil
+		}
+		x |= uint64(b&0x7f) << s
+		s += 7
+	}
 }

@@ -142,9 +142,6 @@ func ReadFile(r Reader, out interface{}, cb func(val unsafe.Pointer) error) erro
 		if err != nil {
 			return fmt.Errorf("failed to read data block length. %w", err)
 		}
-		if dataLength < 5 {
-			return fmt.Errorf("dataLength too small for snappy checksum")
-		}
 		if cap(compressed) < int(dataLength) {
 			compressed = make([]byte, dataLength)
 		} else {
