@@ -1,7 +1,6 @@
 package avro
 
 import (
-	"bytes"
 	"testing"
 	"unsafe"
 
@@ -34,7 +33,7 @@ func TestInt64Codec(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			r := bytes.NewReader(test.data)
+			r := NewBuffer(test.data)
 			var actual int64
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
@@ -49,7 +48,7 @@ func TestInt64Codec(t *testing.T) {
 		})
 		t.Run(test.name+" skip", func(t *testing.T) {
 			t.Parallel()
-			r := bytes.NewReader(test.data)
+			r := NewBuffer(test.data)
 			if err := c.Skip(r); err != nil {
 				t.Fatal(err)
 			}
@@ -86,7 +85,7 @@ func TestInt32Codec(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			r := bytes.NewReader(test.data)
+			r := NewBuffer(test.data)
 			var actual int32
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
@@ -101,7 +100,7 @@ func TestInt32Codec(t *testing.T) {
 		})
 		t.Run(test.name+" skip", func(t *testing.T) {
 			t.Parallel()
-			r := bytes.NewReader(test.data)
+			r := NewBuffer(test.data)
 			if err := c.Skip(r); err != nil {
 				t.Fatal(err)
 			}
@@ -138,7 +137,7 @@ func TestInt16Codec(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			r := bytes.NewReader(test.data)
+			r := NewBuffer(test.data)
 			var actual int16
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
@@ -153,7 +152,7 @@ func TestInt16Codec(t *testing.T) {
 		})
 		t.Run(test.name+" skip", func(t *testing.T) {
 			t.Parallel()
-			r := bytes.NewReader(test.data)
+			r := NewBuffer(test.data)
 			if err := c.Skip(r); err != nil {
 				t.Fatal(err)
 			}

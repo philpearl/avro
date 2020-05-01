@@ -1,7 +1,6 @@
 package avro
 
 import (
-	"bytes"
 	"testing"
 	"unsafe"
 
@@ -26,7 +25,7 @@ func TestFixed(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			c := fixedCodec{Size: 3}
-			b := bytes.NewReader(test.data)
+			b := NewBuffer(test.data)
 			var actual [3]byte
 			if err := c.Read(b, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
@@ -41,7 +40,7 @@ func TestFixed(t *testing.T) {
 		t.Run(test.name+" skip", func(t *testing.T) {
 			t.Parallel()
 			c := fixedCodec{Size: 3}
-			b := bytes.NewReader(test.data)
+			b := NewBuffer(test.data)
 			if err := c.Skip(b); err != nil {
 				t.Fatal(err)
 			}

@@ -1,7 +1,6 @@
 package avro
 
 import (
-	"bytes"
 	"testing"
 	"unsafe"
 )
@@ -31,7 +30,7 @@ func TestBoolCodec(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			var actual bool
-			r := bytes.NewReader(test.data)
+			r := NewBuffer(test.data)
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
 			}
@@ -45,7 +44,7 @@ func TestBoolCodec(t *testing.T) {
 
 		t.Run(test.name+" skip", func(t *testing.T) {
 			t.Parallel()
-			r := bytes.NewReader(test.data)
+			r := NewBuffer(test.data)
 			if err := c.Skip(r); err != nil {
 				t.Fatal(err)
 			}

@@ -1,7 +1,6 @@
 package avro
 
 import (
-	"bytes"
 	"reflect"
 	"testing"
 	"unsafe"
@@ -82,7 +81,7 @@ func TestArrayCodec(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			buf := bytes.NewReader(test.data)
+			buf := NewBuffer(test.data)
 
 			if err := c.Read(buf, unsafe.Pointer(&test.out)); err != nil {
 				t.Fatal(err)
@@ -96,7 +95,7 @@ func TestArrayCodec(t *testing.T) {
 			}
 		})
 		t.Run(test.name+"_skip", func(t *testing.T) {
-			buf := bytes.NewReader(test.data)
+			buf := NewBuffer(test.data)
 
 			if err := c.Skip(buf); err != nil {
 				t.Fatal(err)
@@ -174,7 +173,7 @@ func TestArrayCodecInt(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			buf := bytes.NewReader(test.data)
+			buf := NewBuffer(test.data)
 
 			if err := c.Read(buf, unsafe.Pointer(&test.out)); err != nil {
 				t.Fatal(err)
@@ -189,7 +188,7 @@ func TestArrayCodecInt(t *testing.T) {
 		})
 		t.Run(test.name+"_skip", func(t *testing.T) {
 			t.Parallel()
-			buf := bytes.NewReader(test.data)
+			buf := NewBuffer(test.data)
 
 			if err := c.Skip(buf); err != nil {
 				t.Fatal(err)

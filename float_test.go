@@ -1,7 +1,6 @@
 package avro
 
 import (
-	"bytes"
 	"testing"
 	"unsafe"
 
@@ -29,7 +28,7 @@ func TestFloatCodec(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			r := bytes.NewReader(test.data)
+			r := NewBuffer(test.data)
 			var actual float32
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
@@ -44,7 +43,7 @@ func TestFloatCodec(t *testing.T) {
 		})
 		t.Run(test.name+" skip", func(t *testing.T) {
 			t.Parallel()
-			r := bytes.NewReader(test.data)
+			r := NewBuffer(test.data)
 			if err := c.Skip(r); err != nil {
 				t.Fatal(err)
 			}
@@ -76,7 +75,7 @@ func TestDoubleCodec(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			r := bytes.NewReader(test.data)
+			r := NewBuffer(test.data)
 			var actual float64
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
@@ -91,7 +90,7 @@ func TestDoubleCodec(t *testing.T) {
 		})
 		t.Run(test.name+" skip", func(t *testing.T) {
 			t.Parallel()
-			r := bytes.NewReader(test.data)
+			r := NewBuffer(test.data)
 			if err := c.Skip(r); err != nil {
 				t.Fatal(err)
 			}
@@ -123,7 +122,7 @@ func TestFloat32DoubleCodec(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			r := bytes.NewReader(test.data)
+			r := NewBuffer(test.data)
 			var actual float32
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
@@ -138,7 +137,7 @@ func TestFloat32DoubleCodec(t *testing.T) {
 		})
 		t.Run(test.name+" skip", func(t *testing.T) {
 			t.Parallel()
-			r := bytes.NewReader(test.data)
+			r := NewBuffer(test.data)
 			if err := c.Skip(r); err != nil {
 				t.Fatal(err)
 			}

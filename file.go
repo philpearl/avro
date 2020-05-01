@@ -71,6 +71,12 @@ var avroFileSchema = Schema{
 	},
 }
 
+// Reader combines io.ByteReader and io.Reader. It's what we need to read
+type Reader interface {
+	io.Reader
+	io.ByteReader
+}
+
 // ReadFile reads from an AVRO file. The records in the file are decoded into
 // structs of the type indicated by out. These are fed back to the application
 // via the cb callback. ReadFile calls cb with a pointer to the struct. The
@@ -123,16 +129,16 @@ func ReadFile(r Reader, out interface{}, cb func(val unsafe.Pointer) error) erro
 	p := unpackEFace(out).data
 
 	var compressed []byte
-	var br bytes.Reader
+	br := &Buffer{}
 	for {
-		count, err := readVarint(r)
+		count, err := binary.ReadVarint(r)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				return nil
 			}
 			return fmt.Errorf("failed to read item count. %w", err)
 		}
-		dataLength, err := readVarint(r)
+		dataLength, err := binary.ReadVarint(r)
 		if err != nil {
 			return fmt.Errorf("failed to read data block length. %w", err)
 		}
@@ -158,7 +164,7 @@ func ReadFile(r Reader, out interface{}, cb func(val unsafe.Pointer) error) erro
 			// TODO: might be better to allocate vals in blocks
 			// Zero the data
 			typedmemclr(rtyp, p)
-			if err := codec.Read(&br, p); err != nil {
+			if err := codec.Read(br, p); err != nil {
 				return fmt.Errorf("failed to read item %d in file. %w", i, err)
 			}
 
@@ -169,39 +175,69 @@ func ReadFile(r Reader, out interface{}, cb func(val unsafe.Pointer) error) erro
 
 		// Check the signature.
 		var sig [16]byte
-		fc := fixedCodec{Size: 16}
-		if err := fc.Read(r, unsafe.Pointer(&sig)); err != nil {
+		if _, err := io.ReadFull(r, sig[:]); err != nil {
 			return fmt.Errorf("failed reading block signature. %w", err)
 		}
 		if sig != fh.Sync {
 			return fmt.Errorf("sync block does not match. Have %X, want %X", sig, fh.Sync)
 		}
 	}
-	/*
-	   000070a0  6e 67 22 5d 7d 5d 7d 5d  7d 5d 7d 5d 7d 5d 7d 00  |ng"]}]}]}]}]}]}.|
-	   000070b0  78 9b 8c 58 58 51 3d 39  d9 0b cb 6e c6 cc aa e6  |x..XXQ=9...n....|
-	   000070c0  02 ce 62 ca ef 01 b8 4a  02 0e 68 72 6b 67 61 6d  |..b....J..hrkgam|
-	   000070d0  65 02 10 31 30 32 33 31  31 35 38 02 2e 32 30 31  |e..10231158..201|
-	   000070e0  39 2d 30 34 2d 31 37 54  31 37 3a 35 38 3a 30 33  |9-04-17T17:58:03|
-	   000070f0  2e 36 33 5a 02 30 42 19  00 1c 32 35 2e 33 39 33  |.63Z.0B...25.393|
-	   0
-	*/
 }
 
 func readFileHeader(r Reader) (fh FileHeader, err error) {
-	c, err := buildCodec(avroFileSchema, reflect.TypeOf(fh))
-	if err != nil {
-		return fh, fmt.Errorf("could not build file header codec. %w", err)
+	// It would kind of make sense to use our codecs to read the header, but for
+	// perf reasons we don't want to use a normal reader there
+	if _, err := io.ReadFull(r, fh.Magic[:]); err != nil {
+		return fh, fmt.Errorf("failed ot read file magic: %w", err)
 	}
-
-	if err := c.Read(r, unsafe.Pointer(&fh)); err != nil {
-		return fh, fmt.Errorf("failed to read file header. %w", err)
-	}
-
 	if fh.Magic != [4]byte{'O', 'b', 'j', 1} {
 		return fh, fmt.Errorf("file header Magic is not correct")
 	}
+
+	fh.Meta = make(map[string][]byte)
+	// Seriously there's only going to be one block
+	for {
+		count, err := binary.ReadVarint(r)
+		if err != nil {
+			return fh, fmt.Errorf("failed to read count of map block. %w", err)
+		}
+		if count == 0 {
+			break
+		}
+		if count < 0 {
+			return fh, fmt.Errorf("negative block size not supported in file header")
+		}
+
+		for ; count > 0; count-- {
+			key, err := readBytes(r)
+			if err != nil {
+				return fh, fmt.Errorf("failed to read key for map. %w", err)
+			}
+
+			val, err := readBytes(r)
+			if err != nil {
+				return fh, fmt.Errorf("failed to read value for map. %w", err)
+			}
+			// Put the thing in the thing
+			fh.Meta[string(key)] = val
+		}
+	}
+
+	if _, err := io.ReadFull(r, fh.Sync[:]); err != nil {
+		return fh, fmt.Errorf("failed ot read file sync: %w", err)
+	}
+
 	return fh, nil
+}
+
+func readBytes(r Reader) ([]byte, error) {
+	l, err := binary.ReadVarint(r)
+	if err != nil {
+		return nil, err
+	}
+	v := make([]byte, l)
+	_, err = io.ReadFull(r, v)
+	return v, err
 }
 
 func (fh FileHeader) schema() (schema Schema, err error) {

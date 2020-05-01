@@ -1,7 +1,6 @@
 package avro
 
 import (
-	"bytes"
 	"reflect"
 	"testing"
 	"unsafe"
@@ -106,7 +105,7 @@ func TestMapCodec(t *testing.T) {
 			typ := reflect.TypeOf(m)
 			c := MapCodec{rtype: typ, valueCodec: BytesCodec{}}
 
-			r := bytes.NewReader(test.data)
+			r := NewBuffer(test.data)
 
 			if err := c.Read(r, unsafe.Pointer(&m)); err != nil {
 				t.Fatal(err)
@@ -123,7 +122,7 @@ func TestMapCodec(t *testing.T) {
 
 		t.Run(test.name+" skip", func(t *testing.T) {
 			c := MapCodec{valueCodec: BytesCodec{}}
-			r := bytes.NewReader(test.data)
+			r := NewBuffer(test.data)
 			if err := c.Skip(r); err != nil {
 				t.Fatal(err)
 			}

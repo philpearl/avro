@@ -9,7 +9,7 @@ type unionCodec struct {
 	codecs []Codec
 }
 
-func (u *unionCodec) Read(r Reader, p unsafe.Pointer) error {
+func (u *unionCodec) Read(r *Buffer, p unsafe.Pointer) error {
 	index, err := readVarint(r)
 	if err != nil {
 		return fmt.Errorf("failed reading union selector. %w", err)
@@ -22,7 +22,7 @@ func (u *unionCodec) Read(r Reader, p unsafe.Pointer) error {
 	return c.Read(r, p)
 }
 
-func (u *unionCodec) Skip(r Reader) error {
+func (u *unionCodec) Skip(r *Buffer) error {
 	index, err := readVarint(r)
 	if err != nil {
 		return fmt.Errorf("failed reading union selector. %w", err)
@@ -44,7 +44,7 @@ type unionOneAndNullCodec struct {
 	nonNull uint8
 }
 
-func (u *unionOneAndNullCodec) Read(r Reader, p unsafe.Pointer) error {
+func (u *unionOneAndNullCodec) Read(r *Buffer, p unsafe.Pointer) error {
 	// index must be less than 1 byte in this case.
 	// The result should be 2 or 4
 	index, err := r.ReadByte()
@@ -62,7 +62,7 @@ func (u *unionOneAndNullCodec) Read(r Reader, p unsafe.Pointer) error {
 	return nil
 }
 
-func (u *unionOneAndNullCodec) Skip(r Reader) error {
+func (u *unionOneAndNullCodec) Skip(r *Buffer) error {
 	// index must be less than 1 byte in this case
 	index, err := r.ReadByte()
 	if err != nil {
@@ -88,7 +88,7 @@ type unionNullString struct {
 	nonNull byte
 }
 
-func (u *unionNullString) Read(r Reader, p unsafe.Pointer) error {
+func (u *unionNullString) Read(r *Buffer, p unsafe.Pointer) error {
 	// index must be less than 1 byte in this case
 	index, err := r.ReadByte()
 	if err != nil {
@@ -105,7 +105,7 @@ func (u *unionNullString) Read(r Reader, p unsafe.Pointer) error {
 	return nil
 }
 
-func (u *unionNullString) Skip(r Reader) error {
+func (u *unionNullString) Skip(r *Buffer) error {
 	// index must be less than 1 byte in this case
 	index, err := r.ReadByte()
 	if err != nil {

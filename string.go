@@ -2,14 +2,13 @@ package avro
 
 import (
 	"fmt"
-	"io"
 	"unsafe"
 )
 
 // StringCodec is a decoder for strings
 type StringCodec struct{}
 
-func (StringCodec) Read(r Reader, ptr unsafe.Pointer) error {
+func (StringCodec) Read(r *Buffer, ptr unsafe.Pointer) error {
 	// ptr is a *string
 	l, err := readVarint(r)
 	if err != nil {
@@ -18,15 +17,16 @@ func (StringCodec) Read(r Reader, ptr unsafe.Pointer) error {
 	if l < 0 {
 		return fmt.Errorf("cannot make string with length %d", l)
 	}
-	b := make([]byte, l)
-	if _, err := io.ReadFull(r, b); err != nil {
+	data, err := r.Next(int(l))
+	if err != nil {
 		return fmt.Errorf("failed to read %d bytes of string body. %w", l, err)
 	}
-	*(*string)(ptr) = *(*string)(unsafe.Pointer(&b))
+	// Casting to string creates a copy, so we're not holding the underlying data
+	*(*string)(ptr) = string(data)
 	return nil
 }
 
-func (StringCodec) Skip(r Reader) error {
+func (StringCodec) Skip(r *Buffer) error {
 	l, err := readVarint(r)
 	if err != nil {
 		return fmt.Errorf("failed to read length of string. %w", err)

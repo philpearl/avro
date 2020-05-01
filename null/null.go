@@ -33,7 +33,7 @@ type nullIntCodec struct {
 	avro.Int64Codec
 }
 
-func (c nullIntCodec) Read(data avro.Reader, p unsafe.Pointer) error {
+func (c nullIntCodec) Read(data *avro.Buffer, p unsafe.Pointer) error {
 	ni := (*null.Int)(p)
 	ni.Valid = true
 
@@ -54,7 +54,7 @@ type nullBoolCodec struct {
 	avro.BoolCodec
 }
 
-func (c nullBoolCodec) Read(data avro.Reader, ptr unsafe.Pointer) error {
+func (c nullBoolCodec) Read(data *avro.Buffer, ptr unsafe.Pointer) error {
 	nb := (*null.Bool)(ptr)
 	nb.Valid = true
 	return c.BoolCodec.Read(data, unsafe.Pointer(&nb.Bool))
@@ -79,7 +79,7 @@ type nullDoubleCodec struct {
 	avro.DoubleCodec
 }
 
-func (c nullDoubleCodec) Read(data avro.Reader, ptr unsafe.Pointer) error {
+func (c nullDoubleCodec) Read(data *avro.Buffer, ptr unsafe.Pointer) error {
 	nf := (*null.Float)(ptr)
 	nf.Valid = true
 	return c.DoubleCodec.Read(data, unsafe.Pointer(&nf.Float64))
@@ -92,7 +92,7 @@ type nullFloatCodec struct {
 	avro.FloatCodec
 }
 
-func (c nullFloatCodec) Read(data avro.Reader, ptr unsafe.Pointer) error {
+func (c nullFloatCodec) Read(data *avro.Buffer, ptr unsafe.Pointer) error {
 	var f float32
 	if err := c.FloatCodec.Read(data, unsafe.Pointer(&f)); err != nil {
 		return err
@@ -117,7 +117,7 @@ type nullStringCodec struct {
 	avro.StringCodec
 }
 
-func (c nullStringCodec) Read(data avro.Reader, ptr unsafe.Pointer) error {
+func (c nullStringCodec) Read(data *avro.Buffer, ptr unsafe.Pointer) error {
 	ns := (*null.String)(ptr)
 	ns.Valid = true
 	return c.StringCodec.Read(data, unsafe.Pointer(&ns.String))
@@ -138,7 +138,7 @@ type nullTimeCodec struct {
 	avrotime.StringCodec
 }
 
-func (c nullTimeCodec) Read(data avro.Reader, ptr unsafe.Pointer) error {
+func (c nullTimeCodec) Read(data *avro.Buffer, ptr unsafe.Pointer) error {
 	nt := (*null.Time)(ptr)
 	nt.Valid = true
 	return c.StringCodec.Read(data, unsafe.Pointer(&nt.Time))

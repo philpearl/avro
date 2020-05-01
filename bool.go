@@ -6,7 +6,7 @@ import (
 
 type BoolCodec struct{}
 
-func (BoolCodec) Read(r Reader, p unsafe.Pointer) error {
+func (BoolCodec) Read(r *Buffer, p unsafe.Pointer) error {
 	b, err := r.ReadByte()
 	if err != nil {
 		return err
@@ -16,7 +16,7 @@ func (BoolCodec) Read(r Reader, p unsafe.Pointer) error {
 	return nil
 }
 
-func (BoolCodec) Skip(r Reader) error {
+func (BoolCodec) Skip(r *Buffer) error {
 	return skip(r, 1)
 }
 

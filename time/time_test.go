@@ -1,12 +1,11 @@
 package time
 
 import (
-	"bufio"
-	"bytes"
-	"io"
 	"testing"
 	"time"
 	"unsafe"
+
+	"github.com/philpearl/avro"
 )
 
 func TestTime(t *testing.T) {
@@ -15,7 +14,7 @@ func TestTime(t *testing.T) {
 	data := []byte{byte(len(ts) << 1)}
 	data = append(data, ts...)
 
-	b := bytes.NewReader(data)
+	b := avro.NewBuffer(data)
 	c := StringCodec{}
 
 	var out time.Time
@@ -34,11 +33,11 @@ func TestTimeBufio(t *testing.T) {
 	data := []byte{byte(len(ts) << 1)}
 	data = append(data, ts...)
 
-	b := bytes.NewReader(data)
+	b := avro.NewBuffer(data)
 	c := StringCodec{}
 
 	var out time.Time
-	if err := c.Read(bufio.NewReader(b), unsafe.Pointer(&out)); err != nil {
+	if err := c.Read(b, unsafe.Pointer(&out)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -53,19 +52,17 @@ func BenchmarkTime(b *testing.B) {
 	data := []byte{byte(len(ts) << 1)}
 	data = append(data, ts...)
 
-	buf := bytes.NewReader(data)
+	buf := avro.NewBuffer(data)
 	c := StringCodec{}
-	r := bufio.NewReader(buf)
 
 	b.ReportAllocs()
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		buf.Seek(io.SeekStart, 0)
-		r.Reset(buf)
+		buf.Reset(data)
 
 		var out time.Time
-		if err := c.Read(r, unsafe.Pointer(&out)); err != nil {
+		if err := c.Read(buf, unsafe.Pointer(&out)); err != nil {
 			b.Fatal(err)
 		}
 	}

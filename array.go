@@ -11,7 +11,7 @@ type arrayCodec struct {
 	itemType  reflect.Type
 }
 
-func (rc *arrayCodec) Read(r Reader, p unsafe.Pointer) error {
+func (rc *arrayCodec) Read(r *Buffer, p unsafe.Pointer) error {
 	sh := (*sliceHeader)(p)
 
 	// Blocks can be repeated
@@ -48,7 +48,7 @@ func (rc *arrayCodec) Read(r Reader, p unsafe.Pointer) error {
 	return nil
 }
 
-func (rc *arrayCodec) Skip(r Reader) error {
+func (rc *arrayCodec) Skip(r *Buffer) error {
 	for {
 		count, err := readVarint(r)
 		if err != nil {

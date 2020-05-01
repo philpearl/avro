@@ -1,15 +1,17 @@
 package avro
 
-import "unsafe"
+import (
+	"unsafe"
+)
 
 type nullCodec struct{}
 
-func (nullCodec) Read(r Reader, p unsafe.Pointer) error {
+func (nullCodec) Read(r *Buffer, p unsafe.Pointer) error {
 	// TODO: could consider nil-ing the pointer
 	return nil
 }
 
-func (nullCodec) Skip(r Reader) error {
+func (nullCodec) Skip(r *Buffer) error {
 	return nil
 }
 

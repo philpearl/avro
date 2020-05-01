@@ -1,6 +1,8 @@
 package avro
 
-import "errors"
+import (
+	"errors"
+)
 
 var errOverflow = errors.New("varint overflows a 64-bit integer")
 
@@ -8,7 +10,7 @@ var errOverflow = errors.New("varint overflows a 64-bit integer")
 // avoid interface conversion overheads!
 
 // readUvarint reads an encoded unsigned integer from r and returns it as a uint64.
-func readUvarint(r Reader) (uint64, error) {
+func readUvarint(r *Buffer) (uint64, error) {
 	var x uint64
 	var s uint
 	for i := 0; ; i++ {
@@ -28,7 +30,7 @@ func readUvarint(r Reader) (uint64, error) {
 }
 
 // readVarint reads an encoded signed integer from r and returns it as an int64.
-func readVarint(r Reader) (int64, error) {
+func readVarint(r *Buffer) (int64, error) {
 	v, err := readUvarint(r) // ok to continue in presence of error
 	return int64(v>>1) ^ -int64(v&1), err
 }

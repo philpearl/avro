@@ -1,12 +1,14 @@
 package avro
 
-import "unsafe"
+import (
+	"unsafe"
+)
 
 type pointerCodec struct {
 	Codec
 }
 
-func (c *pointerCodec) Read(r Reader, p unsafe.Pointer) error {
+func (c *pointerCodec) Read(r *Buffer, p unsafe.Pointer) error {
 	pp := (*unsafe.Pointer)(p)
 	if *pp == nil {
 		*pp = c.Codec.New()

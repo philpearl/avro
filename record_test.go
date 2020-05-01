@@ -1,7 +1,6 @@
 package avro
 
 import (
-	"bytes"
 	"reflect"
 	"testing"
 	"unsafe"
@@ -47,7 +46,7 @@ func TestRecordCodec(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	buf := bytes.NewReader(data)
+	buf := NewBuffer(data)
 	if err := c.Read(buf, unsafe.Pointer(&r)); err != nil {
 		t.Fatal(err)
 	}

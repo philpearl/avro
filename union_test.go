@@ -1,7 +1,6 @@
 package avro
 
 import (
-	"bytes"
 	"testing"
 	"unsafe"
 )
@@ -30,7 +29,7 @@ func TestUnionCodec(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			r := bytes.NewReader(test.data)
+			r := NewBuffer(test.data)
 			var actual string
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
@@ -43,7 +42,7 @@ func TestUnionCodec(t *testing.T) {
 			}
 		})
 		t.Run(test.name+" skip", func(t *testing.T) {
-			r := bytes.NewReader(test.data)
+			r := NewBuffer(test.data)
 			if err := c.Skip(r); err != nil {
 				t.Fatal(err)
 			}
