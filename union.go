@@ -77,3 +77,42 @@ func (u unionOneAndNullCodec) Skip(r Reader) error {
 func (u unionOneAndNullCodec) New() unsafe.Pointer {
 	return nil
 }
+
+type unionNullString struct {
+	codec   StringCodec
+	nonNull int64
+}
+
+func (u unionNullString) Read(r Reader, p unsafe.Pointer) error {
+	index, err := readVarint(r)
+	if err != nil {
+		return fmt.Errorf("failed reading union selector. %w", err)
+	}
+	if index < 0 || index > 1 {
+		return fmt.Errorf("union selector %d out of range (2 types)", index)
+	}
+
+	if index == u.nonNull {
+		return u.codec.Read(r, p)
+	}
+	return nil
+}
+
+func (u unionNullString) Skip(r Reader) error {
+	index, err := readVarint(r)
+	if err != nil {
+		return fmt.Errorf("failed reading union selector. %w", err)
+	}
+	if index < 0 || index > 1 {
+		return fmt.Errorf("union selector %d out of range (2 types)", index)
+	}
+
+	if index == u.nonNull {
+		return u.codec.Skip(r)
+	}
+	return nil
+}
+
+func (u unionNullString) New() unsafe.Pointer {
+	return nil
+}

@@ -221,6 +221,9 @@ func buildUnionCodec(schema Schema, typ reflect.Type) (Codec, error) {
 			if err != nil {
 				return nil, fmt.Errorf("failed to build union sub-codec %q: %w", u.Type, err)
 			}
+			if _, ok := sc.(StringCodec); ok {
+				return unionNullString{codec: StringCodec{}, nonNull: c.nonNull}, nil
+			}
 			c.codec = sc
 			return c, nil
 		}
