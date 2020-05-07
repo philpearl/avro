@@ -27,13 +27,8 @@ func TestTime(t *testing.T) {
 	}
 }
 
-func TestTimeBufio(t *testing.T) {
-	now := time.Now()
-	ts := now.Format(time.RFC3339Nano)
-	data := []byte{byte(len(ts) << 1)}
-	data = append(data, ts...)
-
-	b := avro.NewBuffer(data)
+func TestTimeEmpty(t *testing.T) {
+	b := avro.NewBuffer([]byte{0})
 	c := StringCodec{}
 
 	var out time.Time
@@ -41,8 +36,8 @@ func TestTimeBufio(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !out.Equal(now) {
-		t.Fatalf("times %s & %s differ by %s", now, out, now.Sub(out))
+	if !out.IsZero() {
+		t.Fatalf("times %s but expected zero", out)
 	}
 }
 

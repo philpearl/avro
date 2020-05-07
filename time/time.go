@@ -34,6 +34,12 @@ func (c StringCodec) Read(r *avro.Buffer, p unsafe.Pointer) error {
 		return fmt.Errorf("failed to read length of time: %w", err)
 	}
 
+	if l == 0 {
+		// pragmatically better to just leave the time alone if there's no
+		// content to parse.
+		return nil
+	}
+
 	data, err := r.Next(int(l))
 	if err != nil {
 		return fmt.Errorf("failed to read %d bytes of time string body: %w", l, err)
