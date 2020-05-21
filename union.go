@@ -35,7 +35,7 @@ func (u *unionCodec) Skip(r *Buffer) error {
 	return c.Skip(r)
 }
 
-func (u *unionCodec) New() unsafe.Pointer {
+func (u *unionCodec) New(r *Buffer) unsafe.Pointer {
 	return nil
 }
 
@@ -79,7 +79,7 @@ func (u *unionOneAndNullCodec) Skip(r *Buffer) error {
 	return nil
 }
 
-func (u *unionOneAndNullCodec) New() unsafe.Pointer {
+func (u *unionOneAndNullCodec) New(r *Buffer) unsafe.Pointer {
 	return nil
 }
 
@@ -122,6 +122,6 @@ func (u *unionNullString) Skip(r *Buffer) error {
 	return nil
 }
 
-func (u *unionNullString) New() unsafe.Pointer {
+func (u *unionNullString) New(r *Buffer) unsafe.Pointer {
 	return nil
 }

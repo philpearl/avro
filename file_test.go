@@ -27,7 +27,7 @@ func TestReadFile(t *testing.T) {
 	}
 
 	var actual []entry
-	if err := ReadFile(bufio.NewReader(f), entry{}, func(val unsafe.Pointer) error {
+	if err := ReadFile(bufio.NewReader(f), entry{}, func(val unsafe.Pointer, sb *ResourceBank) error {
 		actual = append(actual, *(*entry)(val))
 		return nil
 	}); err != nil {
@@ -84,8 +84,10 @@ func TestReadFileAlt(t *testing.T) {
 	}
 
 	var actual []entry
-	if err := ReadFile(bufio.NewReader(f), entry{}, func(val unsafe.Pointer) error {
+	var sbs []*ResourceBank
+	if err := ReadFile(bufio.NewReader(f), entry{}, func(val unsafe.Pointer, sb *ResourceBank) error {
 		actual = append(actual, *(*entry)(val))
+		sbs = append(sbs, sb)
 		return nil
 	}); err != nil {
 		t.Fatal(err)
@@ -129,5 +131,8 @@ func TestReadFileAlt(t *testing.T) {
 
 	if diff := cmp.Diff(exp, actual); diff != "" {
 		t.Fatalf("result differs. %s", diff)
+	}
+	for _, sb := range sbs {
+		sb.Close()
 	}
 }

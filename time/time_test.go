@@ -41,6 +41,28 @@ func TestTimeEmpty(t *testing.T) {
 	}
 }
 
+func TestTimePtr(t *testing.T) {
+	now := time.Now()
+	ts := now.Format(time.RFC3339Nano)
+	data := []byte{byte(len(ts) << 1)}
+	data = append(data, ts...)
+
+	b := avro.NewBuffer(data)
+
+	c := avro.PointerCodec{
+		Codec: StringCodec{},
+	}
+
+	var out *time.Time
+	if err := c.Read(b, unsafe.Pointer(&out)); err != nil {
+		t.Fatal(err)
+	}
+
+	if !out.Equal(now) {
+		t.Fatalf("times %s & %s differ by %s", now, out, now.Sub(*out))
+	}
+}
+
 func BenchmarkTime(b *testing.B) {
 	now := time.Now()
 	ts := now.Format(time.RFC3339Nano)

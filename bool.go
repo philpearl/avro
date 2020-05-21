@@ -1,6 +1,7 @@
 package avro
 
 import (
+	"reflect"
 	"unsafe"
 )
 
@@ -20,6 +21,8 @@ func (BoolCodec) Skip(r *Buffer) error {
 	return skip(r, 1)
 }
 
-func (BoolCodec) New() unsafe.Pointer {
-	return unsafe.Pointer(new(bool))
+var boolType = reflect.TypeOf(false)
+
+func (BoolCodec) New(r *Buffer) unsafe.Pointer {
+	return r.Alloc(boolType)
 }

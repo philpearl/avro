@@ -2,6 +2,7 @@ package avro
 
 import (
 	"fmt"
+	"reflect"
 	"unsafe"
 )
 
@@ -34,6 +35,8 @@ func (BytesCodec) Skip(r *Buffer) error {
 	return skip(r, l)
 }
 
-func (BytesCodec) New() unsafe.Pointer {
-	return unsafe.Pointer(&[]byte{})
+var bytesType = reflect.TypeOf([]byte{})
+
+func (BytesCodec) New(r *Buffer) unsafe.Pointer {
+	return r.Alloc(bytesType)
 }

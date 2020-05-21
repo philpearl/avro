@@ -2,6 +2,7 @@ package avro
 
 import (
 	"fmt"
+	"reflect"
 	"unsafe"
 )
 
@@ -17,12 +18,11 @@ func (StringCodec) Read(r *Buffer, ptr unsafe.Pointer) error {
 	if l < 0 {
 		return fmt.Errorf("cannot make string with length %d", l)
 	}
-	data, err := r.Next(int(l))
+	data, err := r.NextAsString(int(l))
 	if err != nil {
 		return fmt.Errorf("failed to read %d bytes of string body. %w", l, err)
 	}
-	// Casting to string creates a copy, so we're not holding the underlying data
-	*(*string)(ptr) = string(data)
+	*(*string)(ptr) = data
 	return nil
 }
 
@@ -34,7 +34,8 @@ func (StringCodec) Skip(r *Buffer) error {
 	return skip(r, l)
 }
 
-func (StringCodec) New() unsafe.Pointer {
-	var v string
-	return unsafe.Pointer(&v)
+var stringType = reflect.TypeOf("")
+
+func (StringCodec) New(r *Buffer) unsafe.Pointer {
+	return r.Alloc(stringType)
 }

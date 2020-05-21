@@ -28,5 +28,5 @@ type Codec interface {
 	Skip(r *Buffer) error
 	// New creates a pointer to the type for which the codec is registered. It is
 	// used if the enclosing record has a field that is a pointer to this type
-	New() unsafe.Pointer
+	New(r *Buffer) unsafe.Pointer
 }

@@ -15,7 +15,7 @@ type MapCodec struct {
 func (m *MapCodec) Read(r *Buffer, p unsafe.Pointer) error {
 	// p is a pointer to a map pointer
 	if *(*unsafe.Pointer)(p) == nil {
-		*(*unsafe.Pointer)(p) = m.New()
+		*(*unsafe.Pointer)(p) = m.New(r)
 	}
 	mp := *(*unsafe.Pointer)(p)
 
@@ -45,7 +45,7 @@ func (m *MapCodec) Read(r *Buffer, p unsafe.Pointer) error {
 			}
 
 			// TODO: can we just reuse one val?
-			val := m.valueCodec.New()
+			val := m.valueCodec.New(r)
 			if err := m.valueCodec.Read(r, val); err != nil {
 				return fmt.Errorf("failed to read value for map key %s. %w", key, err)
 			}
@@ -94,6 +94,6 @@ func (m *MapCodec) Skip(r *Buffer) error {
 	return nil
 }
 
-func (m *MapCodec) New() unsafe.Pointer {
+func (m *MapCodec) New(r *Buffer) unsafe.Pointer {
 	return unsafe.Pointer(reflect.MakeMap(m.rtype).Pointer())
 }

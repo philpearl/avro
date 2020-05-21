@@ -90,7 +90,7 @@ type Reader interface {
 //  }); err != nil {
 //	    return err
 //  }
-func ReadFile(r Reader, out interface{}, cb func(val unsafe.Pointer) error) error {
+func ReadFile(r Reader, out interface{}, cb func(val unsafe.Pointer, rb *ResourceBank) error) error {
 	fh, err := readFileHeader(r)
 	if err != nil {
 		return err
@@ -165,7 +165,7 @@ func ReadFile(r Reader, out interface{}, cb func(val unsafe.Pointer) error) erro
 				return fmt.Errorf("failed to read item %d in file. %w", i, err)
 			}
 
-			if err := cb(p); err != nil {
+			if err := cb(p, br.extractResourceBank()); err != nil {
 				return err
 			}
 		}

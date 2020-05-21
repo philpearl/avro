@@ -45,6 +45,6 @@ func (rc *recordCodec) Skip(r *Buffer) error {
 	return nil
 }
 
-func (rc *recordCodec) New() unsafe.Pointer {
-	return unsafe.Pointer(reflect.New(rc.rtype).Pointer())
+func (rc *recordCodec) New(r *Buffer) unsafe.Pointer {
+	return r.Alloc(rc.rtype)
 }

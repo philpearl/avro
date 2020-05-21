@@ -80,8 +80,10 @@ func (rc *arrayCodec) Skip(r *Buffer) error {
 	return nil
 }
 
-func (rc *arrayCodec) New() unsafe.Pointer {
-	return unsafe.Pointer(&sliceHeader{})
+var sliceType = reflect.TypeOf(sliceHeader{})
+
+func (rc *arrayCodec) New(r *Buffer) unsafe.Pointer {
+	return r.Alloc(sliceType)
 }
 
 // resizeSlice increases the length of the slice by len entries

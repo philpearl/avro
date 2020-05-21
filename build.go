@@ -83,7 +83,7 @@ func buildPointerCodec(schema Schema, typ reflect.Type) (Codec, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &pointerCodec{Codec: c}, nil
+	return &PointerCodec{Codec: c}, nil
 }
 
 func buildBoolCodec(schema Schema, typ reflect.Type) (Codec, error) {

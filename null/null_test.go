@@ -28,8 +28,10 @@ func TestNullThings(t *testing.T) {
 	defer f.Close()
 
 	var actual []mystruct
-	if err := avro.ReadFile(bufio.NewReader(f), mystruct{}, func(val unsafe.Pointer) error {
+	var sbs []*avro.ResourceBank
+	if err := avro.ReadFile(bufio.NewReader(f), mystruct{}, func(val unsafe.Pointer, sb *avro.ResourceBank) error {
 		actual = append(actual, *(*mystruct)(val))
+		sbs = append(sbs, sb)
 		return nil
 	}); err != nil {
 		t.Fatal(err)
@@ -47,5 +49,8 @@ func TestNullThings(t *testing.T) {
 
 	if diff := cmp.Diff(exp, actual); diff != "" {
 		t.Fatalf("result differs. %s", diff)
+	}
+	for _, sb := range sbs {
+		sb.Close()
 	}
 }

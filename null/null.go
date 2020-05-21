@@ -39,8 +39,11 @@ func (c nullIntCodec) Read(data *avro.Buffer, p unsafe.Pointer) error {
 
 	return c.Int64Codec.Read(data, unsafe.Pointer(&ni.Int64))
 }
-func (c nullIntCodec) New() unsafe.Pointer {
-	return unsafe.Pointer(&null.Int{})
+
+var intType = reflect.TypeOf(null.Int{})
+
+func (c nullIntCodec) New(r *avro.Buffer) unsafe.Pointer {
+	return r.Alloc(intType)
 }
 
 func buildNullBoolCodec(schema avro.Schema, typ reflect.Type) (avro.Codec, error) {
@@ -59,8 +62,11 @@ func (c nullBoolCodec) Read(data *avro.Buffer, ptr unsafe.Pointer) error {
 	nb.Valid = true
 	return c.BoolCodec.Read(data, unsafe.Pointer(&nb.Bool))
 }
-func (c nullBoolCodec) New() unsafe.Pointer {
-	return unsafe.Pointer(&null.Bool{})
+
+var boolType = reflect.TypeOf(null.Bool{})
+
+func (c nullBoolCodec) New(r *avro.Buffer) unsafe.Pointer {
+	return r.Alloc(boolType)
 }
 
 func buildNullFloatCodec(schema avro.Schema, typ reflect.Type) (avro.Codec, error) {
@@ -84,8 +90,11 @@ func (c nullDoubleCodec) Read(data *avro.Buffer, ptr unsafe.Pointer) error {
 	nf.Valid = true
 	return c.DoubleCodec.Read(data, unsafe.Pointer(&nf.Float64))
 }
-func (c nullDoubleCodec) New() unsafe.Pointer {
-	return unsafe.Pointer(&null.Float{})
+
+var floatType = reflect.TypeOf(null.Float{})
+
+func (c nullDoubleCodec) New(r *avro.Buffer) unsafe.Pointer {
+	return r.Alloc(floatType)
 }
 
 type nullFloatCodec struct {
@@ -102,8 +111,9 @@ func (c nullFloatCodec) Read(data *avro.Buffer, ptr unsafe.Pointer) error {
 	nf.Float64 = float64(f)
 	return nil
 }
-func (c nullFloatCodec) New() unsafe.Pointer {
-	return unsafe.Pointer(&null.Float{})
+
+func (c nullFloatCodec) New(r *avro.Buffer) unsafe.Pointer {
+	return r.Alloc(floatType)
 }
 
 func buildNullStringCodec(schema avro.Schema, typ reflect.Type) (avro.Codec, error) {
@@ -123,8 +133,10 @@ func (c nullStringCodec) Read(data *avro.Buffer, ptr unsafe.Pointer) error {
 	return c.StringCodec.Read(data, unsafe.Pointer(&ns.String))
 }
 
-func (c nullStringCodec) New() unsafe.Pointer {
-	return unsafe.Pointer(&null.String{})
+var stringType = reflect.TypeOf(null.String{})
+
+func (c nullStringCodec) New(r *avro.Buffer) unsafe.Pointer {
+	return r.Alloc(stringType)
 }
 
 func buildNullTimeCodec(schema avro.Schema, typ reflect.Type) (avro.Codec, error) {
@@ -144,6 +156,8 @@ func (c nullTimeCodec) Read(data *avro.Buffer, ptr unsafe.Pointer) error {
 	return c.StringCodec.Read(data, unsafe.Pointer(&nt.Time))
 }
 
-func (c nullTimeCodec) New() unsafe.Pointer {
-	return unsafe.Pointer(&null.Time{})
+var timeType = reflect.TypeOf(null.Time{})
+
+func (c nullTimeCodec) New(r *avro.Buffer) unsafe.Pointer {
+	return r.Alloc(timeType)
 }

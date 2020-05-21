@@ -54,7 +54,9 @@ func (c StringCodec) Read(r *avro.Buffer, p unsafe.Pointer) error {
 	return nil
 }
 
+var timeType = reflect.TypeOf(time.Time{})
+
 // New create a pointer to a new time.Time
-func (c StringCodec) New() unsafe.Pointer {
-	return unsafe.Pointer(&time.Time{})
+func (c StringCodec) New(r *avro.Buffer) unsafe.Pointer {
+	return r.Alloc(timeType)
 }

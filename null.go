@@ -15,6 +15,6 @@ func (nullCodec) Skip(r *Buffer) error {
 	return nil
 }
 
-func (nullCodec) New() unsafe.Pointer {
+func (nullCodec) New(r *Buffer) unsafe.Pointer {
 	return nil
 }

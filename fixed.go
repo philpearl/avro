@@ -31,6 +31,6 @@ func (f fixedCodec) Skip(r *Buffer) error {
 	return skip(r, int64(f.Size))
 }
 
-func (f fixedCodec) New() unsafe.Pointer {
+func (f fixedCodec) New(r *Buffer) unsafe.Pointer {
 	return unsafe_NewArray(unpackEFace(reflect.TypeOf(byte(0))).data, f.Size)
 }

@@ -1,6 +1,7 @@
 package avro
 
 import (
+	"bytes"
 	"testing"
 	"unsafe"
 )
@@ -52,5 +53,28 @@ func TestBoolCodec(t *testing.T) {
 				t.Fatalf("%d bytes left", r.Len())
 			}
 		})
+	}
+}
+
+func BenchmarkBoolPointer(b *testing.B) {
+
+	data := bytes.Repeat([]byte{1}, 1000)
+	r := NewBuffer(data)
+
+	c := PointerCodec{BoolCodec{}}
+	b.ReportAllocs()
+
+	for i := 0; i < b.N; i++ {
+		r.Reset(data)
+		for j := 0; j < 1000; j++ {
+			var out *bool
+			if err := c.Read(r, unsafe.Pointer(&out)); err != nil {
+				b.Fatal(err)
+			}
+			if !*out {
+				b.Fatal("wrong bool")
+			}
+		}
+		r.extractResourceBank().Close()
 	}
 }

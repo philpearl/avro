@@ -1,6 +1,7 @@
 package avro
 
 import (
+	"reflect"
 	"unsafe"
 )
 
@@ -15,8 +16,10 @@ func (FloatCodec) Skip(r *Buffer) error {
 	return skip(r, 4)
 }
 
-func (FloatCodec) New() unsafe.Pointer {
-	return unsafe.Pointer(new(float32))
+var floatType = reflect.TypeOf(float32(0))
+
+func (FloatCodec) New(r *Buffer) unsafe.Pointer {
+	return r.Alloc(floatType)
 }
 
 type DoubleCodec struct{}
@@ -30,8 +33,10 @@ func (DoubleCodec) Skip(r *Buffer) error {
 	return skip(r, 8)
 }
 
-func (DoubleCodec) New() unsafe.Pointer {
-	return unsafe.Pointer(new(float64))
+var doubleType = reflect.TypeOf(float64(0))
+
+func (DoubleCodec) New(r *Buffer) unsafe.Pointer {
+	return r.Alloc(doubleType)
 }
 
 type Float32DoubleCodec struct {
@@ -47,6 +52,6 @@ func (c Float32DoubleCodec) Read(r *Buffer, p unsafe.Pointer) error {
 	return nil
 }
 
-func (Float32DoubleCodec) New() unsafe.Pointer {
-	return unsafe.Pointer(new(float32))
+func (Float32DoubleCodec) New(r *Buffer) unsafe.Pointer {
+	return r.Alloc(floatType)
 }

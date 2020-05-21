@@ -3,6 +3,7 @@ package avro
 import (
 	"fmt"
 	"math"
+	"reflect"
 	"unsafe"
 )
 
@@ -21,9 +22,11 @@ func (Int64Codec) Skip(r *Buffer) error {
 	return err
 }
 
+var int64Type = reflect.TypeOf(int64(0))
+
 // New creates a pointer to a new int64
-func (Int64Codec) New() unsafe.Pointer {
-	return unsafe.Pointer(new(int64))
+func (Int64Codec) New(r *Buffer) unsafe.Pointer {
+	return r.Alloc(int64Type)
 }
 
 type Int32Codec struct{}
@@ -42,8 +45,10 @@ func (Int32Codec) Skip(r *Buffer) error {
 	return err
 }
 
-func (Int32Codec) New() unsafe.Pointer {
-	return unsafe.Pointer(new(int32))
+var int32Type = reflect.TypeOf(int32(0))
+
+func (Int32Codec) New(r *Buffer) unsafe.Pointer {
+	return r.Alloc(int32Type)
 }
 
 type Int16Codec struct{}
@@ -62,6 +67,8 @@ func (Int16Codec) Skip(r *Buffer) error {
 	return err
 }
 
-func (Int16Codec) New() unsafe.Pointer {
-	return unsafe.Pointer(new(int16))
+var int16Type = reflect.TypeOf(int16(0))
+
+func (Int16Codec) New(r *Buffer) unsafe.Pointer {
+	return r.Alloc(int16Type)
 }
