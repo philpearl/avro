@@ -18,10 +18,14 @@ func RegisterCodecs() {
 func buildTimeCodec(schema avro.Schema, typ reflect.Type) (avro.Codec, error) {
 	// If in future we want to decode an integer unix epoc time we can add a
 	// switch here
-	if schema.Type != "string" {
-		return nil, fmt.Errorf("time.Time codec works only with string schema, not %q", schema.Type)
+	switch schema.Type {
+	case "string":
+		return StringCodec{}, nil
+	case "long":
+		return LongCodec{}, nil
 	}
-	return StringCodec{}, nil
+
+	return nil, fmt.Errorf("time.Time codec works only with string and long schema, not %q", schema.Type)
 }
 
 // StringCodec is a decoder from an AVRO string with RFC3339 encoding to a time.Time
@@ -58,5 +62,24 @@ var timeType = reflect.TypeOf(time.Time{})
 
 // New create a pointer to a new time.Time
 func (c StringCodec) New(r *avro.Buffer) unsafe.Pointer {
+	return r.Alloc(timeType)
+}
+
+// LongCodec is a decoder from an AVRO long where the time is encoded as
+// nanoseconds since the UNIX epoch
+type LongCodec struct{ avro.Int64Codec }
+
+func (c LongCodec) Read(r *avro.Buffer, p unsafe.Pointer) error {
+	var l int64
+	if err := c.Int64Codec.Read(r, unsafe.Pointer(&l)); err != nil {
+		return err
+	}
+
+	*(*time.Time)(p) = time.Unix(0, l).UTC()
+	return nil
+}
+
+// New create a pointer to a new time.Time
+func (c LongCodec) New(r *avro.Buffer) unsafe.Pointer {
 	return r.Alloc(timeType)
 }

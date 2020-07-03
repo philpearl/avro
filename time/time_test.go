@@ -1,6 +1,7 @@
 package time
 
 import (
+	"encoding/binary"
 	"testing"
 	"time"
 	"unsafe"
@@ -63,6 +64,47 @@ func TestTimePtr(t *testing.T) {
 	}
 }
 
+func TestTimeLong(t *testing.T) {
+	now := time.Now()
+	data := make([]byte, binary.MaxVarintLen64)
+	l := binary.PutVarint(data, now.UnixNano())
+	data = data[:l]
+
+	b := avro.NewBuffer(data)
+	c := LongCodec{}
+
+	var out time.Time
+	if err := c.Read(b, unsafe.Pointer(&out)); err != nil {
+		t.Fatal(err)
+	}
+
+	if !out.Equal(now) {
+		t.Fatalf("times %s & %s differ by %s", now, out, now.Sub(out))
+	}
+}
+
+func TestTimeLongPtr(t *testing.T) {
+	now := time.Now()
+	data := make([]byte, binary.MaxVarintLen64)
+	l := binary.PutVarint(data, now.UnixNano())
+	data = data[:l]
+
+	b := avro.NewBuffer(data)
+
+	c := avro.PointerCodec{
+		Codec: LongCodec{},
+	}
+
+	var out *time.Time
+	if err := c.Read(b, unsafe.Pointer(&out)); err != nil {
+		t.Fatal(err)
+	}
+
+	if !out.Equal(now) {
+		t.Fatalf("times %s & %s differ by %s", now, out, now.Sub(*out))
+	}
+}
+
 func BenchmarkTime(b *testing.B) {
 	now := time.Now()
 	ts := now.Format(time.RFC3339Nano)
@@ -71,6 +113,28 @@ func BenchmarkTime(b *testing.B) {
 
 	buf := avro.NewBuffer(data)
 	c := StringCodec{}
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		buf.Reset(data)
+
+		var out time.Time
+		if err := c.Read(buf, unsafe.Pointer(&out)); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkLongTime(b *testing.B) {
+	now := time.Now()
+	data := make([]byte, binary.MaxVarintLen64)
+	l := binary.PutVarint(data, now.UnixNano())
+	data = data[:l]
+
+	buf := avro.NewBuffer(data)
+	c := LongCodec{}
 
 	b.ReportAllocs()
 	b.ResetTimer()
