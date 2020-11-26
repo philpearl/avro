@@ -22,7 +22,17 @@ func buildTimeCodec(schema avro.Schema, typ reflect.Type) (avro.Codec, error) {
 	case "string":
 		return StringCodec{}, nil
 	case "long":
-		return LongCodec{}, nil
+		var c LongCodec
+		c.mult = 1
+		if schema.Object != nil {
+			switch schema.Object.LogicalType {
+			case "timestamp-micros":
+				c.mult = 1000
+			case "timestamp-millis":
+				c.mult = 1e6
+			}
+		}
+		return c, nil
 	}
 
 	return nil, fmt.Errorf("time.Time codec works only with string and long schema, not %q", schema.Type)
@@ -67,7 +77,10 @@ func (c StringCodec) New(r *avro.Buffer) unsafe.Pointer {
 
 // LongCodec is a decoder from an AVRO long where the time is encoded as
 // nanoseconds since the UNIX epoch
-type LongCodec struct{ avro.Int64Codec }
+type LongCodec struct {
+	avro.Int64Codec
+	mult int64
+}
 
 func (c LongCodec) Read(r *avro.Buffer, p unsafe.Pointer) error {
 	var l int64
@@ -75,7 +88,7 @@ func (c LongCodec) Read(r *avro.Buffer, p unsafe.Pointer) error {
 		return err
 	}
 
-	*(*time.Time)(p) = time.Unix(0, l).UTC()
+	*(*time.Time)(p) = time.Unix(0, l*c.mult).UTC()
 	return nil
 }
 

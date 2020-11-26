@@ -71,7 +71,7 @@ func TestTimeLong(t *testing.T) {
 	data = data[:l]
 
 	b := avro.NewBuffer(data)
-	c := LongCodec{}
+	c := LongCodec{mult: 1}
 
 	var out time.Time
 	if err := c.Read(b, unsafe.Pointer(&out)); err != nil {
@@ -92,7 +92,7 @@ func TestTimeLongPtr(t *testing.T) {
 	b := avro.NewBuffer(data)
 
 	c := avro.PointerCodec{
-		Codec: LongCodec{},
+		Codec: LongCodec{mult: 1},
 	}
 
 	var out *time.Time
@@ -134,7 +134,7 @@ func BenchmarkLongTime(b *testing.B) {
 	data = data[:l]
 
 	buf := avro.NewBuffer(data)
-	c := LongCodec{}
+	c := LongCodec{mult: 1}
 
 	b.ReportAllocs()
 	b.ResetTimer()

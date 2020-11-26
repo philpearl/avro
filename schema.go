@@ -17,9 +17,10 @@ type Schema struct {
 
 // SchemaObject contains all the fields of more complex schema types
 type SchemaObject struct {
-	Type      string `json:"type"`
-	Name      string `json:"name,omitempty"`
-	Namespace string `json:"namespace,omitempty"`
+	Type        string `json:"type"`
+	LogicalType string `json:"logicalType,omitempty"`
+	Name        string `json:"name,omitempty"`
+	Namespace   string `json:"namespace,omitempty"`
 	// Fields in a record
 	Fields []SchemaRecordField `json:"fields,omitempty"`
 	// The type of each item in an array
@@ -67,6 +68,11 @@ func (schemaCodec) Encode(ptr unsafe.Pointer, stream *jsoniter.Stream) {
 		stream.WriteObjectStart()
 		stream.WriteObjectField("type")
 		stream.WriteString(s.Type)
+		if s.Object.LogicalType != "" {
+			stream.WriteMore()
+			stream.WriteObjectField("logicalType")
+			stream.WriteString(s.Object.LogicalType)
+		}
 		if s.Object.Name != "" {
 			stream.WriteMore()
 			stream.WriteObjectField("name")
