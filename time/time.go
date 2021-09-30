@@ -60,7 +60,7 @@ func (c StringCodec) Read(r *avro.Buffer, p unsafe.Pointer) error {
 	}
 
 	s := *(*string)(unsafe.Pointer(&data))
-	t, err := time.Parse(time.RFC3339, s)
+	t, err := parseTime(s)
 	if err != nil {
 		return fmt.Errorf("failed to parse time: %w", err)
 	}

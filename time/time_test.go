@@ -106,7 +106,7 @@ func TestTimeLongPtr(t *testing.T) {
 }
 
 func BenchmarkTime(b *testing.B) {
-	now := time.Now()
+	now := time.Now().UTC()
 	ts := now.Format(time.RFC3339Nano)
 	data := []byte{byte(len(ts) << 1)}
 	data = append(data, ts...)
@@ -144,6 +144,32 @@ func BenchmarkLongTime(b *testing.B) {
 
 		var out time.Time
 		if err := c.Read(buf, unsafe.Pointer(&out)); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkParseTime(b *testing.B) {
+	ts := time.Now().UTC().Format(time.RFC3339Nano)
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	for i := 0; i < b.N; i++ {
+		_, err := time.Parse(time.RFC3339, ts)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkParseTimeOurselves(b *testing.B) {
+	ts := time.Now().UTC().Format(time.RFC3339Nano)
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	for i := 0; i < b.N; i++ {
+		_, err := parseTime(ts)
+		if err != nil {
 			b.Fatal(err)
 		}
 	}
