@@ -1,8 +1,8 @@
 package time
 
 import (
+	"errors"
 	"fmt"
-	"strconv"
 	"sync"
 	"time"
 )
@@ -26,28 +26,28 @@ func parseTime(in string) (time.Time, error) {
 	}
 
 	// "2006-01-02T15:04:05Z07:00"
-	y, err := strconv.Atoi(in[:4])
+	y, err := atoi4(in[:4])
 	if err != nil {
 		return time.Time{}, fmt.Errorf("could not parse year %q: %w", in[:4], err)
 	}
-	m, err := strconv.Atoi(in[5:7])
+	m, err := atoi2(in[5:7])
 	if err != nil {
 		return time.Time{}, fmt.Errorf("could not parse month %q: %w", in[5:7], err)
 	}
-	d, err := strconv.Atoi(in[8:10])
+	d, err := atoi2(in[8:10])
 	if err != nil {
 		return time.Time{}, fmt.Errorf("could not parse day %q: %w", in[8:10], err)
 	}
 
-	h, err := strconv.Atoi(in[11:13])
+	h, err := atoi2(in[11:13])
 	if err != nil {
 		return time.Time{}, fmt.Errorf("could not parse hour %q: %w", in[11:13], err)
 	}
-	min, err := strconv.Atoi(in[14:16])
+	min, err := atoi2(in[14:16])
 	if err != nil {
 		return time.Time{}, fmt.Errorf("could not parse minute %q: %w", in[14:16], err)
 	}
-	s, err := strconv.Atoi(in[17:19])
+	s, err := atoi2(in[17:19])
 	if err != nil {
 		return time.Time{}, fmt.Errorf("could not parse seconds %q: %w", in[17:19], err)
 	}
@@ -99,11 +99,11 @@ func parseTime(in string) (time.Time, error) {
 		if remaining[2] != ':' {
 			return time.Time{}, fmt.Errorf("TZ info does not include ':'")
 		}
-		tzh, err := strconv.Atoi(remaining[:2])
+		tzh, err := atoi2(remaining[:2])
 		if err != nil {
 			return time.Time{}, fmt.Errorf("could not parse timezone offset hours %q: %w", remaining[:2], err)
 		}
-		tzm, err := strconv.Atoi(remaining[3:5])
+		tzm, err := atoi2(remaining[3:5])
 		if err != nil {
 			return time.Time{}, fmt.Errorf("could not parse timezone offset minutes %q: %w", remaining[3:5], err)
 		}
@@ -134,4 +134,24 @@ func getTimezone(offset int) *time.Location {
 		tzMap[offset] = tz
 	}
 	return tz
+}
+
+var errCannotParseNumber = errors.New("couldn't parse number")
+
+func atoi2(in string) (int, error) {
+	_ = in[1]
+	a, b := int(in[0]-'0'), int(in[1]-'0')
+	if a < 0 || a > 9 || b < 0 || b > 9 {
+		return 0, errCannotParseNumber
+	}
+	return a*10 + b, nil
+}
+
+func atoi4(in string) (int, error) {
+	_ = in[3]
+	a, b, c, d := int(in[0]-'0'), int(in[1]-'0'), int(in[2]-'0'), int(in[3]-'0')
+	if a < 0 || a > 9 || b < 0 || b > 9 || c < 0 || c > 9 || d < 0 || d > 9 {
+		return 0, errCannotParseNumber
+	}
+	return a*1000 + b*100 + c*10 + d, nil
 }
