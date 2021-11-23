@@ -85,7 +85,7 @@ func TestReadFileAlt(t *testing.T) {
 
 	var actual []entry
 	var sbs []*ResourceBank
-	if err := ReadFile(bufio.NewReader(f), entry{}, func(val unsafe.Pointer, sb *ResourceBank) error {
+	if err := ReadFile(bufio.NewReader(f), &entry{}, func(val unsafe.Pointer, sb *ResourceBank) error {
 		actual = append(actual, *(*entry)(val))
 		sbs = append(sbs, sb)
 		return nil

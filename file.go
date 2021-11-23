@@ -136,8 +136,22 @@ func ReadFile(r Reader, out interface{}, cb func(val unsafe.Pointer, rb *Resourc
 	}
 
 	typ := reflect.TypeOf(out)
-	if typ.Kind() != reflect.Struct {
-		return fmt.Errorf("out must be a struct")
+	if typ.Kind() == reflect.Ptr {
+		// Pointer to a struct is what we really want
+		typ = typ.Elem()
+		if typ.Kind() != reflect.Struct {
+			return fmt.Errorf("out must be a pointer to a struct")
+		}
+
+	} else if typ.Kind() != reflect.Struct {
+		return fmt.Errorf("out must be a struct or pointer to a struct")
+	} else {
+		// We're on fairly dodgy ground writing to the pointer in this interface,
+		// and it definitely isn't safe if it is a small int. Just reject
+		// any smaller structs.
+		if typ.Size() <= 8 {
+			return fmt.Errorf("small structs may cause issues: see https://philpearl.github.io/post/anathema/. Use a pointer to the struct instead")
+		}
 	}
 
 	codec, err := buildCodec(schema, typ)
@@ -145,7 +159,7 @@ func ReadFile(r Reader, out interface{}, cb func(val unsafe.Pointer, rb *Resourc
 		return fmt.Errorf("failed to build codec. %w", err)
 	}
 
-	rtyp := unpackEFace(out).rtype
+	rtyp := unpackEFace(typ).data
 	p := unpackEFace(out).data
 
 	var compressed []byte
