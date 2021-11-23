@@ -136,3 +136,53 @@ func TestReadFileAlt(t *testing.T) {
 		sb.Close()
 	}
 }
+
+func TestFileSchema(t *testing.T) {
+	schema, err := FileSchema("./testdata/avro1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(Schema{
+		Type: "record",
+		Object: &SchemaObject{
+			Name: "Root",
+			Fields: []SchemaRecordField{
+				{
+					Name: "name",
+					Type: Schema{Type: "union", Union: []Schema{{Type: "null"}, {Type: "string"}}},
+				},
+				{
+					Name: "number",
+					Type: Schema{Type: "union", Union: []Schema{{Type: "null"}, {Type: "long"}}},
+				},
+				{
+					Name: "owns",
+					Type: Schema{
+						Type: "array",
+						Object: &SchemaObject{
+							Items: Schema{
+								Type: "record",
+								Object: &SchemaObject{
+									Name:      "Owns",
+									Namespace: "root",
+									Fields: []SchemaRecordField{
+										{
+											Name: "typ",
+											Type: Schema{Type: "union", Union: []Schema{{Type: "null"}, {Type: "string"}}},
+										},
+										{
+											Name: "size",
+											Type: Schema{Type: "union", Union: []Schema{{Type: "null"}, {Type: "double"}}},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}, schema); diff != "" {
+		t.Fatalf("not as expected: %s", diff)
+	}
+}

@@ -1,6 +1,7 @@
 package avro
 
 import (
+	"bufio"
 	"bytes"
 	"compress/flate"
 	"encoding/binary"
@@ -8,6 +9,7 @@ import (
 	"fmt"
 	"hash/crc32"
 	"io"
+	"os"
 	"reflect"
 	"unsafe"
 
@@ -69,6 +71,24 @@ var avroFileSchema = Schema{
 			},
 		},
 	},
+}
+
+// FileSchema reads the Schema from an AVRO file.
+func FileSchema(filename string) (Schema, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return Schema{}, fmt.Errorf("failed to open file: %w", err)
+	}
+	defer f.Close()
+
+	r := bufio.NewReader(f)
+
+	fh, err := readFileHeader(r)
+	if err != nil {
+		return Schema{}, fmt.Errorf("failed to read AVRO file header: %w", err)
+	}
+
+	return fh.schema()
 }
 
 // Reader combines io.ByteReader and io.Reader. It's what we need to read
@@ -185,7 +205,7 @@ func readFileHeader(r Reader) (fh FileHeader, err error) {
 	// It would kind of make sense to use our codecs to read the header, but for
 	// perf reasons we don't want to use a normal reader there
 	if _, err := io.ReadFull(r, fh.Magic[:]); err != nil {
-		return fh, fmt.Errorf("failed ot read file magic: %w", err)
+		return fh, fmt.Errorf("failed to read file magic: %w", err)
 	}
 	if fh.Magic != [4]byte{'O', 'b', 'j', 1} {
 		return fh, fmt.Errorf("file header Magic is not correct")
@@ -221,7 +241,7 @@ func readFileHeader(r Reader) (fh FileHeader, err error) {
 	}
 
 	if _, err := io.ReadFull(r, fh.Sync[:]); err != nil {
-		return fh, fmt.Errorf("failed ot read file sync: %w", err)
+		return fh, fmt.Errorf("failed to read file sync: %w", err)
 	}
 
 	return fh, nil
