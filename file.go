@@ -136,31 +136,35 @@ func ReadFile(r Reader, out interface{}, cb func(val unsafe.Pointer, rb *Resourc
 	}
 
 	typ := reflect.TypeOf(out)
+	rtyp := unpackEFace(typ).data
+
+	var p unsafe.Pointer
+
 	if typ.Kind() == reflect.Ptr {
-		// Pointer to a struct is what we really want
+		// Pointer to a struct is what we really want. We can write to this as
+		// Go semantics would allow us to write to the underlying struct without
+		// weird unsafe tricks
 		typ = typ.Elem()
 		if typ.Kind() != reflect.Struct {
 			return fmt.Errorf("out must be a pointer to a struct")
 		}
-
+		rtyp = unpackEFace(typ).data
+		p = unpackEFace(out).data
 	} else if typ.Kind() != reflect.Struct {
 		return fmt.Errorf("out must be a struct or pointer to a struct")
 	} else {
-		// We're on fairly dodgy ground writing to the pointer in this interface,
-		// and it definitely isn't safe if it is a small int. Just reject
-		// any smaller structs.
-		if typ.Size() <= 8 {
-			return fmt.Errorf("small structs may cause issues: see https://philpearl.github.io/post/anathema/. Use a pointer to the struct instead")
-		}
+		// We don't try to re-use the memory of the out variable. If Go passes a
+		// value type in an interface it may use memory that it doesn't expect
+		// to be changed. Writing to the memory of go value types that can't be
+		// changed except via unsafe mechanisms is almost certainly dangerous!
+		// See see https://philpearl.github.io/post/anathema/ for one case
+		p = unsafe_New(rtyp)
 	}
 
 	codec, err := buildCodec(schema, typ)
 	if err != nil {
 		return fmt.Errorf("failed to build codec. %w", err)
 	}
-
-	rtyp := unpackEFace(typ).data
-	p := unpackEFace(out).data
 
 	var compressed []byte
 	br := &Buffer{}
