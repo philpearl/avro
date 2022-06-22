@@ -1,43 +1,41 @@
 package avro
 
 import (
+	"fmt"
 	"reflect"
 	"unsafe"
 )
 
-type FloatCodec struct{}
+type floatCodec[t float32 | float64] struct{}
 
-func (FloatCodec) Read(r *Buffer, p unsafe.Pointer) error {
+func (floatCodec[T]) Read(r *Buffer, p unsafe.Pointer) error {
 	// This works for little-endian only (or is it bigendian?)
-	return fixedCodec{Size: 4}.Read(r, p)
+	return fixedCodec{Size: int(unsafe.Sizeof(T(0)))}.Read(r, p)
 }
 
-func (FloatCodec) Skip(r *Buffer) error {
-	return skip(r, 4)
+func (floatCodec[T]) Skip(r *Buffer) error {
+	return skip(r, int64(unsafe.Sizeof(T(0))))
 }
 
-var floatType = reflect.TypeOf(float32(0))
+var (
+	floatType  = reflect.TypeOf(float32(0))
+	doubleType = reflect.TypeOf(float64(0))
+)
 
-func (FloatCodec) New(r *Buffer) unsafe.Pointer {
-	return r.Alloc(floatType)
+func (floatCodec[T]) New(r *Buffer) unsafe.Pointer {
+	switch unsafe.Sizeof(T(0)) {
+	case 4:
+		return r.Alloc(floatType)
+	case 8:
+		return r.Alloc(doubleType)
+	}
+	panic(fmt.Sprintf("unexpected float size %d", unsafe.Sizeof(T(0))))
 }
 
-type DoubleCodec struct{}
-
-func (DoubleCodec) Read(r *Buffer, p unsafe.Pointer) error {
-	// This works for little-endian only (or is it bigendian?)
-	return fixedCodec{Size: 8}.Read(r, p)
-}
-
-func (DoubleCodec) Skip(r *Buffer) error {
-	return skip(r, 8)
-}
-
-var doubleType = reflect.TypeOf(float64(0))
-
-func (DoubleCodec) New(r *Buffer) unsafe.Pointer {
-	return r.Alloc(doubleType)
-}
+type (
+	FloatCodec  = floatCodec[float32]
+	DoubleCodec = floatCodec[float64]
+)
 
 type Float32DoubleCodec struct {
 	DoubleCodec
