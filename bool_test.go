@@ -57,7 +57,6 @@ func TestBoolCodec(t *testing.T) {
 }
 
 func BenchmarkBoolPointer(b *testing.B) {
-
 	data := bytes.Repeat([]byte{1}, 1000)
 	r := NewBuffer(data)
 
@@ -75,6 +74,6 @@ func BenchmarkBoolPointer(b *testing.B) {
 				b.Fatal("wrong bool")
 			}
 		}
-		r.extractResourceBank().Close()
+		r.ExtractResourceBank().Close()
 	}
 }

@@ -24,7 +24,6 @@ type FileHeader struct {
 	Sync  [16]byte          `json:"sync"`
 }
 
-//
 var avroFileSchemaString = `{"type": "record", "name": "org.apache.avro.file.Header",
  "fields" : [
    {"name": "magic", "type": {"type": "fixed", "name": "Magic", "size": 4}},
@@ -103,13 +102,13 @@ type Reader interface {
 // pointer is converted to an unsafe.Pointer. The pointer should not be retained
 // by the application past the return of cb.
 //
-//  var records []myrecord
-//  if err := ReadFile(f, myrecord{}, func(val unsafe.Pointer) error {
-//      records = append(records, *(*record)(val))
-//      return nil
-//  }); err != nil {
-//	    return err
-//  }
+//	 var records []myrecord
+//	 if err := ReadFile(f, myrecord{}, func(val unsafe.Pointer) error {
+//	     records = append(records, *(*record)(val))
+//	     return nil
+//	 }); err != nil {
+//		    return err
+//	 }
 func ReadFile(r Reader, out interface{}, cb func(val unsafe.Pointer, rb *ResourceBank) error) error {
 	fh, err := readFileHeader(r)
 	if err != nil {
@@ -135,23 +134,22 @@ func ReadFile(r Reader, out interface{}, cb func(val unsafe.Pointer, rb *Resourc
 		return err
 	}
 
-	typ := reflect.TypeOf(out)
-	rtyp := unpackEFace(typ).data
+	codec, err := schema.Codec(out)
+	if err != nil {
+		return fmt.Errorf("failed to build codec. %w", err)
+	}
 
-	var p unsafe.Pointer
+	// At this point we know out is either a struct or a pointer to a struct.
+	// We repeat some work from schema.Codec
+	typ := reflect.TypeOf(out)
+	var rtyp, p unsafe.Pointer
 
 	if typ.Kind() == reflect.Ptr {
 		// Pointer to a struct is what we really want. We can write to this as
 		// Go semantics would allow us to write to the underlying struct without
 		// weird unsafe tricks
 		typ = typ.Elem()
-		if typ.Kind() != reflect.Struct {
-			return fmt.Errorf("out must be a pointer to a struct")
-		}
-		rtyp = unpackEFace(typ).data
 		p = unpackEFace(out).data
-	} else if typ.Kind() != reflect.Struct {
-		return fmt.Errorf("out must be a struct or pointer to a struct")
 	} else {
 		// We don't try to re-use the memory of the out variable. If Go passes a
 		// value type in an interface it may use memory that it doesn't expect
@@ -160,11 +158,7 @@ func ReadFile(r Reader, out interface{}, cb func(val unsafe.Pointer, rb *Resourc
 		// See see https://philpearl.github.io/post/anathema/ for one case
 		p = unsafe_New(rtyp)
 	}
-
-	codec, err := buildCodec(schema, typ)
-	if err != nil {
-		return fmt.Errorf("failed to build codec. %w", err)
-	}
+	rtyp = unpackEFace(typ).data
 
 	var compressed []byte
 	br := &Buffer{}
@@ -203,7 +197,7 @@ func ReadFile(r Reader, out interface{}, cb func(val unsafe.Pointer, rb *Resourc
 				return fmt.Errorf("failed to read item %d in file. %w", i, err)
 			}
 
-			if err := cb(p, br.extractResourceBank()); err != nil {
+			if err := cb(p, br.ExtractResourceBank()); err != nil {
 				return err
 			}
 		}

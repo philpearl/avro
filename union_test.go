@@ -167,7 +167,7 @@ func BenchmarkUnionStringCodec(b *testing.B) {
 				if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 					b.Fatal(err)
 				}
-				r.extractResourceBank().Close()
+				r.ExtractResourceBank().Close()
 			}
 		})
 	})
@@ -202,7 +202,7 @@ func BenchmarkUnionOneCodec(b *testing.B) {
 				if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 					b.Fatal(err)
 				}
-				r.extractResourceBank().Close()
+				r.ExtractResourceBank().Close()
 			}
 		})
 	})
@@ -236,7 +236,7 @@ func BenchmarkUnionCodec(b *testing.B) {
 				if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 					b.Fatal(err)
 				}
-				r.extractResourceBank().Close()
+				r.ExtractResourceBank().Close()
 			}
 		})
 	})

@@ -1,6 +1,8 @@
 package avro
 
 import (
+	"fmt"
+	"reflect"
 	"unsafe"
 
 	jsoniter "github.com/json-iterator/go"
@@ -13,6 +15,27 @@ type Schema struct {
 	Type   string
 	Object *SchemaObject
 	Union  []Schema
+}
+
+// Codec creates a codec for the given schema and output type
+func (s Schema) Codec(out interface{}) (Codec, error) {
+	typ := reflect.TypeOf(out)
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
+	}
+	if typ.Kind() != reflect.Struct {
+		return nil, fmt.Errorf("out must be a struct or pointer to a struct")
+	}
+
+	return buildCodec(s, typ)
+}
+
+func SchemaFromString(in string) (Schema, error) {
+	var schema Schema
+	if err := jsoniter.UnmarshalFromString(in, &schema); err != nil {
+		return schema, fmt.Errorf("could not decode schema JSON. %w", err)
+	}
+	return schema, nil
 }
 
 // SchemaObject contains all the fields of more complex schema types

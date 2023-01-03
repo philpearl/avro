@@ -19,4 +19,12 @@ func TestSchemaEncoding(t *testing.T) {
 	if diff := cmp.Diff(avroFileSchema, out); diff != "" {
 		t.Fatalf("results differ. %s", diff)
 	}
+
+	out2, err := SchemaFromString(string(data))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(avroFileSchema, out2); diff != "" {
+		t.Fatalf("results differ. %s", diff)
+	}
 }

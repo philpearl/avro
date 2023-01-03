@@ -29,9 +29,9 @@ func (d *Buffer) Reset(data []byte) {
 	}
 }
 
-// extractResourceBank extracts the current ResourceBank from the buffer, and replaces
+// ExtractResourceBank extracts the current ResourceBank from the buffer, and replaces
 // it with a fresh one.
-func (d *Buffer) extractResourceBank() *ResourceBank {
+func (d *Buffer) ExtractResourceBank() *ResourceBank {
 	rb := d.rb
 	d.rb = newResourceBank()
 	return rb

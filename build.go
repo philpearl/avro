@@ -30,7 +30,6 @@ func Register(typ reflect.Type, f CodecBuildFunc) {
 // be nil, in which case we still need a codec to know how to skip over the
 // field
 func buildCodec(schema Schema, typ reflect.Type) (Codec, error) {
-
 	if schema.Type != "union" && schema.Type != "null" && typ != nil {
 		if typ.Kind() == reflect.Ptr {
 			return buildPointerCodec(schema, typ)
@@ -140,7 +139,6 @@ func buildDoubleCodec(schema Schema, typ reflect.Type) (Codec, error) {
 	}
 
 	return nil, fmt.Errorf("type %s not supported for double codec", typ)
-
 }
 
 func buildNullCodec(schema Schema, typ reflect.Type) (Codec, error) {
@@ -281,7 +279,7 @@ func buildRecordCodec(schema Schema, typ reflect.Type) (Codec, error) {
 
 	// The schema is in the driving-seat here
 	for _, schemaf := range schema.Object.Fields {
-		var offset = uintptr(math.MaxUint64)
+		offset := uintptr(math.MaxUint64)
 		var fieldType reflect.Type
 		sf, ok := ntf[schemaf.Name]
 		if ok {
