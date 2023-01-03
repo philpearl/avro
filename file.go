@@ -149,6 +149,7 @@ func ReadFile(r Reader, out interface{}, cb func(val unsafe.Pointer, rb *Resourc
 		// Go semantics would allow us to write to the underlying struct without
 		// weird unsafe tricks
 		typ = typ.Elem()
+		rtyp = unpackEFace(typ).data
 		p = unpackEFace(out).data
 	} else {
 		// We don't try to re-use the memory of the out variable. If Go passes a
@@ -156,9 +157,9 @@ func ReadFile(r Reader, out interface{}, cb func(val unsafe.Pointer, rb *Resourc
 		// to be changed. Writing to the memory of go value types that can't be
 		// changed except via unsafe mechanisms is almost certainly dangerous!
 		// See see https://philpearl.github.io/post/anathema/ for one case
+		rtyp = unpackEFace(typ).data
 		p = unsafe_New(rtyp)
 	}
-	rtyp = unpackEFace(typ).data
 
 	var compressed []byte
 	br := &Buffer{}
