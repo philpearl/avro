@@ -1,6 +1,7 @@
 package avro
 
 import (
+	"math"
 	"testing"
 	"unsafe"
 
@@ -26,6 +27,16 @@ func TestInt64Codec(t *testing.T) {
 			name: "-something",
 			data: []byte{45},
 			exp:  -23,
+		},
+		{
+			name: "max",
+			data: []byte{254, 255, 255, 255, 255, 255, 255, 255, 255, 1},
+			exp:  math.MaxInt64,
+		},
+		{
+			name: "min",
+			data: []byte{255, 255, 255, 255, 255, 255, 255, 255, 255, 1},
+			exp:  math.MinInt64,
 		},
 	}
 	var c Int64Codec
@@ -79,6 +90,16 @@ func TestInt32Codec(t *testing.T) {
 			data: []byte{45},
 			exp:  -23,
 		},
+		{
+			name: "max",
+			data: []byte{254, 255, 255, 255, 15},
+			exp:  math.MaxInt32,
+		},
+		{
+			name: "min",
+			data: []byte{255, 255, 255, 255, 15},
+			exp:  math.MinInt32,
+		},
 	}
 	var c Int32Codec
 	for _, test := range tests {
@@ -111,6 +132,19 @@ func TestInt32Codec(t *testing.T) {
 	}
 }
 
+func TestInt16TooBig(t *testing.T) {
+	var c Int16Codec
+	r := NewBuffer([]byte{128, 128, 4})
+	var actual int16
+	err := c.Read(r, unsafe.Pointer(&actual))
+	if err == nil {
+		t.Fatal("expected an error")
+	}
+	if s := err.Error(); s != "value 32768 will not fit in int16" {
+		t.Fatalf("error not as expected: %q", s)
+	}
+}
+
 func TestInt16Codec(t *testing.T) {
 	tests := []struct {
 		name string
@@ -130,6 +164,16 @@ func TestInt16Codec(t *testing.T) {
 			name: "-something",
 			data: []byte{45},
 			exp:  -23,
+		},
+		{
+			name: "max",
+			data: []byte{254, 255, 3},
+			exp:  math.MaxInt16,
+		},
+		{
+			name: "min",
+			data: []byte{255, 255, 3},
+			exp:  math.MinInt16,
 		},
 	}
 	var c Int16Codec

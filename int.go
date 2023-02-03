@@ -12,7 +12,8 @@ type IntCodec[T int64 | int32 | int16] struct{}
 func (IntCodec[T]) Read(r *Buffer, p unsafe.Pointer) error {
 	i, err := r.Varint()
 
-	if i > 1<<(unsafe.Sizeof(T(0))*8-1)-1 || i < -1<<(unsafe.Sizeof(T(0))*8-1) {
+	if i > int64(uint64(1)<<(unsafe.Sizeof(T(0))*8-1)-1) ||
+		i < -1<<(unsafe.Sizeof(T(0))*8-1) {
 		return fmt.Errorf("value %d will not fit in %T", i, T(0))
 	}
 
