@@ -83,6 +83,25 @@ func TestTimeLong(t *testing.T) {
 	}
 }
 
+func TestDate(t *testing.T) {
+	data := make([]byte, binary.MaxVarintLen64)
+	l := binary.PutVarint(data, 573)
+	data = data[:l]
+
+	b := avro.NewBuffer(data)
+	c := DateCodec{}
+
+	var out time.Time
+	if err := c.Read(b, unsafe.Pointer(&out)); err != nil {
+		t.Fatal(err)
+	}
+
+	exp := time.Date(1971, 7, 27, 0, 0, 0, 0, time.UTC)
+	if !out.Equal(exp) {
+		t.Fatalf("times %s & %s differ by %s", exp, out, exp.Sub(out))
+	}
+}
+
 func TestTimeLongPtr(t *testing.T) {
 	now := time.Now()
 	data := make([]byte, binary.MaxVarintLen64)

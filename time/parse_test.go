@@ -40,6 +40,31 @@ func TestParse(t *testing.T) {
 	}
 }
 
+func TestParseDate(t *testing.T) {
+	tests := []string{
+		"2021-09-30",
+		"1970-01-01",
+	}
+
+	for _, test := range tests {
+		t.Run(test, func(t *testing.T) {
+			exp, err := time.Parse(time.DateOnly, test)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			actual, err := parseTime(test)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if !exp.Equal(actual) {
+				t.Fatalf("parsed time incorrect. Got %s for %s", actual, test)
+			}
+		})
+	}
+}
+
 func TestParseFails(t *testing.T) {
 	tests := []string{
 		"",

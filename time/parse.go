@@ -11,18 +11,11 @@ import (
 // this particular timezone is faster than using time.Parse, and parsing string
 // timestamps comes up rather more often than is ideal
 func parseTime(in string) (time.Time, error) {
-	if len(in) < 20 {
-		return time.Time{}, fmt.Errorf("expect time string to be at least 20 characters long")
+	if len(in) < 10 {
+		return time.Time{}, fmt.Errorf("expect time string to be at least 10 characters long %q", in)
 	}
 	if in[4] != '-' || in[7] != '-' {
 		return time.Time{}, fmt.Errorf("date not formatted as expected, missing -")
-	}
-	if in[10] != 'T' {
-		return time.Time{}, fmt.Errorf("time not formatted as expected, missing T")
-	}
-
-	if in[13] != ':' || in[16] != ':' {
-		return time.Time{}, fmt.Errorf("time not formatted as expected, missing ':': %q", in)
 	}
 
 	// "2006-01-02T15:04:05Z07:00"
@@ -37,6 +30,22 @@ func parseTime(in string) (time.Time, error) {
 	d, err := atoi2(in[8:10])
 	if err != nil {
 		return time.Time{}, fmt.Errorf("could not parse day %q: %w", in[8:10], err)
+	}
+
+	if len(in) == 10 {
+		return time.Date(y, time.Month(m), d, 0, 0, 0, 0, time.UTC), nil
+	}
+
+	if len(in) < 20 {
+		return time.Time{}, fmt.Errorf("expect time string to be at least 20 characters long if greater than 10 characters %q", in)
+	}
+
+	if in[10] != 'T' {
+		return time.Time{}, fmt.Errorf("time not formatted as expected, missing T")
+	}
+
+	if in[13] != ':' || in[16] != ':' {
+		return time.Time{}, fmt.Errorf("time not formatted as expected, missing ':': %q", in)
 	}
 
 	h, err := atoi2(in[11:13])
