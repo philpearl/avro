@@ -24,14 +24,9 @@ type FileHeader struct {
 	Sync  [16]byte          `json:"sync"`
 }
 
-var avroFileSchemaString = `{"type": "record", "name": "org.apache.avro.file.Header",
- "fields" : [
-   {"name": "magic", "type": {"type": "fixed", "name": "Magic", "size": 4}},
-   {"name": "meta", "type": {"type": "map", "values": "bytes"}},
-   {"name": "sync", "type": {"type": "fixed", "name": "Sync", "size": 16}},
-  ]
-}`
+var FileMagic = [4]byte{'O', 'b', 'j', 1}
 
+// Note this isn't actually used except in one test of schema encoding.
 var avroFileSchema = Schema{
 	Type: "record",
 	Object: &SchemaObject{
@@ -63,7 +58,7 @@ var avroFileSchema = Schema{
 				Type: Schema{
 					Type: "fixed",
 					Object: &SchemaObject{
-						Name: "Magic",
+						Name: "Sync",
 						Size: 16,
 					},
 				},
@@ -169,19 +164,19 @@ func ReadFile(r Reader, out interface{}, cb func(val unsafe.Pointer, rb *Resourc
 			if errors.Is(err, io.EOF) {
 				return nil
 			}
-			return fmt.Errorf("failed to read item count. %w", err)
+			return fmt.Errorf("reading item count. %w", err)
 		}
 		dataLength, err := binary.ReadVarint(r)
 		if err != nil {
-			return fmt.Errorf("failed to read data block length. %w", err)
+			return fmt.Errorf("reading data block length. %w", err)
 		}
 		if cap(compressed) < int(dataLength) {
 			compressed = make([]byte, dataLength)
 		} else {
 			compressed = compressed[:dataLength]
 		}
-		if _, err := io.ReadFull(r, compressed); err != nil {
-			return err
+		if n, err := io.ReadFull(r, compressed); err != nil {
+			return fmt.Errorf("reading %d bytes of compressed data: %w after %d bytes", dataLength, err, n)
 		}
 		uncompressed, err := decoder.decompress(compressed)
 		if err != nil {
@@ -220,7 +215,7 @@ func readFileHeader(r Reader) (fh FileHeader, err error) {
 	if _, err := io.ReadFull(r, fh.Magic[:]); err != nil {
 		return fh, fmt.Errorf("failed to read file magic: %w", err)
 	}
-	if fh.Magic != [4]byte{'O', 'b', 'j', 1} {
+	if fh.Magic != FileMagic {
 		return fh, fmt.Errorf("file header Magic is not correct")
 	}
 
@@ -296,6 +291,7 @@ func (fh FileHeader) schema() (schema Schema, err error) {
 
 type compressionCodec interface {
 	decompress(compressed []byte) ([]byte, error)
+	compress(uncompressed []byte) ([]byte, error)
 }
 
 type nullCompression struct{}
@@ -304,8 +300,13 @@ func (nullCompression) decompress(compressed []byte) ([]byte, error) {
 	return compressed, nil
 }
 
+func (nullCompression) compress(uncompressed []byte) ([]byte, error) {
+	return uncompressed, nil
+}
+
 type deflate struct {
 	reader io.Reader
+	writer *flate.Writer
 	buf    bytes.Reader
 	out    bytes.Buffer
 }
@@ -319,6 +320,22 @@ func (d *deflate) decompress(compressed []byte) ([]byte, error) {
 
 	d.out.Reset()
 	d.out.ReadFrom(d.reader)
+
+	return d.out.Bytes(), nil
+}
+
+func (d *deflate) compress(uncompressed []byte) ([]byte, error) {
+	d.out.Reset()
+	if d.writer == nil {
+		d.writer, _ = flate.NewWriter(&d.out, flate.DefaultCompression)
+	}
+	d.writer.Reset(&d.out)
+	if _, err := d.writer.Write(uncompressed); err != nil {
+		return nil, fmt.Errorf("writing to deflate compressor: %w", err)
+	}
+	if err := d.writer.Close(); err != nil {
+		return nil, fmt.Errorf("flushing deflate compressor: %w", err)
+	}
 
 	return d.out.Bytes(), nil
 }
@@ -338,6 +355,14 @@ func (s *snappyCodec) decompress(compressed []byte) ([]byte, error) {
 	if crc32.ChecksumIEEE(s.buf) != crc {
 		return nil, errors.New("snappy checksum mismatch")
 	}
+
+	return s.buf, nil
+}
+
+func (s *snappyCodec) compress(uncompressed []byte) ([]byte, error) {
+	s.buf = snappy.Encode(s.buf[:cap(s.buf)], uncompressed)
+	crc := crc32.ChecksumIEEE(uncompressed)
+	s.buf = binary.BigEndian.AppendUint32(s.buf, crc)
 
 	return s.buf, nil
 }

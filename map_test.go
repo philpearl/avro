@@ -9,7 +9,6 @@ import (
 )
 
 func TestMapCodec(t *testing.T) {
-
 	tests := []struct {
 		name string
 		data []byte
@@ -29,7 +28,7 @@ func TestMapCodec(t *testing.T) {
 				0,
 			},
 			exp: map[string][]byte{
-				"foo": []byte{1, 2, 3, 4},
+				"foo": {1, 2, 3, 4},
 			},
 		},
 		{
@@ -46,7 +45,7 @@ func TestMapCodec(t *testing.T) {
 				0,
 			},
 			exp: map[string][]byte{
-				"foo": []byte{1, 2, 3, 4},
+				"foo": {1, 2, 3, 4},
 			},
 		},
 
@@ -68,8 +67,8 @@ func TestMapCodec(t *testing.T) {
 				0,
 			},
 			exp: map[string][]byte{
-				"foo": []byte{1, 2, 3, 4},
-				"bar": []byte{4, 3, 2, 1},
+				"foo": {1, 2, 3, 4},
+				"bar": {4, 3, 2, 1},
 			},
 		},
 		{
@@ -93,8 +92,8 @@ func TestMapCodec(t *testing.T) {
 				0,
 			},
 			exp: map[string][]byte{
-				"foo": []byte{1, 2, 3, 4},
-				"bar": []byte{4, 3, 2, 1},
+				"foo": {1, 2, 3, 4},
+				"bar": {4, 3, 2, 1},
 			},
 		},
 	}
