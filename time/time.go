@@ -57,7 +57,7 @@ func (c DateCodec) Read(r *avro.Buffer, p unsafe.Pointer) error {
 		return err
 	}
 
-	*(*time.Time)(p) = time.Date(1970, 1, int(l), 0, 0, 0, 0, time.UTC)
+	*(*time.Time)(p) = time.Date(1970, 1, 1+int(l), 0, 0, 0, 0, time.UTC)
 	return nil
 }
 

@@ -2,6 +2,7 @@ package time
 
 import (
 	"encoding/binary"
+	"strconv"
 	"testing"
 	"time"
 	"unsafe"
@@ -84,21 +85,26 @@ func TestTimeLong(t *testing.T) {
 }
 
 func TestDate(t *testing.T) {
-	data := make([]byte, binary.MaxVarintLen64)
-	l := binary.PutVarint(data, 573)
-	data = data[:l]
+	t0 := time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
+	for _, l := range []int{0, 1, 573} {
+		t.Run(strconv.Itoa(l), func(t *testing.T) {
+			exp := t0.AddDate(0, 0, l)
+			data := make([]byte, binary.MaxVarintLen64)
+			l := binary.PutVarint(data, int64(l))
+			data = data[:l]
 
-	b := avro.NewBuffer(data)
-	c := DateCodec{}
+			b := avro.NewBuffer(data)
+			c := DateCodec{}
 
-	var out time.Time
-	if err := c.Read(b, unsafe.Pointer(&out)); err != nil {
-		t.Fatal(err)
-	}
+			var out time.Time
+			if err := c.Read(b, unsafe.Pointer(&out)); err != nil {
+				t.Fatal(err)
+			}
 
-	exp := time.Date(1971, 7, 27, 0, 0, 0, 0, time.UTC)
-	if !out.Equal(exp) {
-		t.Fatalf("times %s & %s differ by %s", exp, out, exp.Sub(out))
+			if !out.Equal(exp) {
+				t.Fatalf("times %s & %s differ by %s", exp, out, exp.Sub(out))
+			}
+		})
 	}
 }
 
