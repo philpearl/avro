@@ -45,21 +45,21 @@ func buildCodec(schema Schema, typ reflect.Type) (Codec, error) {
 
 	switch schema.Type {
 	case "null":
-		return buildNullCodec(schema, typ)
+		return buildNullCodec()
 	case "boolean":
-		return buildBoolCodec(schema, typ)
+		return buildBoolCodec(typ)
 	case "int":
-		return buildIntCodec(schema, typ)
+		return buildIntCodec(typ)
 	case "long":
-		return buildLongCodec(schema, typ)
+		return buildLongCodec(typ)
 	case "float":
-		return buildFloatCodec(schema, typ)
+		return buildFloatCodec(typ)
 	case "double":
-		return buildDoubleCodec(schema, typ)
+		return buildDoubleCodec(typ)
 	case "bytes":
-		return buildBytesCodec(schema, typ)
+		return buildBytesCodec(typ)
 	case "string":
-		return buildStringCodec(schema, typ)
+		return buildStringCodec(typ)
 	case "record":
 		return buildRecordCodec(schema, typ)
 	case "enum":
@@ -85,7 +85,7 @@ func buildPointerCodec(schema Schema, typ reflect.Type) (Codec, error) {
 	return &PointerCodec{Codec: c}, nil
 }
 
-func buildBoolCodec(schema Schema, typ reflect.Type) (Codec, error) {
+func buildBoolCodec(typ reflect.Type) (Codec, error) {
 	if typ != nil && typ.Kind() != reflect.Bool {
 		return nil, fmt.Errorf("type for boolean must be a bool, not %s", typ)
 	}
@@ -93,13 +93,13 @@ func buildBoolCodec(schema Schema, typ reflect.Type) (Codec, error) {
 	return BoolCodec{}, nil
 }
 
-func buildIntCodec(schema Schema, typ reflect.Type) (Codec, error) {
+func buildIntCodec(typ reflect.Type) (Codec, error) {
 	// We can actually use the same codecs as long ints. We might want to
 	// separate them if we do encoding.
-	return buildLongCodec(schema, typ)
+	return buildLongCodec(typ)
 }
 
-func buildLongCodec(schema Schema, typ reflect.Type) (Codec, error) {
+func buildLongCodec(typ reflect.Type) (Codec, error) {
 	// TODO: unsigned types?
 	// It's likely BQ will specify this type even for smaller integer types.
 	if typ == nil {
@@ -118,7 +118,7 @@ func buildLongCodec(schema Schema, typ reflect.Type) (Codec, error) {
 	return nil, fmt.Errorf("type %s (kind %s) not supported for long codec", typ, typ.Kind())
 }
 
-func buildFloatCodec(schema Schema, typ reflect.Type) (Codec, error) {
+func buildFloatCodec(typ reflect.Type) (Codec, error) {
 	if typ != nil && typ.Kind() != reflect.Float32 {
 		return nil, fmt.Errorf("type for float codec must be a 32 bit float, not %s", typ)
 	}
@@ -126,7 +126,7 @@ func buildFloatCodec(schema Schema, typ reflect.Type) (Codec, error) {
 	return FloatCodec{}, nil
 }
 
-func buildDoubleCodec(schema Schema, typ reflect.Type) (Codec, error) {
+func buildDoubleCodec(typ reflect.Type) (Codec, error) {
 	if typ == nil {
 		return DoubleCodec{}, nil
 	}
@@ -141,7 +141,7 @@ func buildDoubleCodec(schema Schema, typ reflect.Type) (Codec, error) {
 	return nil, fmt.Errorf("type %s not supported for double codec", typ)
 }
 
-func buildNullCodec(schema Schema, typ reflect.Type) (Codec, error) {
+func buildNullCodec() (Codec, error) {
 	return nullCodec{}, nil
 }
 
@@ -157,7 +157,7 @@ func buildFixedCodec(schema Schema, typ reflect.Type) (Codec, error) {
 	return &fixedCodec{Size: schema.Object.Size}, nil
 }
 
-func buildBytesCodec(schema Schema, typ reflect.Type) (Codec, error) {
+func buildBytesCodec(typ reflect.Type) (Codec, error) {
 	if typ != nil {
 		if typ.Kind() != reflect.Slice || typ.Elem().Kind() != reflect.Uint8 {
 			return nil, fmt.Errorf("type for bytes must be a byte slice, not %s", typ)
@@ -166,7 +166,7 @@ func buildBytesCodec(schema Schema, typ reflect.Type) (Codec, error) {
 	return BytesCodec{}, nil
 }
 
-func buildStringCodec(schema Schema, typ reflect.Type) (Codec, error) {
+func buildStringCodec(typ reflect.Type) (Codec, error) {
 	if typ != nil && typ.Kind() != reflect.String {
 		return nil, fmt.Errorf("type for string must be a string, not %s", typ)
 	}

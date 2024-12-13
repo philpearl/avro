@@ -29,4 +29,10 @@ type Codec interface {
 	// New creates a pointer to the type for which the codec is registered. It is
 	// used if the enclosing record has a field that is a pointer to this type
 	New(r *Buffer) unsafe.Pointer
+
+	// Schema returns the schema for the type that the codec is encoding
+	Schema() Schema
+
+	// Write writes the wire format bytes for the value that p points to to w.
+	Write(w *Writer, p unsafe.Pointer) error
 }

@@ -66,6 +66,23 @@ func (c DateCodec) New(r *avro.Buffer) unsafe.Pointer {
 	return r.Alloc(timeType)
 }
 
+func (c DateCodec) Schema() avro.Schema {
+	return avro.Schema{
+		Type: "int",
+		Object: &avro.SchemaObject{
+			LogicalType: "date",
+		},
+	}
+}
+
+func (c DateCodec) Write(w *avro.Writer, p unsafe.Pointer) error {
+	t := *(*time.Time)(p)
+	// TODO: wrangle this into Time.AppendFormat?
+	day := int32(t.Unix() / (60 * 60 * 24))
+
+	return c.Int32Codec.Write(w, unsafe.Pointer(&day))
+}
+
 // StringCodec is a decoder from an AVRO string with RFC3339 encoding to a time.Time
 type StringCodec struct{ avro.StringCodec }
 
@@ -103,6 +120,20 @@ func (c StringCodec) New(r *avro.Buffer) unsafe.Pointer {
 	return r.Alloc(timeType)
 }
 
+func (c StringCodec) Schema() avro.Schema {
+	return avro.Schema{
+		Type: "string",
+	}
+}
+
+func (c StringCodec) Write(w *avro.Writer, p unsafe.Pointer) error {
+	t := *(*time.Time)(p)
+	// TODO: wrangle this into Time.AppendFormat?
+	s := t.Format(time.RFC3339Nano)
+
+	return c.StringCodec.Write(w, unsafe.Pointer(&s))
+}
+
 // LongCodec is a decoder from an AVRO long where the time is encoded as
 // nanoseconds since the UNIX epoch
 type LongCodec struct {
@@ -123,4 +154,20 @@ func (c LongCodec) Read(r *avro.Buffer, p unsafe.Pointer) error {
 // New create a pointer to a new time.Time
 func (c LongCodec) New(r *avro.Buffer) unsafe.Pointer {
 	return r.Alloc(timeType)
+}
+
+func (c LongCodec) Schema() avro.Schema {
+	return avro.Schema{
+		Type: "long",
+		Object: &avro.SchemaObject{
+			LogicalType: "timestamp-micros",
+		},
+	}
+}
+
+func (c LongCodec) Write(w *avro.Writer, p unsafe.Pointer) error {
+	t := *(*time.Time)(p)
+	l := t.UnixMicro()
+
+	return c.Int64Codec.Write(w, unsafe.Pointer(&l))
 }

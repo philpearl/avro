@@ -18,3 +18,13 @@ func (nullCodec) Skip(r *Buffer) error {
 func (nullCodec) New(r *Buffer) unsafe.Pointer {
 	return nil
 }
+
+func (rc nullCodec) Schema() Schema {
+	return Schema{
+		Type: "null",
+	}
+}
+
+func (rc nullCodec) Write(w *Writer, p unsafe.Pointer) error {
+	return nil
+}

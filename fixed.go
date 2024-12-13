@@ -34,3 +34,16 @@ func (f fixedCodec) Skip(r *Buffer) error {
 func (f fixedCodec) New(r *Buffer) unsafe.Pointer {
 	return unsafe_NewArray(unpackEFace(reflect.TypeOf(byte(0))).data, f.Size)
 }
+
+func (rc fixedCodec) Schema() Schema {
+	return Schema{
+		Type:   "fixed",
+		Object: &SchemaObject{Size: rc.Size},
+	}
+}
+
+func (rc fixedCodec) Write(w *Writer, p unsafe.Pointer) error {
+	sh := unsafe.Slice((*byte)(p), rc.Size)
+	w.Write(sh)
+	return nil
+}

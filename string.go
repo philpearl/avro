@@ -39,3 +39,16 @@ var stringType = reflect.TypeOf("")
 func (StringCodec) New(r *Buffer) unsafe.Pointer {
 	return r.Alloc(stringType)
 }
+
+func (StringCodec) Schema() Schema {
+	return Schema{
+		Type: "string",
+	}
+}
+
+func (StringCodec) Write(w *Writer, p unsafe.Pointer) error {
+	s := *(*string)(p)
+	w.Varint(int64(len(s)))
+	w.Write([]byte(s))
+	return nil
+}

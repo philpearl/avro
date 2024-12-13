@@ -97,3 +97,46 @@ func (m *MapCodec) Skip(r *Buffer) error {
 func (m *MapCodec) New(r *Buffer) unsafe.Pointer {
 	return unsafe.Pointer(reflect.MakeMap(m.rtype).Pointer())
 }
+
+func (m *MapCodec) Schema() Schema {
+	return Schema{
+		Type: "map",
+		Object: &SchemaObject{
+			Values: m.valueCodec.Schema(),
+		},
+	}
+}
+
+func (m *MapCodec) Write(w *Writer, p unsafe.Pointer) error {
+	// Start with the count. Note the same ability to use a negative count to
+	// record a block size exists here too.
+	w.Varint(int64(maplen(p)))
+
+	var iterM mapiter
+	iter := (unsafe.Pointer)(&iterM)
+	mapiterinit(unpackEFace(m.rtype).data, p, iter)
+
+	var sc StringCodec
+
+	for {
+		k := mapiterkey(iter)
+		if k == nil {
+			break
+		}
+		v := mapiterelem(iter)
+
+		if err := sc.Write(w, k); err != nil {
+			return fmt.Errorf("writing key: %w", err)
+		}
+
+		if err := m.valueCodec.Write(w, v); err != nil {
+			return fmt.Errorf("writing value: %w", err)
+		}
+
+		mapiternext(iter)
+	}
+
+	// like arrays, theoretically there can be multiple blocks so we need to write a zero count to say there's no more.
+	w.Varint(0)
+	return nil
+}

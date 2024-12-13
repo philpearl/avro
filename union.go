@@ -39,6 +39,22 @@ func (u *unionCodec) New(r *Buffer) unsafe.Pointer {
 	return nil
 }
 
+func (u *unionCodec) Schema() Schema {
+	us := make([]Schema, len(u.codecs))
+	for i, c := range u.codecs {
+		us[i] = c.Schema()
+	}
+	return Schema{
+		Type:  "union",
+		Union: us,
+	}
+}
+
+func (u *unionCodec) Write(w *Writer, p unsafe.Pointer) error {
+	// TODO: Need a way to determine which type!
+	return fmt.Errorf("union codec not implemented!")
+}
+
 type unionOneAndNullCodec struct {
 	codec   Codec
 	nonNull uint8
@@ -83,6 +99,21 @@ func (u *unionOneAndNullCodec) New(r *Buffer) unsafe.Pointer {
 	return nil
 }
 
+func (u *unionOneAndNullCodec) Schema() Schema {
+	return Schema{
+		Type: "union",
+		Union: []Schema{
+			{Type: "null"},
+			u.codec.Schema(),
+		},
+	}
+}
+
+func (u *unionOneAndNullCodec) Write(w *Writer, p unsafe.Pointer) error {
+	// TODO: Need a way to determine if p is null
+	return fmt.Errorf("union codec not implemented!")
+}
+
 type unionNullString struct {
 	codec   StringCodec
 	nonNull byte
@@ -123,5 +154,28 @@ func (u *unionNullString) Skip(r *Buffer) error {
 }
 
 func (u *unionNullString) New(r *Buffer) unsafe.Pointer {
+	return nil
+}
+
+func (u *unionNullString) Schema() Schema {
+	return Schema{
+		Type: "union",
+		Union: []Schema{
+			{Type: "null"},
+			{Type: "string"},
+		},
+	}
+}
+
+func (u *unionNullString) Write(w *Writer, p unsafe.Pointer) error {
+	s := *(*string)(p)
+	if s == "" {
+		w.Varint(0)
+		return nil
+	}
+
+	w.Varint(1)
+	u.codec.Write(w, p)
+
 	return nil
 }

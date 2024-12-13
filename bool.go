@@ -26,3 +26,19 @@ var boolType = reflect.TypeOf(false)
 func (BoolCodec) New(r *Buffer) unsafe.Pointer {
 	return r.Alloc(boolType)
 }
+
+func (rc BoolCodec) Schema() Schema {
+	return Schema{
+		Type: "boolean",
+	}
+}
+
+func (rc BoolCodec) Write(w *Writer, p unsafe.Pointer) error {
+	if *(*bool)(p) {
+		w.Byte(1)
+	} else {
+		w.Byte(0)
+	}
+
+	return nil
+}

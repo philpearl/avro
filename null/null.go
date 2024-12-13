@@ -46,6 +46,13 @@ func (c nullIntCodec) New(r *avro.Buffer) unsafe.Pointer {
 	return r.Alloc(intType)
 }
 
+func (c nullIntCodec) Write(w *avro.Writer, p unsafe.Pointer) error {
+	// I think we'll expect this codec to always be wrapped by a null union
+	// codec, so checking for empty would be done elsewhere.
+	ni := *(*null.Int)(p)
+	return c.Int64Codec.Write(w, unsafe.Pointer(&ni.Int64))
+}
+
 func buildNullBoolCodec(schema avro.Schema, typ reflect.Type) (avro.Codec, error) {
 	if schema.Type != "boolean" {
 		return nil, fmt.Errorf("null.Bool can only be used with boolean schema types")
@@ -67,6 +74,13 @@ var boolType = reflect.TypeOf(null.Bool{})
 
 func (c nullBoolCodec) New(r *avro.Buffer) unsafe.Pointer {
 	return r.Alloc(boolType)
+}
+
+func (c nullBoolCodec) Write(w *avro.Writer, p unsafe.Pointer) error {
+	// I think we'll expect this codec to always be wrapped by a null union
+	// codec, so checking for empty would be done elsewhere.
+	ni := *(*null.Bool)(p)
+	return c.BoolCodec.Write(w, unsafe.Pointer(&ni.Bool))
 }
 
 func buildNullFloatCodec(schema avro.Schema, typ reflect.Type) (avro.Codec, error) {
@@ -97,6 +111,13 @@ func (c nullDoubleCodec) New(r *avro.Buffer) unsafe.Pointer {
 	return r.Alloc(floatType)
 }
 
+func (c nullDoubleCodec) Write(w *avro.Writer, p unsafe.Pointer) error {
+	// I think we'll expect this codec to always be wrapped by a null union
+	// codec, so checking for empty would be done elsewhere.
+	ni := *(*null.Float)(p)
+	return c.DoubleCodec.Write(w, unsafe.Pointer(&ni.Float64))
+}
+
 type nullFloatCodec struct {
 	avro.FloatCodec
 }
@@ -114,6 +135,13 @@ func (c nullFloatCodec) Read(data *avro.Buffer, ptr unsafe.Pointer) error {
 
 func (c nullFloatCodec) New(r *avro.Buffer) unsafe.Pointer {
 	return r.Alloc(floatType)
+}
+
+func (c nullFloatCodec) Write(w *avro.Writer, p unsafe.Pointer) error {
+	// I think we'll expect this codec to always be wrapped by a null union
+	// codec, so checking for empty would be done elsewhere.
+	ni := *(*null.Float)(p)
+	return c.FloatCodec.Write(w, unsafe.Pointer(&ni.Float64))
 }
 
 func buildNullStringCodec(schema avro.Schema, typ reflect.Type) (avro.Codec, error) {
@@ -139,6 +167,13 @@ func (c nullStringCodec) New(r *avro.Buffer) unsafe.Pointer {
 	return r.Alloc(stringType)
 }
 
+func (c nullStringCodec) Write(w *avro.Writer, p unsafe.Pointer) error {
+	// I think we'll expect this codec to always be wrapped by a null union
+	// codec, so checking for empty would be done elsewhere.
+	ni := *(*null.String)(p)
+	return c.StringCodec.Write(w, unsafe.Pointer(&ni.String))
+}
+
 func buildNullTimeCodec(schema avro.Schema, typ reflect.Type) (avro.Codec, error) {
 	if schema.Type != "string" {
 		return nil, fmt.Errorf("null.Time is only supported for string, not for %s", schema.Type)
@@ -160,4 +195,11 @@ var timeType = reflect.TypeOf(null.Time{})
 
 func (c nullTimeCodec) New(r *avro.Buffer) unsafe.Pointer {
 	return r.Alloc(timeType)
+}
+
+func (c nullTimeCodec) Write(w *avro.Writer, p unsafe.Pointer) error {
+	// I think we'll expect this codec to always be wrapped by a null union
+	// codec, so checking for empty would be done elsewhere.
+	ni := *(*null.Time)(p)
+	return c.StringCodec.Write(w, unsafe.Pointer(&ni.Time))
 }

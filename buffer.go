@@ -1,12 +1,32 @@
 package avro
 
 import (
+	"encoding/binary"
 	"errors"
 	"io"
 	"reflect"
 	"sync"
 	"unsafe"
 )
+
+// TODO: rename Buffer to Reader
+
+// Write is a simple, append only, replacement for bytes.Buffer.
+type Writer struct {
+	buf []byte
+}
+
+func (w *Writer) Varint(v int64) {
+	w.buf = binary.AppendVarint(w.buf, v)
+}
+
+func (w *Writer) Byte(val byte) {
+	w.buf = append(w.buf, val)
+}
+
+func (w *Writer) Write(val []byte) {
+	w.buf = append(w.buf, val...)
+}
 
 // Buffer is a very simple replacement for bytes.Reader that avoids data copies
 type Buffer struct {

@@ -32,6 +32,20 @@ func (floatCodec[T]) New(r *Buffer) unsafe.Pointer {
 	panic(fmt.Sprintf("unexpected float size %d", unsafe.Sizeof(T(0))))
 }
 
+func (rc floatCodec[T]) Schema() Schema {
+	switch unsafe.Sizeof(T(0)) {
+	case 4:
+		return Schema{Type: "float"}
+	case 8:
+		return Schema{Type: "double"}
+	}
+	panic(fmt.Sprintf("unexpected float size %d", unsafe.Sizeof(T(0))))
+}
+
+func (rc floatCodec[T]) Write(w *Writer, p unsafe.Pointer) error {
+	return fixedCodec{Size: int(unsafe.Sizeof(T(0)))}.Write(w, p)
+}
+
 type (
 	FloatCodec  = floatCodec[float32]
 	DoubleCodec = floatCodec[float64]
@@ -52,4 +66,13 @@ func (c Float32DoubleCodec) Read(r *Buffer, p unsafe.Pointer) error {
 
 func (Float32DoubleCodec) New(r *Buffer) unsafe.Pointer {
 	return r.Alloc(floatType)
+}
+
+func (rc Float32DoubleCodec) Schema() Schema {
+	return Schema{Type: "double"}
+}
+
+func (rc Float32DoubleCodec) Write(w *Writer, p unsafe.Pointer) error {
+	q := float64(*(*float32)(p))
+	return fixedCodec{Size: 8}.Write(w, unsafe.Pointer(&q))
 }

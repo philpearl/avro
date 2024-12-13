@@ -40,3 +40,17 @@ var bytesType = reflect.TypeOf([]byte{})
 func (BytesCodec) New(r *Buffer) unsafe.Pointer {
 	return r.Alloc(bytesType)
 }
+
+func (rc BytesCodec) Schema() Schema {
+	return Schema{
+		Type: "bytes",
+	}
+}
+
+func (rc BytesCodec) Write(w *Writer, p unsafe.Pointer) error {
+	sh := *(*[]byte)(p)
+
+	w.Varint(int64(len(sh)))
+	w.Write(sh)
+	return nil
+}
