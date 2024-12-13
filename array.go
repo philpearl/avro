@@ -9,6 +9,7 @@ import (
 type arrayCodec struct {
 	itemCodec Codec
 	itemType  reflect.Type
+	omitEmpty bool
 }
 
 func (rc *arrayCodec) Read(r *Buffer, p unsafe.Pointer) error {
@@ -112,6 +113,10 @@ func (rc *arrayCodec) Schema() Schema {
 			Items: rc.itemCodec.Schema(),
 		},
 	}
+}
+
+func (rc *arrayCodec) Omit(p unsafe.Pointer) bool {
+	return rc.omitEmpty && len(*(*[]byte)(p)) == 0
 }
 
 func (rc *arrayCodec) Write(w *Writer, p unsafe.Pointer) error {

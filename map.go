@@ -10,6 +10,7 @@ import (
 type MapCodec struct {
 	valueCodec Codec
 	rtype      reflect.Type
+	omitEmpty  bool
 }
 
 func (m *MapCodec) Read(r *Buffer, p unsafe.Pointer) error {
@@ -105,6 +106,10 @@ func (m *MapCodec) Schema() Schema {
 			Values: m.valueCodec.Schema(),
 		},
 	}
+}
+
+func (m *MapCodec) Omit(p unsafe.Pointer) bool {
+	return m.omitEmpty && maplen(p) == 0
 }
 
 func (m *MapCodec) Write(w *Writer, p unsafe.Pointer) error {

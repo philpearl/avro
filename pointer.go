@@ -28,13 +28,18 @@ func (c *PointerCodec) Schema() Schema {
 		Type: "union",
 		Union: []Schema{
 			{Type: "null"},
-			c.Schema(),
+			c.Codec.Schema(),
 		},
 	}
 }
 
+func (c *PointerCodec) Omit(p unsafe.Pointer) bool {
+	return *(*unsafe.Pointer)(p) == nil
+}
+
 func (c *PointerCodec) Write(w *Writer, p unsafe.Pointer) error {
-	// TODO: do we encode the union here? or in the union type?
+	// Note this codec will normally be wrapped by a union codec, so we don't
+	// need to worry about writing the union selector.
 	pp := *(*unsafe.Pointer)(p)
 	if pp == nil {
 		return nil

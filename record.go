@@ -66,6 +66,10 @@ func (rc *recordCodec) Schema() Schema {
 	}
 }
 
+func (rc *recordCodec) Omit(p unsafe.Pointer) bool {
+	return false
+}
+
 func (rc *recordCodec) Write(w *Writer, p unsafe.Pointer) error {
 	for i, rf := range rc.fields {
 		fp := unsafe.Add(p, rf.offset)

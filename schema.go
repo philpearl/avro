@@ -27,7 +27,7 @@ func (s Schema) Codec(out interface{}) (Codec, error) {
 		return nil, fmt.Errorf("out must be a struct or pointer to a struct")
 	}
 
-	return buildCodec(s, typ)
+	return buildCodec(s, typ, false)
 }
 
 func SchemaFromString(in string) (Schema, error) {

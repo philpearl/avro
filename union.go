@@ -50,6 +50,10 @@ func (u *unionCodec) Schema() Schema {
 	}
 }
 
+func (u *unionCodec) Omit(p unsafe.Pointer) bool {
+	return false
+}
+
 func (u *unionCodec) Write(w *Writer, p unsafe.Pointer) error {
 	// TODO: Need a way to determine which type!
 	return fmt.Errorf("union codec not implemented!")
@@ -109,6 +113,10 @@ func (u *unionOneAndNullCodec) Schema() Schema {
 	}
 }
 
+func (u *unionOneAndNullCodec) Omit(p unsafe.Pointer) bool {
+	return u.codec.Omit(p)
+}
+
 func (u *unionOneAndNullCodec) Write(w *Writer, p unsafe.Pointer) error {
 	// TODO: Need a way to determine if p is null
 	return fmt.Errorf("union codec not implemented!")
@@ -165,6 +173,10 @@ func (u *unionNullString) Schema() Schema {
 			{Type: "string"},
 		},
 	}
+}
+
+func (u *unionNullString) Omit(p unsafe.Pointer) bool {
+	return u.codec.Omit(p)
 }
 
 func (u *unionNullString) Write(w *Writer, p unsafe.Pointer) error {

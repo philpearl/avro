@@ -7,7 +7,7 @@ import (
 )
 
 // StringCodec is a decoder for strings
-type StringCodec struct{}
+type StringCodec struct{ omitEmpty bool }
 
 func (StringCodec) Read(r *Buffer, ptr unsafe.Pointer) error {
 	// ptr is a *string
@@ -44,6 +44,10 @@ func (StringCodec) Schema() Schema {
 	return Schema{
 		Type: "string",
 	}
+}
+
+func (sc StringCodec) Omit(p unsafe.Pointer) bool {
+	return sc.omitEmpty && len(*(*string)(p)) == 0
 }
 
 func (StringCodec) Write(w *Writer, p unsafe.Pointer) error {

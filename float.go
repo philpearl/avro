@@ -6,7 +6,7 @@ import (
 	"unsafe"
 )
 
-type floatCodec[t float32 | float64] struct{}
+type floatCodec[t float32 | float64] struct{ omitEmpty bool }
 
 func (floatCodec[T]) Read(r *Buffer, p unsafe.Pointer) error {
 	// This works for little-endian only (or is it bigendian?)
@@ -42,6 +42,10 @@ func (rc floatCodec[T]) Schema() Schema {
 	panic(fmt.Sprintf("unexpected float size %d", unsafe.Sizeof(T(0))))
 }
 
+func (rc floatCodec[T]) Omit(p unsafe.Pointer) bool {
+	return rc.omitEmpty && *(*T)(p) == 0
+}
+
 func (rc floatCodec[T]) Write(w *Writer, p unsafe.Pointer) error {
 	return fixedCodec{Size: int(unsafe.Sizeof(T(0)))}.Write(w, p)
 }
@@ -70,6 +74,10 @@ func (Float32DoubleCodec) New(r *Buffer) unsafe.Pointer {
 
 func (rc Float32DoubleCodec) Schema() Schema {
 	return Schema{Type: "double"}
+}
+
+func (rc Float32DoubleCodec) Omit(p unsafe.Pointer) bool {
+	return rc.omitEmpty && *(*float32)(p) == 0
 }
 
 func (rc Float32DoubleCodec) Write(w *Writer, p unsafe.Pointer) error {

@@ -5,7 +5,7 @@ import (
 	"unsafe"
 )
 
-type BoolCodec struct{}
+type BoolCodec struct{ omitEmpty bool }
 
 func (BoolCodec) Read(r *Buffer, p unsafe.Pointer) error {
 	b, err := r.ReadByte()
@@ -31,6 +31,10 @@ func (rc BoolCodec) Schema() Schema {
 	return Schema{
 		Type: "boolean",
 	}
+}
+
+func (rc BoolCodec) Omit(p unsafe.Pointer) bool {
+	return rc.omitEmpty && !*(*bool)(p)
 }
 
 func (rc BoolCodec) Write(w *Writer, p unsafe.Pointer) error {

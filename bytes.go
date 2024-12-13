@@ -6,7 +6,7 @@ import (
 	"unsafe"
 )
 
-type BytesCodec struct{}
+type BytesCodec struct{ omitEmpty bool }
 
 func (BytesCodec) Read(r *Buffer, ptr unsafe.Pointer) error {
 	l, err := r.Varint()
@@ -45,6 +45,10 @@ func (rc BytesCodec) Schema() Schema {
 	return Schema{
 		Type: "bytes",
 	}
+}
+
+func (rc BytesCodec) Omit(p unsafe.Pointer) bool {
+	return rc.omitEmpty && len(*(*[]byte)(p)) == 0
 }
 
 func (rc BytesCodec) Write(w *Writer, p unsafe.Pointer) error {

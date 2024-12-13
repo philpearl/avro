@@ -7,7 +7,7 @@ import (
 )
 
 // Int64Codec is an avro codec for int64
-type IntCodec[T int64 | int32 | int16] struct{}
+type IntCodec[T int64 | int32 | int16] struct{ omitEmpty bool }
 
 func (IntCodec[T]) Read(r *Buffer, p unsafe.Pointer) error {
 	i, err := r.Varint()
@@ -57,6 +57,10 @@ func (rc IntCodec[T]) Schema() Schema {
 		return Schema{Type: "int"}
 	}
 	panic(fmt.Sprintf("unexpected int size %d", unsafe.Sizeof(T(0))))
+}
+
+func (rc IntCodec[T]) Omit(p unsafe.Pointer) bool {
+	return rc.omitEmpty && *(*T)(p) == 0
 }
 
 func (rc IntCodec[T]) Write(w *Writer, p unsafe.Pointer) error {

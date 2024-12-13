@@ -16,6 +16,10 @@ type Writer struct {
 	buf []byte
 }
 
+func NewWriter(buf []byte) *Writer {
+	return &Writer{buf: buf}
+}
+
 func (w *Writer) Varint(v int64) {
 	w.buf = binary.AppendVarint(w.buf, v)
 }

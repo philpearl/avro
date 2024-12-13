@@ -106,7 +106,7 @@ func TestBuildCodec(t *testing.T) {
 		},
 	}
 
-	c, err := buildCodec(allSchema, reflect.TypeOf(all{}))
+	c, err := buildCodec(allSchema, reflect.TypeOf(all{}), false)
 	if err != nil {
 		t.Fatal(err)
 	}

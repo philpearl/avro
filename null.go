@@ -25,6 +25,10 @@ func (rc nullCodec) Schema() Schema {
 	}
 }
 
+func (rc nullCodec) Omit(p unsafe.Pointer) bool {
+	return true
+}
+
 func (rc nullCodec) Write(w *Writer, p unsafe.Pointer) error {
 	return nil
 }

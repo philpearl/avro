@@ -31,8 +31,14 @@ type Codec interface {
 	New(r *Buffer) unsafe.Pointer
 
 	// Schema returns the schema for the type that the codec is encoding
+	// TODO: is this at all useful?
 	Schema() Schema
 
+	// Omit returns true if the value that p points to should be omitted from the
+	// output. This is used for optional fields in records.
+	Omit(p unsafe.Pointer) bool
+
 	// Write writes the wire format bytes for the value that p points to to w.
+	// TOOD: do we need the error return?
 	Write(w *Writer, p unsafe.Pointer) error
 }

@@ -42,6 +42,10 @@ func (rc fixedCodec) Schema() Schema {
 	}
 }
 
+func (rc fixedCodec) Omit(p unsafe.Pointer) bool {
+	return false
+}
+
 func (rc fixedCodec) Write(w *Writer, p unsafe.Pointer) error {
 	sh := unsafe.Slice((*byte)(p), rc.Size)
 	w.Write(sh)

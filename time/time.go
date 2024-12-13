@@ -13,9 +13,16 @@ import (
 // RegisterCodecs makes the codecs in this package available to avro
 func RegisterCodecs() {
 	avro.Register(reflect.TypeOf(time.Time{}), buildTimeCodec)
+	avro.RegisterSchema(reflect.TypeFor[time.Time](), avro.Schema{
+		Type: "union",
+		Union: []avro.Schema{
+			{Type: "null"},
+			{Type: "string"},
+		},
+	})
 }
 
-func buildTimeCodec(schema avro.Schema, typ reflect.Type) (avro.Codec, error) {
+func buildTimeCodec(schema avro.Schema, typ reflect.Type, omit bool) (avro.Codec, error) {
 	// If in future we want to decode an integer unix epoc time we can add a
 	// switch here
 	switch schema.Type {
@@ -75,6 +82,11 @@ func (c DateCodec) Schema() avro.Schema {
 	}
 }
 
+func (c DateCodec) Omit(p unsafe.Pointer) bool {
+	t := (*time.Time)(p)
+	return t.IsZero()
+}
+
 func (c DateCodec) Write(w *avro.Writer, p unsafe.Pointer) error {
 	t := *(*time.Time)(p)
 	// TODO: wrangle this into Time.AppendFormat?
@@ -126,6 +138,11 @@ func (c StringCodec) Schema() avro.Schema {
 	}
 }
 
+func (c StringCodec) Omit(p unsafe.Pointer) bool {
+	t := (*time.Time)(p)
+	return t.IsZero()
+}
+
 func (c StringCodec) Write(w *avro.Writer, p unsafe.Pointer) error {
 	t := *(*time.Time)(p)
 	// TODO: wrangle this into Time.AppendFormat?
@@ -163,6 +180,11 @@ func (c LongCodec) Schema() avro.Schema {
 			LogicalType: "timestamp-micros",
 		},
 	}
+}
+
+func (c LongCodec) Omit(p unsafe.Pointer) bool {
+	t := (*time.Time)(p)
+	return t.IsZero()
 }
 
 func (c LongCodec) Write(w *avro.Writer, p unsafe.Pointer) error {
