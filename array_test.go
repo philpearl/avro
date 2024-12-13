@@ -6,6 +6,7 @@ import (
 	"unsafe"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestArrayCodec(t *testing.T) {
@@ -199,5 +200,56 @@ func TestArrayCodecInt(t *testing.T) {
 			}
 		})
 
+	}
+}
+
+func TestArrayCodecRoundTrip(t *testing.T) {
+	tests := []struct {
+		name string
+		data []string
+	}{
+		{
+			name: "empty",
+			data: []string{},
+		},
+		{
+			name: "one",
+			data: []string{"one"},
+		},
+		{
+			name: "two",
+			data: []string{"one", "two"},
+		},
+		{
+			name: "three",
+			data: []string{"one", "two", "three"},
+		},
+	}
+
+	c := arrayCodec{
+		itemCodec: StringCodec{},
+		itemType:  reflect.TypeOf(""),
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			w := NewWriter(nil)
+
+			if err := c.Write(w, unsafe.Pointer(&test.data)); err != nil {
+				t.Fatal(err)
+			}
+
+			var out []string
+			r := NewBuffer(w.Bytes())
+			if err := c.Read(r, unsafe.Pointer(&out)); err != nil {
+				t.Fatal(err)
+			}
+
+			if diff := cmp.Diff(test.data, out, cmpopts.EquateEmpty()); diff != "" {
+				t.Fatalf("output not as expected. %s", diff)
+			}
+		})
 	}
 }

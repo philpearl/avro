@@ -32,6 +32,10 @@ func (w *Writer) Write(val []byte) {
 	w.buf = append(w.buf, val...)
 }
 
+func (w *Writer) Bytes() []byte {
+	return w.buf
+}
+
 // Buffer is a very simple replacement for bytes.Reader that avoids data copies
 type Buffer struct {
 	i   int

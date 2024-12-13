@@ -46,9 +46,6 @@ func schemaForType(typ reflect.Type) (Schema, error) {
 
 	// BigQuery makes every basic type nullable. We'll send null for the zero
 	// value if there's an "omitempty" tag.
-	// TODO: add omitempty support to codecs!
-	// - flag to indicate if the field is omitempty
-	// - interface to check if the field should be omitted (probably zero + omitempty)
 	switch typ.Kind() {
 	case reflect.Bool:
 		return nullableSchema(Schema{Type: "boolean"}), nil
@@ -103,7 +100,7 @@ func schemaForStruct(typ reflect.Type) (Schema, error) {
 			return Schema{}, err
 		}
 		fields = append(fields, SchemaRecordField{
-			Name: field.Name,
+			Name: name,
 			Type: s,
 		})
 	}
@@ -117,15 +114,16 @@ func schemaForStruct(typ reflect.Type) (Schema, error) {
 }
 
 func schemaForArray(typ reflect.Type) (Schema, error) {
-	if typ.Kind() == reflect.Uint8 {
+	elem := typ.Elem()
+	if elem.Kind() == reflect.Uint8 {
 		return Schema{
 			Type: "bytes",
 		}, nil
 	}
 
-	s, err := schemaForType(typ.Elem())
+	s, err := schemaForType(elem)
 	if err != nil {
-		return Schema{}, err
+		return Schema{}, fmt.Errorf("building array schema: %w", err)
 	}
 
 	return Schema{

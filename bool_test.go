@@ -77,3 +77,40 @@ func BenchmarkBoolPointer(b *testing.B) {
 		r.ExtractResourceBank().Close()
 	}
 }
+
+func TestBoolCodecRoundTrip(t *testing.T) {
+	tests := []struct {
+		name string
+		data bool
+	}{
+		{
+			name: "true",
+			data: true,
+		},
+		{
+			name: "false",
+			data: false,
+		},
+	}
+
+	c := BoolCodec{}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			var actual bool
+			w := NewWriter(nil)
+			if err := c.Write(w, unsafe.Pointer(&test.data)); err != nil {
+				t.Fatal(err)
+			}
+			r := NewBuffer(w.Bytes())
+			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
+				t.Fatal(err)
+			}
+			if actual != test.data {
+				t.Fatalf("got %t, expected %t", actual, test.data)
+			}
+		})
+	}
+}
