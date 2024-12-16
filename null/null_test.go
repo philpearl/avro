@@ -78,7 +78,7 @@ func TestNullRoundTrip(t *testing.T) {
 	if err := enc.Encode(mystruct{
 		String: null.StringFrom("String"),
 		Int:    null.IntFrom(42),
-		Bool:   null.BoolFrom(false),
+		Bool:   null.BoolFrom(true),
 		Float:  null.FloatFrom(13.37),
 		Time:   null.TimeFrom(time.Date(1970, 3, 15, 13, 37, 42, 0, time.UTC)),
 	}); err != nil {
@@ -86,6 +86,16 @@ func TestNullRoundTrip(t *testing.T) {
 	}
 
 	if err := enc.Encode(mystruct{}); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := enc.Encode(mystruct{
+		String: null.StringFrom(""),
+		Int:    null.IntFrom(0),
+		Bool:   null.BoolFrom(false),
+		Float:  null.FloatFrom(0.0),
+		Time:   null.TimeFrom(time.Time{}),
+	}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -107,11 +117,18 @@ func TestNullRoundTrip(t *testing.T) {
 		{
 			String: null.StringFrom("String"),
 			Int:    null.IntFrom(42),
-			Bool:   null.BoolFrom(false),
+			Bool:   null.BoolFrom(true),
 			Float:  null.FloatFrom(13.37),
 			Time:   null.TimeFrom(time.Date(1970, 3, 15, 13, 37, 42, 0, time.UTC)),
 		},
 		{},
+		{
+			String: null.StringFrom(""),
+			Int:    null.IntFrom(0),
+			Bool:   null.BoolFrom(false),
+			Float:  null.FloatFrom(0.0),
+			Time:   null.TimeFrom(time.Time{}),
+		},
 	}
 
 	if diff := cmp.Diff(exp, actual); diff != "" {
