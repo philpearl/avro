@@ -113,6 +113,9 @@ func (m *MapCodec) Omit(p unsafe.Pointer) bool {
 }
 
 func (m *MapCodec) Write(w *Writer, p unsafe.Pointer) error {
+	// p is a pointer to a map pointer, but maps are already pointery
+	p = *(*unsafe.Pointer)(p)
+
 	// Start with the count. Note the same ability to use a negative count to
 	// record a block size exists here too.
 	w.Varint(int64(maplen(p)))

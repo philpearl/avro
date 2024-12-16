@@ -100,6 +100,20 @@ func TestUnionOneCodec(t *testing.T) {
 				t.Fatalf("%d bytes unread", r.Len())
 			}
 		})
+		t.Run(test.name+" roundtrip", func(t *testing.T) {
+			w := NewWriter(nil)
+			if err := c.Write(w, unsafe.Pointer(&test.exp)); err != nil {
+				t.Fatal(err)
+			}
+			var actual string
+			r := NewBuffer(w.Bytes())
+			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
+				t.Fatal(err)
+			}
+			if actual != test.exp {
+				t.Fatalf("result %q does not match expected %q", actual, test.exp)
+			}
+		})
 	}
 }
 
@@ -148,6 +162,40 @@ func TestUnionStringCodec(t *testing.T) {
 				t.Fatalf("%d bytes unread", r.Len())
 			}
 		})
+		t.Run(test.name+" roundtrip", func(t *testing.T) {
+			w := NewWriter(nil)
+			if err := c.Write(w, unsafe.Pointer(&test.exp)); err != nil {
+				t.Fatal(err)
+			}
+			var actual string
+			r := NewBuffer(w.Bytes())
+			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
+				t.Fatal(err)
+			}
+			if actual != test.exp {
+				t.Fatalf("result %q does not match expected %q", actual, test.exp)
+			}
+		})
+		t.Run(test.name+" roundtrip omitempty", func(t *testing.T) {
+			c := unionNullString{
+				nonNull: 1,
+				codec:   StringCodec{omitEmpty: true},
+			}
+
+			w := NewWriter(nil)
+			if err := c.Write(w, unsafe.Pointer(&test.exp)); err != nil {
+				t.Fatal(err)
+			}
+			var actual string
+			r := NewBuffer(w.Bytes())
+			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
+				t.Fatal(err)
+			}
+			if actual != test.exp {
+				t.Fatalf("result %q does not match expected %q", actual, test.exp)
+			}
+		})
+
 	}
 }
 

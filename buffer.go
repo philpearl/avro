@@ -36,6 +36,14 @@ func (w *Writer) Bytes() []byte {
 	return w.buf
 }
 
+func (w *Writer) Reset() {
+	w.buf = w.buf[:0]
+}
+
+func (w *Writer) Len() int {
+	return len(w.buf)
+}
+
 // Buffer is a very simple replacement for bytes.Reader that avoids data copies
 type Buffer struct {
 	i   int

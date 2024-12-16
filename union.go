@@ -114,12 +114,18 @@ func (u *unionOneAndNullCodec) Schema() Schema {
 }
 
 func (u *unionOneAndNullCodec) Omit(p unsafe.Pointer) bool {
-	return u.codec.Omit(p)
+	// The union codec itself is never omitted
+	return false
 }
 
 func (u *unionOneAndNullCodec) Write(w *Writer, p unsafe.Pointer) error {
-	// TODO: Need a way to determine if p is null
-	return fmt.Errorf("union codec not implemented!")
+	if u.codec.Omit(p) {
+		// TODO: this assumes the null type is always first.
+		w.Varint(0)
+		return nil
+	}
+	w.Varint(int64(u.nonNull))
+	return u.codec.Write(w, p)
 }
 
 type unionNullString struct {
@@ -176,12 +182,11 @@ func (u *unionNullString) Schema() Schema {
 }
 
 func (u *unionNullString) Omit(p unsafe.Pointer) bool {
-	return u.codec.Omit(p)
+	return false
 }
 
 func (u *unionNullString) Write(w *Writer, p unsafe.Pointer) error {
-	s := *(*string)(p)
-	if s == "" {
+	if u.codec.Omit(p) {
 		w.Varint(0)
 		return nil
 	}

@@ -6,6 +6,7 @@ import (
 	"unsafe"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestRecordCodec(t *testing.T) {
@@ -67,5 +68,74 @@ func TestRecordCodec(t *testing.T) {
 	if buf.Len() != 0 {
 		t.Fatalf("unread data (%d)", buf.Len())
 	}
+}
 
+func TestRecordRoundTrip(t *testing.T) {
+	type mustruct struct {
+		Name  string `json:"name"`
+		Hat   string `json:",omitempty"`
+		V     int
+		Q     float64
+		Bytes []byte
+		La    []int  `json:"la"`
+		W     int32  `json:"w,omitempty"`
+		Z     *int64 `json:"z"`
+		Mmm   map[string]string
+	}
+
+	var zval int64 = 1020202
+
+	tests := []struct {
+		name string
+		data mustruct
+	}{
+		{
+			name: "basic",
+			data: mustruct{
+				Name:  "jim",
+				Hat:   "cat",
+				V:     31,
+				Q:     3.14,
+				Bytes: []byte{1, 2, 3, 4},
+				La:    []int{1, 2, 3, 4},
+				W:     0,
+				Z:     &zval,
+				Mmm:   map[string]string{"foo": "bar", "baz": "qux"},
+			},
+		},
+		{
+			name: "empty",
+			data: mustruct{},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			s, err := SchemaForType(&test.data)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := s.Codec(&test.data)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			buf := NewWriter(nil)
+
+			if err := c.Write(buf, unsafe.Pointer(&test.data)); err != nil {
+				t.Fatal(err)
+			}
+
+			var actual mustruct
+			r := NewBuffer(buf.Bytes())
+			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
+				t.Fatal(err)
+			}
+
+			if diff := cmp.Diff(test.data, actual, cmpopts.EquateEmpty()); diff != "" {
+				t.Fatalf("record differs. %s", diff)
+			}
+		})
+	}
 }

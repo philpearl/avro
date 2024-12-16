@@ -25,14 +25,37 @@ func TestBuildSchema(t *testing.T) {
 						{
 							Name: "aaa",
 							Type: avro.Schema{
-								Type:  "union",
-								Union: []avro.Schema{{Type: "null"}, {Type: "long"}},
+								Type: "long",
 							},
 						},
 					},
 				},
 			},
 		},
+		{
+			name: "int omitempty",
+			in: struct {
+				A int `json:"aaa,omitempty"`
+			}{},
+			exp: avro.Schema{
+				Type: "record",
+				Object: &avro.SchemaObject{
+					Fields: []avro.SchemaRecordField{
+						{
+							Name: "aaa",
+							Type: avro.Schema{
+								Type: "union",
+								Union: []avro.Schema{
+									{Type: "null"},
+									{Type: "long"},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+
 		{
 			name: "int skip unexported",
 			in: struct {
@@ -46,8 +69,7 @@ func TestBuildSchema(t *testing.T) {
 						{
 							Name: "aaa",
 							Type: avro.Schema{
-								Type:  "union",
-								Union: []avro.Schema{{Type: "null"}, {Type: "long"}},
+								Type: "long",
 							},
 						},
 					},
@@ -67,8 +89,7 @@ func TestBuildSchema(t *testing.T) {
 						{
 							Name: "aaa",
 							Type: avro.Schema{
-								Type:  "union",
-								Union: []avro.Schema{{Type: "null"}, {Type: "long"}},
+								Type: "long",
 							},
 						},
 					},
@@ -88,8 +109,7 @@ func TestBuildSchema(t *testing.T) {
 						{
 							Name: "aaa",
 							Type: avro.Schema{
-								Type:  "union",
-								Union: []avro.Schema{{Type: "null"}, {Type: "long"}},
+								Type: "long",
 							},
 						},
 					},
@@ -108,8 +128,7 @@ func TestBuildSchema(t *testing.T) {
 						{
 							Name: "aaa",
 							Type: avro.Schema{
-								Type:  "union",
-								Union: []avro.Schema{{Type: "null"}, {Type: "boolean"}},
+								Type: "boolean",
 							},
 						},
 					},
@@ -128,8 +147,7 @@ func TestBuildSchema(t *testing.T) {
 						{
 							Name: "aaa",
 							Type: avro.Schema{
-								Type:  "union",
-								Union: []avro.Schema{{Type: "null"}, {Type: "double"}},
+								Type: "double",
 							},
 						},
 					},
@@ -148,8 +166,7 @@ func TestBuildSchema(t *testing.T) {
 						{
 							Name: "aaa",
 							Type: avro.Schema{
-								Type:  "union",
-								Union: []avro.Schema{{Type: "null"}, {Type: "double"}},
+								Type: "double",
 							},
 						},
 					},
@@ -168,8 +185,7 @@ func TestBuildSchema(t *testing.T) {
 						{
 							Name: "aaa",
 							Type: avro.Schema{
-								Type:  "union",
-								Union: []avro.Schema{{Type: "null"}, {Type: "string"}},
+								Type: "string",
 							},
 						},
 					},
@@ -209,11 +225,8 @@ func TestBuildSchema(t *testing.T) {
 							Type: avro.Schema{
 								Type: "map",
 								Object: &avro.SchemaObject{
-									// Note I'm really not sure if this is sensible or not...
-									// We could just use the bare type here, not wrap with nullable.
 									Values: avro.Schema{
-										Type:  "union",
-										Union: []avro.Schema{{Type: "null"}, {Type: "long"}},
+										Type: "long",
 									},
 								},
 							},
@@ -262,8 +275,7 @@ func TestBuildSchema(t *testing.T) {
 										{
 											Name: "bbb",
 											Type: avro.Schema{
-												Type:  "union",
-												Union: []avro.Schema{{Type: "null"}, {Type: "long"}},
+												Type: "long",
 											},
 										},
 									},
@@ -298,8 +310,7 @@ func TestBuildSchema(t *testing.T) {
 												{
 													Name: "bbb",
 													Type: avro.Schema{
-														Type:  "union",
-														Union: []avro.Schema{{Type: "null"}, {Type: "long"}},
+														Type: "long",
 													},
 												},
 											},
@@ -336,8 +347,7 @@ func TestBuildSchema(t *testing.T) {
 												{
 													Name: "bbb",
 													Type: avro.Schema{
-														Type:  "union",
-														Union: []avro.Schema{{Type: "null"}, {Type: "long"}},
+														Type: "long",
 													},
 												},
 											},

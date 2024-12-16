@@ -206,3 +206,135 @@ func TestInt16Codec(t *testing.T) {
 		})
 	}
 }
+
+func TestInt64RoundTrip(t *testing.T) {
+	tests := []struct {
+		name string
+		in   int64
+	}{
+		{
+			name: "zero",
+			in:   0,
+		},
+		{
+			name: "something",
+			in:   23,
+		},
+		{
+			name: "-something",
+			in:   -23,
+		},
+		{
+			name: "max",
+			in:   math.MaxInt64,
+		},
+		{
+			name: "min",
+			in:   math.MinInt64,
+		},
+	}
+	var c Int64Codec
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			buf := NewWriter(nil)
+			if err := c.Write(buf, unsafe.Pointer(&test.in)); err != nil {
+				t.Fatal(err)
+			}
+			var actual int64
+			if err := c.Read(NewBuffer(buf.Bytes()), unsafe.Pointer(&actual)); err != nil {
+				t.Fatal(err)
+			}
+			if actual != test.in {
+				t.Fatalf("%d does not match expected %d", actual, test.in)
+			}
+		})
+	}
+}
+
+func TestInt32RoundTrip(t *testing.T) {
+	tests := []struct {
+		name string
+		in   int32
+	}{
+		{
+			name: "zero",
+			in:   0,
+		},
+		{
+			name: "something",
+			in:   23,
+		},
+		{
+			name: "-something",
+			in:   -23,
+		},
+		{
+			name: "max",
+			in:   math.MaxInt32,
+		},
+		{
+			name: "min",
+			in:   math.MinInt32,
+		},
+	}
+	var c Int64Codec
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			buf := NewWriter(nil)
+			if err := c.Write(buf, unsafe.Pointer(&test.in)); err != nil {
+				t.Fatal(err)
+			}
+			var actual int32
+			if err := c.Read(NewBuffer(buf.Bytes()), unsafe.Pointer(&actual)); err != nil {
+				t.Fatal(err)
+			}
+			if actual != test.in {
+				t.Fatalf("%d does not match expected %d", actual, test.in)
+			}
+		})
+	}
+}
+
+func TestInt16RoundTrip(t *testing.T) {
+	tests := []struct {
+		name string
+		in   int16
+	}{
+		{
+			name: "zero",
+			in:   0,
+		},
+		{
+			name: "something",
+			in:   23,
+		},
+		{
+			name: "-something",
+			in:   -23,
+		},
+		{
+			name: "max",
+			in:   math.MaxInt16,
+		},
+		{
+			name: "min",
+			in:   math.MinInt16,
+		},
+	}
+	var c Int64Codec
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			buf := NewWriter(nil)
+			if err := c.Write(buf, unsafe.Pointer(&test.in)); err != nil {
+				t.Fatal(err)
+			}
+			var actual int16
+			if err := c.Read(NewBuffer(buf.Bytes()), unsafe.Pointer(&actual)); err != nil {
+				t.Fatal(err)
+			}
+			if actual != test.in {
+				t.Fatalf("%d does not match expected %d", actual, test.in)
+			}
+		})
+	}
+}

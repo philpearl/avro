@@ -5,6 +5,7 @@ import (
 	"unsafe"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestBytesCodec(t *testing.T) {
@@ -52,5 +53,45 @@ func TestBytesCodec(t *testing.T) {
 			}
 		})
 
+	}
+}
+
+func TestBytesRoundTrip(t *testing.T) {
+	tests := []struct {
+		name string
+		in   []byte
+	}{
+		{
+			name: "empty",
+			in:   []byte{},
+		},
+		{
+			name: "zero",
+			in:   []byte{0},
+		},
+
+		{
+			name: "hello",
+			in:   []byte("hello"),
+		},
+	}
+
+	var c BytesCodec
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			buf := NewWriter(nil)
+			if err := c.Write(buf, unsafe.Pointer(&test.in)); err != nil {
+				t.Fatal(err)
+			}
+
+			var actual []byte
+			if err := c.Read(NewBuffer(buf.Bytes()), unsafe.Pointer(&actual)); err != nil {
+				t.Fatal(err)
+			}
+
+			if diff := cmp.Diff(test.in, actual, cmpopts.EquateEmpty()); diff != "" {
+				t.Fatalf("output not as expected. %s", diff)
+			}
+		})
 	}
 }

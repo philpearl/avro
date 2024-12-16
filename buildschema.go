@@ -48,13 +48,13 @@ func schemaForType(typ reflect.Type) (Schema, error) {
 	// value if there's an "omitempty" tag.
 	switch typ.Kind() {
 	case reflect.Bool:
-		return nullableSchema(Schema{Type: "boolean"}), nil
+		return Schema{Type: "boolean"}, nil
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return nullableSchema(Schema{Type: "long"}), nil
+		return Schema{Type: "long"}, nil
 	case reflect.Float32, reflect.Float64:
-		return nullableSchema(Schema{Type: "double"}), nil
+		return Schema{Type: "double"}, nil
 	case reflect.String:
-		return nullableSchema(Schema{Type: "string"}), nil
+		return Schema{Type: "string"}, nil
 	case reflect.Struct:
 		return schemaForStruct(typ)
 	case reflect.Array, reflect.Slice:
@@ -99,6 +99,11 @@ func schemaForStruct(typ reflect.Type) (Schema, error) {
 		if err != nil {
 			return Schema{}, err
 		}
+
+		if omitEmpty(field) && s.Type != "union" {
+			s = nullableSchema(s)
+		}
+
 		fields = append(fields, SchemaRecordField{
 			Name: name,
 			Type: s,

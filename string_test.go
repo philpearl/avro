@@ -52,3 +52,46 @@ func TestStringCodec(t *testing.T) {
 
 	}
 }
+
+func TestStringRoundTrip(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+	}{
+		{
+			name: "empty",
+			in:   "",
+		},
+		{
+			name: "hello",
+			in:   "hello",
+		},
+		{
+			name: "unicode",
+			in:   "こんにちは",
+		},
+
+		{
+			name: "emoji",
+			in:   "👋",
+		},
+	}
+
+	c := StringCodec{}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			w := NewWriter(nil)
+			if err := c.Write(w, unsafe.Pointer(&test.in)); err != nil {
+				t.Fatal(err)
+			}
+			var actual string
+			r := NewBuffer(w.Bytes())
+			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
+				t.Fatal(err)
+			}
+			if test.in != actual {
+				t.Fatalf("%q does not match expected %q", actual, test.in)
+			}
+		})
+	}
+}

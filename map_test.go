@@ -129,5 +129,23 @@ func TestMapCodec(t *testing.T) {
 				t.Fatalf("unread bytes. %d", r.Len())
 			}
 		})
+
+		t.Run(test.name+" roundtrip", func(t *testing.T) {
+			typ := reflect.TypeOf(test.exp)
+			c := MapCodec{rtype: typ, valueCodec: BytesCodec{}}
+			w := NewWriter(nil)
+
+			if err := c.Write(w, (unsafe.Pointer)(&test.exp)); err != nil {
+				t.Fatal(err)
+			}
+			var actual map[string][]byte
+			r := NewBuffer(w.Bytes())
+			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
+				t.Fatal(err)
+			}
+			if diff := cmp.Diff(test.exp, actual); diff != "" {
+				t.Fatal(diff)
+			}
+		})
 	}
 }
