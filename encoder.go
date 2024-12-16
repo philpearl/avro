@@ -19,7 +19,10 @@ type Encoder[T any] struct {
 	count           int
 }
 
-// NewEncoder returns a new Encoder.
+// NewEncoder returns a new Encoder. Data will be written to w in Avro format,
+// including a schema header. The data will be compressed using the specified
+// compression algorithm. Data is written in blocks of at least approxBlockSize
+// bytes. A block is written when it reaches that size, or when Flush is called.
 func NewEncoderFor[T any](w io.Writer, compression Compression, approxBlockSize int) (*Encoder[T], error) {
 	var t T
 
@@ -58,11 +61,12 @@ func NewEncoderFor[T any](w io.Writer, compression Compression, approxBlockSize 
 	}, nil
 }
 
+// Encode writes a new row to the Avro file.
 func (e *Encoder[T]) Encode(v T) error {
 	e.codec.Write(e.wb, unsafe.Pointer(&v))
 	e.count++
 
-	if e.wb.Len() > e.approxBlockSize {
+	if e.wb.Len() >= e.approxBlockSize {
 		if err := e.Flush(); err != nil {
 			return fmt.Errorf("flushing: %w", err)
 		}
@@ -71,6 +75,8 @@ func (e *Encoder[T]) Encode(v T) error {
 	return nil
 }
 
+// Flush writes any buffered data to the underlying writer. It completes the
+// current block. It must be called before closing the underlying file.
 func (e *Encoder[T]) Flush() error {
 	if e.count > 0 {
 		if err := e.fw.WriteBlock(e.w, e.count, e.wb.Bytes()); err != nil {

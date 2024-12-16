@@ -30,6 +30,7 @@ func (s Schema) Codec(out interface{}) (Codec, error) {
 	return buildCodec(s, typ, false)
 }
 
+// SchemaFromString decodes a JSON string into a Schema
 func SchemaFromString(in string) (Schema, error) {
 	var schema Schema
 	if err := jsoniter.UnmarshalFromString(in, &schema); err != nil {

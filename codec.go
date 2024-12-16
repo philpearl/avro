@@ -1,11 +1,13 @@
-// Package avro is an AVRO decoder aimed principly at decoding AVRO output from
-// Google's Big Query. It decodes directly into Go structs, and uses json tags
-// as naming hints.
+// Package avro is an AVRO encoder and decoder aimed principly at decoding AVRO
+// output from Google's Big Query. It encodes directly from Go structs and
+// decodes directly into Go structs, and uses json tags as naming hints.
 //
-// The primary interface to the package is ReadFile. This reads an AVRO file,
+// The primary decoding interface is ReadFile. This reads an AVRO file,
 // combining the schema in the file with type information from the struct passed
 // via the out parameter to decode the records. It then passes an instance of a
 // struct of type out to the callback cb for each record in the file.
+//
+// # Use Encoder to encode a file
 //
 // You can implement custom decoders for your own types and register them via
 // the Register function. github.com/phil/avro/null is an example of custom
@@ -16,7 +18,7 @@ import (
 	"unsafe"
 )
 
-// Codec defines a decoder for a type. It may eventually define an encoder too.
+// Codec defines an encoder / decoder for a type.
 // You can write custom Codecs for types. See Register and CodecBuildFunc
 type Codec interface {
 	// Read reads the wire format bytes for the current field from r and sets up

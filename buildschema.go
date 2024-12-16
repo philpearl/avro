@@ -11,7 +11,9 @@ var (
 	schemaRegistry      = make(map[reflect.Type]Schema)
 )
 
-// Register is used to set a custom codec builder for a type
+// Call RegisterSchema to indicate what schema should be used for a given type.
+// Use this to register the schema to use for a type for which you write a
+// custom codec.
 func RegisterSchema(typ reflect.Type, s Schema) {
 	schemaRegistryMutex.Lock()
 	defer schemaRegistryMutex.Unlock()
