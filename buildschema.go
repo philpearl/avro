@@ -115,6 +115,7 @@ func schemaForStruct(typ reflect.Type) (Schema, error) {
 	return Schema{
 		Type: "record",
 		Object: &SchemaObject{
+			Name:   typ.Name(),
 			Fields: fields,
 		},
 	}, nil
