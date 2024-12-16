@@ -40,12 +40,6 @@ func (StringCodec) New(r *ReadBuf) unsafe.Pointer {
 	return r.Alloc(stringType)
 }
 
-func (StringCodec) Schema() Schema {
-	return Schema{
-		Type: "string",
-	}
-}
-
 func (sc StringCodec) Omit(p unsafe.Pointer) bool {
 	return sc.omitEmpty && len(*(*string)(p)) == 0
 }

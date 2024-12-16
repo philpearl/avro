@@ -19,12 +19,6 @@ func (nullCodec) New(r *ReadBuf) unsafe.Pointer {
 	return nil
 }
 
-func (rc nullCodec) Schema() Schema {
-	return Schema{
-		Type: "null",
-	}
-}
-
 func (rc nullCodec) Omit(p unsafe.Pointer) bool {
 	return true
 }

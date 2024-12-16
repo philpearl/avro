@@ -32,16 +32,6 @@ func (floatCodec[T]) New(r *ReadBuf) unsafe.Pointer {
 	panic(fmt.Sprintf("unexpected float size %d", unsafe.Sizeof(T(0))))
 }
 
-func (rc floatCodec[T]) Schema() Schema {
-	switch unsafe.Sizeof(T(0)) {
-	case 4:
-		return Schema{Type: "float"}
-	case 8:
-		return Schema{Type: "double"}
-	}
-	panic(fmt.Sprintf("unexpected float size %d", unsafe.Sizeof(T(0))))
-}
-
 func (rc floatCodec[T]) Omit(p unsafe.Pointer) bool {
 	return rc.omitEmpty && *(*T)(p) == 0
 }
@@ -70,10 +60,6 @@ func (c Float32DoubleCodec) Read(r *ReadBuf, p unsafe.Pointer) error {
 
 func (Float32DoubleCodec) New(r *ReadBuf) unsafe.Pointer {
 	return r.Alloc(floatType)
-}
-
-func (rc Float32DoubleCodec) Schema() Schema {
-	return Schema{Type: "double"}
 }
 
 func (rc Float32DoubleCodec) Omit(p unsafe.Pointer) bool {

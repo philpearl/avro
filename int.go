@@ -46,19 +46,6 @@ func (IntCodec[T]) New(r *ReadBuf) unsafe.Pointer {
 	panic(fmt.Sprintf("unexpected int size %d", unsafe.Sizeof(T(0))))
 }
 
-func (rc IntCodec[T]) Schema() Schema {
-	// TODO: or do we always want to use long?? What does BQ do?
-	switch unsafe.Sizeof(T(0)) {
-	case 8:
-		return Schema{Type: "long"}
-	case 4:
-		return Schema{Type: "int"}
-	case 2:
-		return Schema{Type: "int"}
-	}
-	panic(fmt.Sprintf("unexpected int size %d", unsafe.Sizeof(T(0))))
-}
-
 func (rc IntCodec[T]) Omit(p unsafe.Pointer) bool {
 	return rc.omitEmpty && *(*T)(p) == 0
 }

@@ -73,15 +73,6 @@ func (c DateCodec) New(r *avro.ReadBuf) unsafe.Pointer {
 	return r.Alloc(timeType)
 }
 
-func (c DateCodec) Schema() avro.Schema {
-	return avro.Schema{
-		Type: "int",
-		Object: &avro.SchemaObject{
-			LogicalType: "date",
-		},
-	}
-}
-
 func (c DateCodec) Omit(p unsafe.Pointer) bool {
 	t := (*time.Time)(p)
 	return t.IsZero()
@@ -132,12 +123,6 @@ func (c StringCodec) New(r *avro.ReadBuf) unsafe.Pointer {
 	return r.Alloc(timeType)
 }
 
-func (c StringCodec) Schema() avro.Schema {
-	return avro.Schema{
-		Type: "string",
-	}
-}
-
 func (c StringCodec) Omit(p unsafe.Pointer) bool {
 	t := (*time.Time)(p)
 	return t.IsZero()
@@ -171,15 +156,6 @@ func (c LongCodec) Read(r *avro.ReadBuf, p unsafe.Pointer) error {
 // New create a pointer to a new time.Time
 func (c LongCodec) New(r *avro.ReadBuf) unsafe.Pointer {
 	return r.Alloc(timeType)
-}
-
-func (c LongCodec) Schema() avro.Schema {
-	return avro.Schema{
-		Type: "long",
-		Object: &avro.SchemaObject{
-			LogicalType: "timestamp-micros",
-		},
-	}
 }
 
 func (c LongCodec) Omit(p unsafe.Pointer) bool {

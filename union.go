@@ -39,17 +39,6 @@ func (u *unionCodec) New(r *ReadBuf) unsafe.Pointer {
 	return nil
 }
 
-func (u *unionCodec) Schema() Schema {
-	us := make([]Schema, len(u.codecs))
-	for i, c := range u.codecs {
-		us[i] = c.Schema()
-	}
-	return Schema{
-		Type:  "union",
-		Union: us,
-	}
-}
-
 func (u *unionCodec) Omit(p unsafe.Pointer) bool {
 	return false
 }
@@ -101,16 +90,6 @@ func (u *unionOneAndNullCodec) Skip(r *ReadBuf) error {
 
 func (u *unionOneAndNullCodec) New(r *ReadBuf) unsafe.Pointer {
 	return nil
-}
-
-func (u *unionOneAndNullCodec) Schema() Schema {
-	return Schema{
-		Type: "union",
-		Union: []Schema{
-			{Type: "null"},
-			u.codec.Schema(),
-		},
-	}
 }
 
 func (u *unionOneAndNullCodec) Omit(p unsafe.Pointer) bool {
@@ -169,16 +148,6 @@ func (u *unionNullString) Skip(r *ReadBuf) error {
 
 func (u *unionNullString) New(r *ReadBuf) unsafe.Pointer {
 	return nil
-}
-
-func (u *unionNullString) Schema() Schema {
-	return Schema{
-		Type: "union",
-		Union: []Schema{
-			{Type: "null"},
-			{Type: "string"},
-		},
-	}
 }
 
 func (u *unionNullString) Omit(p unsafe.Pointer) bool {

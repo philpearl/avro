@@ -35,13 +35,6 @@ func (f fixedCodec) New(r *ReadBuf) unsafe.Pointer {
 	return unsafe_NewArray(unpackEFace(reflect.TypeOf(byte(0))).data, f.Size)
 }
 
-func (rc fixedCodec) Schema() Schema {
-	return Schema{
-		Type:   "fixed",
-		Object: &SchemaObject{Size: rc.Size},
-	}
-}
-
 func (rc fixedCodec) Omit(p unsafe.Pointer) bool {
 	return false
 }

@@ -41,12 +41,6 @@ func (BytesCodec) New(r *ReadBuf) unsafe.Pointer {
 	return r.Alloc(bytesType)
 }
 
-func (rc BytesCodec) Schema() Schema {
-	return Schema{
-		Type: "bytes",
-	}
-}
-
 func (rc BytesCodec) Omit(p unsafe.Pointer) bool {
 	return rc.omitEmpty && len(*(*[]byte)(p)) == 0
 }

@@ -49,23 +49,6 @@ func (rc *recordCodec) New(r *ReadBuf) unsafe.Pointer {
 	return r.Alloc(rc.rtype)
 }
 
-func (rc *recordCodec) Schema() Schema {
-	fields := make([]SchemaRecordField, len(rc.fields))
-	for i, rf := range rc.fields {
-		fields[i] = SchemaRecordField{
-			Name: rf.name,
-			Type: rf.codec.Schema(),
-		}
-	}
-
-	return Schema{
-		Type: "record",
-		Object: &SchemaObject{
-			Fields: fields,
-		},
-	}
-}
-
 func (rc *recordCodec) Omit(p unsafe.Pointer) bool {
 	return false
 }

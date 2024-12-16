@@ -99,15 +99,6 @@ func (m *MapCodec) New(r *ReadBuf) unsafe.Pointer {
 	return unsafe.Pointer(reflect.MakeMap(m.rtype).Pointer())
 }
 
-func (m *MapCodec) Schema() Schema {
-	return Schema{
-		Type: "map",
-		Object: &SchemaObject{
-			Values: m.valueCodec.Schema(),
-		},
-	}
-}
-
 func (m *MapCodec) Omit(p unsafe.Pointer) bool {
 	return m.omitEmpty && maplen(p) == 0
 }

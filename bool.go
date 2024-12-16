@@ -27,12 +27,6 @@ func (BoolCodec) New(r *ReadBuf) unsafe.Pointer {
 	return r.Alloc(boolType)
 }
 
-func (rc BoolCodec) Schema() Schema {
-	return Schema{
-		Type: "boolean",
-	}
-}
-
 func (rc BoolCodec) Omit(p unsafe.Pointer) bool {
 	return rc.omitEmpty && !*(*bool)(p)
 }

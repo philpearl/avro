@@ -23,16 +23,6 @@ func (c *PointerCodec) New(r *ReadBuf) unsafe.Pointer {
 	return r.Alloc(pointerType)
 }
 
-func (c *PointerCodec) Schema() Schema {
-	return Schema{
-		Type: "union",
-		Union: []Schema{
-			{Type: "null"},
-			c.Codec.Schema(),
-		},
-	}
-}
-
 func (c *PointerCodec) Omit(p unsafe.Pointer) bool {
 	return *(*unsafe.Pointer)(p) == nil
 }

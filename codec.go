@@ -30,10 +30,6 @@ type Codec interface {
 	// used if the enclosing record has a field that is a pointer to this type
 	New(r *ReadBuf) unsafe.Pointer
 
-	// Schema returns the schema for the type that the codec is encoding
-	// TODO: is this at all useful?
-	Schema() Schema
-
 	// Omit returns true if the value that p points to should be omitted from the
 	// output. This is used for optional fields in records.
 	Omit(p unsafe.Pointer) bool

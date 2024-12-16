@@ -106,15 +106,6 @@ func (rc *arrayCodec) resizeSlice(in sliceHeader, len int) sliceHeader {
 	return out
 }
 
-func (rc *arrayCodec) Schema() Schema {
-	return Schema{
-		Type: "array",
-		Object: &SchemaObject{
-			Items: rc.itemCodec.Schema(),
-		},
-	}
-}
-
 func (rc *arrayCodec) Omit(p unsafe.Pointer) bool {
 	return rc.omitEmpty && len(*(*[]byte)(p)) == 0
 }
