@@ -9,7 +9,7 @@ type unionCodec struct {
 	codecs []Codec
 }
 
-func (u *unionCodec) Read(r *Buffer, p unsafe.Pointer) error {
+func (u *unionCodec) Read(r *ReadBuf, p unsafe.Pointer) error {
 	index, err := r.Varint()
 	if err != nil {
 		return fmt.Errorf("failed reading union selector. %w", err)
@@ -22,7 +22,7 @@ func (u *unionCodec) Read(r *Buffer, p unsafe.Pointer) error {
 	return c.Read(r, p)
 }
 
-func (u *unionCodec) Skip(r *Buffer) error {
+func (u *unionCodec) Skip(r *ReadBuf) error {
 	index, err := r.Varint()
 	if err != nil {
 		return fmt.Errorf("failed reading union selector. %w", err)
@@ -35,7 +35,7 @@ func (u *unionCodec) Skip(r *Buffer) error {
 	return c.Skip(r)
 }
 
-func (u *unionCodec) New(r *Buffer) unsafe.Pointer {
+func (u *unionCodec) New(r *ReadBuf) unsafe.Pointer {
 	return nil
 }
 
@@ -54,7 +54,7 @@ func (u *unionCodec) Omit(p unsafe.Pointer) bool {
 	return false
 }
 
-func (u *unionCodec) Write(w *Writer, p unsafe.Pointer) error {
+func (u *unionCodec) Write(w *WriteBuf, p unsafe.Pointer) error {
 	// TODO: Need a way to determine which type!
 	return fmt.Errorf("union codec not implemented!")
 }
@@ -64,7 +64,7 @@ type unionOneAndNullCodec struct {
 	nonNull uint8
 }
 
-func (u *unionOneAndNullCodec) Read(r *Buffer, p unsafe.Pointer) error {
+func (u *unionOneAndNullCodec) Read(r *ReadBuf, p unsafe.Pointer) error {
 	// index must be less than 1 byte in this case.
 	// The result should be 2 or 4
 	index, err := r.ReadByte()
@@ -82,7 +82,7 @@ func (u *unionOneAndNullCodec) Read(r *Buffer, p unsafe.Pointer) error {
 	return nil
 }
 
-func (u *unionOneAndNullCodec) Skip(r *Buffer) error {
+func (u *unionOneAndNullCodec) Skip(r *ReadBuf) error {
 	// index must be less than 1 byte in this case
 	index, err := r.ReadByte()
 	if err != nil {
@@ -99,7 +99,7 @@ func (u *unionOneAndNullCodec) Skip(r *Buffer) error {
 	return nil
 }
 
-func (u *unionOneAndNullCodec) New(r *Buffer) unsafe.Pointer {
+func (u *unionOneAndNullCodec) New(r *ReadBuf) unsafe.Pointer {
 	return nil
 }
 
@@ -118,7 +118,7 @@ func (u *unionOneAndNullCodec) Omit(p unsafe.Pointer) bool {
 	return false
 }
 
-func (u *unionOneAndNullCodec) Write(w *Writer, p unsafe.Pointer) error {
+func (u *unionOneAndNullCodec) Write(w *WriteBuf, p unsafe.Pointer) error {
 	if u.codec.Omit(p) {
 		// TODO: this assumes the null type is always first.
 		w.Varint(0)
@@ -133,7 +133,7 @@ type unionNullString struct {
 	nonNull byte
 }
 
-func (u *unionNullString) Read(r *Buffer, p unsafe.Pointer) error {
+func (u *unionNullString) Read(r *ReadBuf, p unsafe.Pointer) error {
 	// index must be less than 1 byte in this case
 	index, err := r.ReadByte()
 	if err != nil {
@@ -150,7 +150,7 @@ func (u *unionNullString) Read(r *Buffer, p unsafe.Pointer) error {
 	return nil
 }
 
-func (u *unionNullString) Skip(r *Buffer) error {
+func (u *unionNullString) Skip(r *ReadBuf) error {
 	// index must be less than 1 byte in this case
 	index, err := r.ReadByte()
 	if err != nil {
@@ -167,7 +167,7 @@ func (u *unionNullString) Skip(r *Buffer) error {
 	return nil
 }
 
-func (u *unionNullString) New(r *Buffer) unsafe.Pointer {
+func (u *unionNullString) New(r *ReadBuf) unsafe.Pointer {
 	return nil
 }
 
@@ -185,7 +185,7 @@ func (u *unionNullString) Omit(p unsafe.Pointer) bool {
 	return false
 }
 
-func (u *unionNullString) Write(w *Writer, p unsafe.Pointer) error {
+func (u *unionNullString) Write(w *WriteBuf, p unsafe.Pointer) error {
 	if u.codec.Omit(p) {
 		w.Varint(0)
 		return nil

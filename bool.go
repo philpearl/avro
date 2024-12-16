@@ -7,7 +7,7 @@ import (
 
 type BoolCodec struct{ omitEmpty bool }
 
-func (BoolCodec) Read(r *Buffer, p unsafe.Pointer) error {
+func (BoolCodec) Read(r *ReadBuf, p unsafe.Pointer) error {
 	b, err := r.ReadByte()
 	if err != nil {
 		return err
@@ -17,13 +17,13 @@ func (BoolCodec) Read(r *Buffer, p unsafe.Pointer) error {
 	return nil
 }
 
-func (BoolCodec) Skip(r *Buffer) error {
+func (BoolCodec) Skip(r *ReadBuf) error {
 	return skip(r, 1)
 }
 
 var boolType = reflect.TypeOf(false)
 
-func (BoolCodec) New(r *Buffer) unsafe.Pointer {
+func (BoolCodec) New(r *ReadBuf) unsafe.Pointer {
 	return r.Alloc(boolType)
 }
 
@@ -37,7 +37,7 @@ func (rc BoolCodec) Omit(p unsafe.Pointer) bool {
 	return rc.omitEmpty && !*(*bool)(p)
 }
 
-func (rc BoolCodec) Write(w *Writer, p unsafe.Pointer) error {
+func (rc BoolCodec) Write(w *WriteBuf, p unsafe.Pointer) error {
 	if *(*bool)(p) {
 		w.Byte(1)
 	} else {

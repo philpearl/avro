@@ -12,7 +12,7 @@ type arrayCodec struct {
 	omitEmpty bool
 }
 
-func (rc *arrayCodec) Read(r *Buffer, p unsafe.Pointer) error {
+func (rc *arrayCodec) Read(r *ReadBuf, p unsafe.Pointer) error {
 	sh := (*sliceHeader)(p)
 
 	// Blocks can be repeated
@@ -49,7 +49,7 @@ func (rc *arrayCodec) Read(r *Buffer, p unsafe.Pointer) error {
 	return nil
 }
 
-func (rc *arrayCodec) Skip(r *Buffer) error {
+func (rc *arrayCodec) Skip(r *ReadBuf) error {
 	for {
 		count, err := r.Varint()
 		if err != nil {
@@ -83,7 +83,7 @@ func (rc *arrayCodec) Skip(r *Buffer) error {
 
 var sliceType = reflect.TypeOf(sliceHeader{})
 
-func (rc *arrayCodec) New(r *Buffer) unsafe.Pointer {
+func (rc *arrayCodec) New(r *ReadBuf) unsafe.Pointer {
 	return r.Alloc(sliceType)
 }
 
@@ -119,7 +119,7 @@ func (rc *arrayCodec) Omit(p unsafe.Pointer) bool {
 	return rc.omitEmpty && len(*(*[]byte)(p)) == 0
 }
 
-func (rc *arrayCodec) Write(w *Writer, p unsafe.Pointer) error {
+func (rc *arrayCodec) Write(w *WriteBuf, p unsafe.Pointer) error {
 	sh := (*sliceHeader)(p)
 
 	// TODO: you can write negative counts, which are then followed by the size

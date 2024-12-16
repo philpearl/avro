@@ -9,55 +9,53 @@ import (
 	"unsafe"
 )
 
-// TODO: rename Buffer to Reader
-
-// Write is a simple, append only, replacement for bytes.Buffer.
-type Writer struct {
+// WriteBuf is a simple, append only, replacement for bytes.Buffer.
+type WriteBuf struct {
 	buf []byte
 }
 
-func NewWriter(buf []byte) *Writer {
-	return &Writer{buf: buf}
+func NewWriteBuf(buf []byte) *WriteBuf {
+	return &WriteBuf{buf: buf}
 }
 
-func (w *Writer) Varint(v int64) {
+func (w *WriteBuf) Varint(v int64) {
 	w.buf = binary.AppendVarint(w.buf, v)
 }
 
-func (w *Writer) Byte(val byte) {
+func (w *WriteBuf) Byte(val byte) {
 	w.buf = append(w.buf, val)
 }
 
-func (w *Writer) Write(val []byte) {
+func (w *WriteBuf) Write(val []byte) {
 	w.buf = append(w.buf, val...)
 }
 
-func (w *Writer) Bytes() []byte {
+func (w *WriteBuf) Bytes() []byte {
 	return w.buf
 }
 
-func (w *Writer) Reset() {
+func (w *WriteBuf) Reset() {
 	w.buf = w.buf[:0]
 }
 
-func (w *Writer) Len() int {
+func (w *WriteBuf) Len() int {
 	return len(w.buf)
 }
 
-// Buffer is a very simple replacement for bytes.Reader that avoids data copies
-type Buffer struct {
+// ReadBuf is a very simple replacement for bytes.Reader that avoids data copies
+type ReadBuf struct {
 	i   int
 	buf []byte
 	rb  *ResourceBank
 }
 
 // NewBuffer returns a new Buffer.
-func NewBuffer(data []byte) *Buffer {
-	return &Buffer{buf: data, rb: newResourceBank()}
+func NewBuffer(data []byte) *ReadBuf {
+	return &ReadBuf{buf: data, rb: newResourceBank()}
 }
 
 // Reset allows you to reuse a buffer with a new set of data
-func (d *Buffer) Reset(data []byte) {
+func (d *ReadBuf) Reset(data []byte) {
 	d.i = 0
 	d.buf = data
 	if d.rb == nil {
@@ -67,7 +65,7 @@ func (d *Buffer) Reset(data []byte) {
 
 // ExtractResourceBank extracts the current ResourceBank from the buffer, and replaces
 // it with a fresh one.
-func (d *Buffer) ExtractResourceBank() *ResourceBank {
+func (d *ReadBuf) ExtractResourceBank() *ResourceBank {
 	rb := d.rb
 	d.rb = newResourceBank()
 	return rb
@@ -76,7 +74,7 @@ func (d *Buffer) ExtractResourceBank() *ResourceBank {
 // Next returns the next l bytes from the buffer. It does so without copying, so
 // if you hold onto the data you risk holding onto a lot of data. If l exceeds
 // the remaining space Next returns io.EOF
-func (d *Buffer) Next(l int) ([]byte, error) {
+func (d *ReadBuf) Next(l int) ([]byte, error) {
 	if l+d.i > len(d.buf) {
 		return nil, io.EOF
 	}
@@ -87,7 +85,7 @@ func (d *Buffer) Next(l int) ([]byte, error) {
 // NextAsString returns the next l bytes from the buffer as a string. The string
 // data is held in a StringBank and will be valid only until someone calls Close
 // on that bank. If l exceeds the remaining space NextAsString returns io.EOF
-func (d *Buffer) NextAsString(l int) (string, error) {
+func (d *ReadBuf) NextAsString(l int) (string, error) {
 	if l+d.i > len(d.buf) {
 		return "", io.EOF
 	}
@@ -96,13 +94,13 @@ func (d *Buffer) NextAsString(l int) (string, error) {
 }
 
 // Alloc allocates a pointer to the type rtyp. The data is allocated in a ResourceBank
-func (d *Buffer) Alloc(rtyp reflect.Type) unsafe.Pointer {
+func (d *ReadBuf) Alloc(rtyp reflect.Type) unsafe.Pointer {
 	return d.rb.Alloc(rtyp)
 }
 
 // ReadByte returns the next byte from the buffer. If no bytes are left it
 // returns io.EOF
-func (d *Buffer) ReadByte() (byte, error) {
+func (d *ReadBuf) ReadByte() (byte, error) {
 	if d.i >= len(d.buf) {
 		return 0, io.EOF
 	}
@@ -111,19 +109,19 @@ func (d *Buffer) ReadByte() (byte, error) {
 }
 
 // Len returns the length of unread data in the buffer
-func (d *Buffer) Len() int {
+func (d *ReadBuf) Len() int {
 	return len(d.buf) - d.i
 }
 
 // Varint reads a varint from the buffer
-func (d *Buffer) Varint() (int64, error) {
+func (d *ReadBuf) Varint() (int64, error) {
 	v, err := d.uvarint() // ok to continue in presence of error
 	return int64(v>>1) ^ -int64(v&1), err
 }
 
 var errOverflow = errors.New("varint overflows a 64-bit integer")
 
-func (d *Buffer) uvarint() (uint64, error) {
+func (d *ReadBuf) uvarint() (uint64, error) {
 	var x uint64
 	var s uint
 	for i := 0; ; i++ {

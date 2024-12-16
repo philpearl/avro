@@ -100,7 +100,7 @@ func TestBoolCodecRoundTrip(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			var actual bool
-			w := NewWriter(nil)
+			w := NewWriteBuf(nil)
 			if err := c.Write(w, unsafe.Pointer(&test.data)); err != nil {
 				t.Fatal(err)
 			}

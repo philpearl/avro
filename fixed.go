@@ -15,7 +15,7 @@ type sliceHeader struct {
 	Cap  int
 }
 
-func (f fixedCodec) Read(r *Buffer, p unsafe.Pointer) error {
+func (f fixedCodec) Read(r *ReadBuf, p unsafe.Pointer) error {
 	// p points to an array of size f.Size
 	sh := sliceHeader{
 		Data: p,
@@ -27,11 +27,11 @@ func (f fixedCodec) Read(r *Buffer, p unsafe.Pointer) error {
 	return err
 }
 
-func (f fixedCodec) Skip(r *Buffer) error {
+func (f fixedCodec) Skip(r *ReadBuf) error {
 	return skip(r, int64(f.Size))
 }
 
-func (f fixedCodec) New(r *Buffer) unsafe.Pointer {
+func (f fixedCodec) New(r *ReadBuf) unsafe.Pointer {
 	return unsafe_NewArray(unpackEFace(reflect.TypeOf(byte(0))).data, f.Size)
 }
 
@@ -46,7 +46,7 @@ func (rc fixedCodec) Omit(p unsafe.Pointer) bool {
 	return false
 }
 
-func (rc fixedCodec) Write(w *Writer, p unsafe.Pointer) error {
+func (rc fixedCodec) Write(w *WriteBuf, p unsafe.Pointer) error {
 	sh := unsafe.Slice((*byte)(p), rc.Size)
 	w.Write(sh)
 	return nil

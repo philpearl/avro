@@ -15,7 +15,7 @@ type Encoder[T any] struct {
 	w      io.Writer
 
 	approxBlockSize int
-	wb              *Writer
+	wb              *WriteBuf
 	count           int
 }
 
@@ -54,7 +54,7 @@ func NewEncoderFor[T any](w io.Writer, compression Compression, approxBlockSize 
 		w:      w,
 
 		approxBlockSize: approxBlockSize,
-		wb:              NewWriter(make([]byte, 0, approxBlockSize)),
+		wb:              NewWriteBuf(make([]byte, 0, approxBlockSize)),
 	}, nil
 }
 

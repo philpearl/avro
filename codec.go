@@ -23,12 +23,12 @@ type Codec interface {
 	// the value that p points to. The codec can assume that the memory for an
 	// instance of the type for which the codec is registered is present behind
 	// p
-	Read(r *Buffer, p unsafe.Pointer) error
+	Read(r *ReadBuf, p unsafe.Pointer) error
 	// Skip advances the reader over the bytes for the current field.
-	Skip(r *Buffer) error
+	Skip(r *ReadBuf) error
 	// New creates a pointer to the type for which the codec is registered. It is
 	// used if the enclosing record has a field that is a pointer to this type
-	New(r *Buffer) unsafe.Pointer
+	New(r *ReadBuf) unsafe.Pointer
 
 	// Schema returns the schema for the type that the codec is encoding
 	// TODO: is this at all useful?
@@ -40,5 +40,5 @@ type Codec interface {
 
 	// Write writes the wire format bytes for the value that p points to to w.
 	// TOOD: do we need the error return?
-	Write(w *Writer, p unsafe.Pointer) error
+	Write(w *WriteBuf, p unsafe.Pointer) error
 }

@@ -9,7 +9,7 @@ import (
 // StringCodec is a decoder for strings
 type StringCodec struct{ omitEmpty bool }
 
-func (StringCodec) Read(r *Buffer, ptr unsafe.Pointer) error {
+func (StringCodec) Read(r *ReadBuf, ptr unsafe.Pointer) error {
 	// ptr is a *string
 	l, err := r.Varint()
 	if err != nil {
@@ -26,7 +26,7 @@ func (StringCodec) Read(r *Buffer, ptr unsafe.Pointer) error {
 	return nil
 }
 
-func (StringCodec) Skip(r *Buffer) error {
+func (StringCodec) Skip(r *ReadBuf) error {
 	l, err := r.Varint()
 	if err != nil {
 		return fmt.Errorf("failed to read length of string. %w", err)
@@ -36,7 +36,7 @@ func (StringCodec) Skip(r *Buffer) error {
 
 var stringType = reflect.TypeOf("")
 
-func (StringCodec) New(r *Buffer) unsafe.Pointer {
+func (StringCodec) New(r *ReadBuf) unsafe.Pointer {
 	return r.Alloc(stringType)
 }
 
@@ -50,7 +50,7 @@ func (sc StringCodec) Omit(p unsafe.Pointer) bool {
 	return sc.omitEmpty && len(*(*string)(p)) == 0
 }
 
-func (StringCodec) Write(w *Writer, p unsafe.Pointer) error {
+func (StringCodec) Write(w *WriteBuf, p unsafe.Pointer) error {
 	s := *(*string)(p)
 	w.Varint(int64(len(s)))
 	w.Write([]byte(s))

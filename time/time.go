@@ -58,7 +58,7 @@ func buildTimeCodec(schema avro.Schema, typ reflect.Type, omit bool) (avro.Codec
 // days since 1 Jan 1970
 type DateCodec struct{ avro.Int32Codec }
 
-func (c DateCodec) Read(r *avro.Buffer, p unsafe.Pointer) error {
+func (c DateCodec) Read(r *avro.ReadBuf, p unsafe.Pointer) error {
 	var l int64
 	if err := c.Int32Codec.Read(r, unsafe.Pointer(&l)); err != nil {
 		return err
@@ -69,7 +69,7 @@ func (c DateCodec) Read(r *avro.Buffer, p unsafe.Pointer) error {
 }
 
 // New create a pointer to a new time.Time
-func (c DateCodec) New(r *avro.Buffer) unsafe.Pointer {
+func (c DateCodec) New(r *avro.ReadBuf) unsafe.Pointer {
 	return r.Alloc(timeType)
 }
 
@@ -87,7 +87,7 @@ func (c DateCodec) Omit(p unsafe.Pointer) bool {
 	return t.IsZero()
 }
 
-func (c DateCodec) Write(w *avro.Writer, p unsafe.Pointer) error {
+func (c DateCodec) Write(w *avro.WriteBuf, p unsafe.Pointer) error {
 	t := *(*time.Time)(p)
 	// TODO: wrangle this into Time.AppendFormat?
 	day := int32(t.Unix() / (60 * 60 * 24))
@@ -98,7 +98,7 @@ func (c DateCodec) Write(w *avro.Writer, p unsafe.Pointer) error {
 // StringCodec is a decoder from an AVRO string with RFC3339 encoding to a time.Time
 type StringCodec struct{ avro.StringCodec }
 
-func (c StringCodec) Read(r *avro.Buffer, p unsafe.Pointer) error {
+func (c StringCodec) Read(r *avro.ReadBuf, p unsafe.Pointer) error {
 	// Can we do better than using the underlying string codec?
 	l, err := r.Varint()
 	if err != nil {
@@ -128,7 +128,7 @@ func (c StringCodec) Read(r *avro.Buffer, p unsafe.Pointer) error {
 var timeType = reflect.TypeOf(time.Time{})
 
 // New create a pointer to a new time.Time
-func (c StringCodec) New(r *avro.Buffer) unsafe.Pointer {
+func (c StringCodec) New(r *avro.ReadBuf) unsafe.Pointer {
 	return r.Alloc(timeType)
 }
 
@@ -143,7 +143,7 @@ func (c StringCodec) Omit(p unsafe.Pointer) bool {
 	return t.IsZero()
 }
 
-func (c StringCodec) Write(w *avro.Writer, p unsafe.Pointer) error {
+func (c StringCodec) Write(w *avro.WriteBuf, p unsafe.Pointer) error {
 	t := *(*time.Time)(p)
 	// TODO: wrangle this into Time.AppendFormat?
 	s := t.Format(time.RFC3339Nano)
@@ -158,7 +158,7 @@ type LongCodec struct {
 	mult int64
 }
 
-func (c LongCodec) Read(r *avro.Buffer, p unsafe.Pointer) error {
+func (c LongCodec) Read(r *avro.ReadBuf, p unsafe.Pointer) error {
 	var l int64
 	if err := c.Int64Codec.Read(r, unsafe.Pointer(&l)); err != nil {
 		return err
@@ -169,7 +169,7 @@ func (c LongCodec) Read(r *avro.Buffer, p unsafe.Pointer) error {
 }
 
 // New create a pointer to a new time.Time
-func (c LongCodec) New(r *avro.Buffer) unsafe.Pointer {
+func (c LongCodec) New(r *avro.ReadBuf) unsafe.Pointer {
 	return r.Alloc(timeType)
 }
 
@@ -187,7 +187,7 @@ func (c LongCodec) Omit(p unsafe.Pointer) bool {
 	return t.IsZero()
 }
 
-func (c LongCodec) Write(w *avro.Writer, p unsafe.Pointer) error {
+func (c LongCodec) Write(w *avro.WriteBuf, p unsafe.Pointer) error {
 	t := *(*time.Time)(p)
 	l := t.UnixMicro()
 

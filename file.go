@@ -157,7 +157,7 @@ func ReadFile(r Reader, out interface{}, cb func(val unsafe.Pointer, rb *Resourc
 	}
 
 	var compressed []byte
-	br := &Buffer{}
+	br := &ReadBuf{}
 	for {
 		count, err := binary.ReadVarint(r)
 		if err != nil {

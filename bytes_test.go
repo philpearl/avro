@@ -79,7 +79,7 @@ func TestBytesRoundTrip(t *testing.T) {
 	var c BytesCodec
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			buf := NewWriter(nil)
+			buf := NewWriteBuf(nil)
 			if err := c.Write(buf, unsafe.Pointer(&test.in)); err != nil {
 				t.Fatal(err)
 			}

@@ -121,7 +121,7 @@ func TestRecordRoundTrip(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			buf := NewWriter(nil)
+			buf := NewWriteBuf(nil)
 
 			if err := c.Write(buf, unsafe.Pointer(&test.data)); err != nil {
 				t.Fatal(err)

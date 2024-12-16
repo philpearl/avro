@@ -21,7 +21,7 @@ type recordCodec struct {
 	fields []recordCodecField
 }
 
-func (rc *recordCodec) Read(r *Buffer, p unsafe.Pointer) error {
+func (rc *recordCodec) Read(r *ReadBuf, p unsafe.Pointer) error {
 	for i, f := range rc.fields {
 		if f.offset == math.MaxUint64 {
 			if err := f.codec.Skip(r); err != nil {
@@ -36,7 +36,7 @@ func (rc *recordCodec) Read(r *Buffer, p unsafe.Pointer) error {
 	return nil
 }
 
-func (rc *recordCodec) Skip(r *Buffer) error {
+func (rc *recordCodec) Skip(r *ReadBuf) error {
 	for i, f := range rc.fields {
 		if err := f.codec.Skip(r); err != nil {
 			return fmt.Errorf("failed to skip field %d %q of record. %w", i, f.name, err)
@@ -45,7 +45,7 @@ func (rc *recordCodec) Skip(r *Buffer) error {
 	return nil
 }
 
-func (rc *recordCodec) New(r *Buffer) unsafe.Pointer {
+func (rc *recordCodec) New(r *ReadBuf) unsafe.Pointer {
 	return r.Alloc(rc.rtype)
 }
 
@@ -70,7 +70,7 @@ func (rc *recordCodec) Omit(p unsafe.Pointer) bool {
 	return false
 }
 
-func (rc *recordCodec) Write(w *Writer, p unsafe.Pointer) error {
+func (rc *recordCodec) Write(w *WriteBuf, p unsafe.Pointer) error {
 	for i, rf := range rc.fields {
 		fp := unsafe.Add(p, rf.offset)
 		if err := rf.codec.Write(w, fp); err != nil {

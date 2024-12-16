@@ -101,7 +101,7 @@ func TestUnionOneCodec(t *testing.T) {
 			}
 		})
 		t.Run(test.name+" roundtrip", func(t *testing.T) {
-			w := NewWriter(nil)
+			w := NewWriteBuf(nil)
 			if err := c.Write(w, unsafe.Pointer(&test.exp)); err != nil {
 				t.Fatal(err)
 			}
@@ -163,7 +163,7 @@ func TestUnionStringCodec(t *testing.T) {
 			}
 		})
 		t.Run(test.name+" roundtrip", func(t *testing.T) {
-			w := NewWriter(nil)
+			w := NewWriteBuf(nil)
 			if err := c.Write(w, unsafe.Pointer(&test.exp)); err != nil {
 				t.Fatal(err)
 			}
@@ -182,7 +182,7 @@ func TestUnionStringCodec(t *testing.T) {
 				codec:   StringCodec{omitEmpty: true},
 			}
 
-			w := NewWriter(nil)
+			w := NewWriteBuf(nil)
 			if err := c.Write(w, unsafe.Pointer(&test.exp)); err != nil {
 				t.Fatal(err)
 			}

@@ -13,7 +13,7 @@ type MapCodec struct {
 	omitEmpty  bool
 }
 
-func (m *MapCodec) Read(r *Buffer, p unsafe.Pointer) error {
+func (m *MapCodec) Read(r *ReadBuf, p unsafe.Pointer) error {
 	// p is a pointer to a map pointer
 	if *(*unsafe.Pointer)(p) == nil {
 		*(*unsafe.Pointer)(p) = m.New(r)
@@ -58,7 +58,7 @@ func (m *MapCodec) Read(r *Buffer, p unsafe.Pointer) error {
 	return nil
 }
 
-func (m *MapCodec) Skip(r *Buffer) error {
+func (m *MapCodec) Skip(r *ReadBuf) error {
 	for {
 		count, err := r.Varint()
 		if err != nil {
@@ -95,7 +95,7 @@ func (m *MapCodec) Skip(r *Buffer) error {
 	return nil
 }
 
-func (m *MapCodec) New(r *Buffer) unsafe.Pointer {
+func (m *MapCodec) New(r *ReadBuf) unsafe.Pointer {
 	return unsafe.Pointer(reflect.MakeMap(m.rtype).Pointer())
 }
 
@@ -112,7 +112,7 @@ func (m *MapCodec) Omit(p unsafe.Pointer) bool {
 	return m.omitEmpty && maplen(p) == 0
 }
 
-func (m *MapCodec) Write(w *Writer, p unsafe.Pointer) error {
+func (m *MapCodec) Write(w *WriteBuf, p unsafe.Pointer) error {
 	// p is a pointer to a map pointer, but maps are already pointery
 	p = *(*unsafe.Pointer)(p)
 

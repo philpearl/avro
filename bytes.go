@@ -8,7 +8,7 @@ import (
 
 type BytesCodec struct{ omitEmpty bool }
 
-func (BytesCodec) Read(r *Buffer, ptr unsafe.Pointer) error {
+func (BytesCodec) Read(r *ReadBuf, ptr unsafe.Pointer) error {
 	l, err := r.Varint()
 	if err != nil {
 		return fmt.Errorf("failed to read length of bytes. %w", err)
@@ -27,7 +27,7 @@ func (BytesCodec) Read(r *Buffer, ptr unsafe.Pointer) error {
 	return nil
 }
 
-func (BytesCodec) Skip(r *Buffer) error {
+func (BytesCodec) Skip(r *ReadBuf) error {
 	l, err := r.Varint()
 	if err != nil {
 		return fmt.Errorf("failed to read length of bytes. %w", err)
@@ -37,7 +37,7 @@ func (BytesCodec) Skip(r *Buffer) error {
 
 var bytesType = reflect.TypeOf([]byte{})
 
-func (BytesCodec) New(r *Buffer) unsafe.Pointer {
+func (BytesCodec) New(r *ReadBuf) unsafe.Pointer {
 	return r.Alloc(bytesType)
 }
 
@@ -51,7 +51,7 @@ func (rc BytesCodec) Omit(p unsafe.Pointer) bool {
 	return rc.omitEmpty && len(*(*[]byte)(p)) == 0
 }
 
-func (rc BytesCodec) Write(w *Writer, p unsafe.Pointer) error {
+func (rc BytesCodec) Write(w *WriteBuf, p unsafe.Pointer) error {
 	sh := *(*[]byte)(p)
 
 	w.Varint(int64(len(sh)))

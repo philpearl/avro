@@ -181,7 +181,7 @@ func TestFloatRoundTrip(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			w := NewWriter(nil)
+			w := NewWriteBuf(nil)
 			var c FloatCodec
 			if err := c.Write(w, unsafe.Pointer(&test.val)); err != nil {
 				t.Fatal(err)
@@ -229,7 +229,7 @@ func TestDoubleRoundTrip(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			w := NewWriter(nil)
+			w := NewWriteBuf(nil)
 			var c DoubleCodec
 			if err := c.Write(w, unsafe.Pointer(&test.val)); err != nil {
 				t.Fatal(err)
@@ -277,7 +277,7 @@ func TestFloat32DoubleRoundTrip(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			w := NewWriter(nil)
+			w := NewWriteBuf(nil)
 			var c Float32DoubleCodec
 			if err := c.Write(w, unsafe.Pointer(&test.val)); err != nil {
 				t.Fatal(err)

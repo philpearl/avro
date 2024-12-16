@@ -9,7 +9,7 @@ import (
 // Int64Codec is an avro codec for int64
 type IntCodec[T int64 | int32 | int16] struct{ omitEmpty bool }
 
-func (IntCodec[T]) Read(r *Buffer, p unsafe.Pointer) error {
+func (IntCodec[T]) Read(r *ReadBuf, p unsafe.Pointer) error {
 	i, err := r.Varint()
 
 	if i > int64(uint64(1)<<(unsafe.Sizeof(T(0))*8-1)-1) ||
@@ -22,7 +22,7 @@ func (IntCodec[T]) Read(r *Buffer, p unsafe.Pointer) error {
 }
 
 // Skip skips over an int
-func (IntCodec[T]) Skip(r *Buffer) error {
+func (IntCodec[T]) Skip(r *ReadBuf) error {
 	_, err := r.Varint()
 	return err
 }
@@ -34,7 +34,7 @@ var (
 )
 
 // New creates a pointer to a new int64
-func (IntCodec[T]) New(r *Buffer) unsafe.Pointer {
+func (IntCodec[T]) New(r *ReadBuf) unsafe.Pointer {
 	switch unsafe.Sizeof(T(0)) {
 	case 8:
 		return r.Alloc(int64Type)
@@ -63,7 +63,7 @@ func (rc IntCodec[T]) Omit(p unsafe.Pointer) bool {
 	return rc.omitEmpty && *(*T)(p) == 0
 }
 
-func (rc IntCodec[T]) Write(w *Writer, p unsafe.Pointer) error {
+func (rc IntCodec[T]) Write(w *WriteBuf, p unsafe.Pointer) error {
 	w.Varint(int64(*(*T)(p)))
 	return nil
 }

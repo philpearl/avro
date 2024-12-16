@@ -236,7 +236,7 @@ func TestInt64RoundTrip(t *testing.T) {
 	var c Int64Codec
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			buf := NewWriter(nil)
+			buf := NewWriteBuf(nil)
 			if err := c.Write(buf, unsafe.Pointer(&test.in)); err != nil {
 				t.Fatal(err)
 			}
@@ -280,7 +280,7 @@ func TestInt32RoundTrip(t *testing.T) {
 	var c Int64Codec
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			buf := NewWriter(nil)
+			buf := NewWriteBuf(nil)
 			if err := c.Write(buf, unsafe.Pointer(&test.in)); err != nil {
 				t.Fatal(err)
 			}
@@ -324,7 +324,7 @@ func TestInt16RoundTrip(t *testing.T) {
 	var c Int64Codec
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			buf := NewWriter(nil)
+			buf := NewWriteBuf(nil)
 			if err := c.Write(buf, unsafe.Pointer(&test.in)); err != nil {
 				t.Fatal(err)
 			}

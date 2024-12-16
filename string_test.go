@@ -80,7 +80,7 @@ func TestStringRoundTrip(t *testing.T) {
 	c := StringCodec{}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			w := NewWriter(nil)
+			w := NewWriteBuf(nil)
 			if err := c.Write(w, unsafe.Pointer(&test.in)); err != nil {
 				t.Fatal(err)
 			}

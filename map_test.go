@@ -133,7 +133,7 @@ func TestMapCodec(t *testing.T) {
 		t.Run(test.name+" roundtrip", func(t *testing.T) {
 			typ := reflect.TypeOf(test.exp)
 			c := MapCodec{rtype: typ, valueCodec: BytesCodec{}}
-			w := NewWriter(nil)
+			w := NewWriteBuf(nil)
 
 			if err := c.Write(w, (unsafe.Pointer)(&test.exp)); err != nil {
 				t.Fatal(err)

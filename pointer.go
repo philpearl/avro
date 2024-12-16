@@ -9,7 +9,7 @@ type PointerCodec struct {
 	Codec
 }
 
-func (c *PointerCodec) Read(r *Buffer, p unsafe.Pointer) error {
+func (c *PointerCodec) Read(r *ReadBuf, p unsafe.Pointer) error {
 	pp := (*unsafe.Pointer)(p)
 	if *pp == nil {
 		*pp = c.Codec.New(r)
@@ -19,7 +19,7 @@ func (c *PointerCodec) Read(r *Buffer, p unsafe.Pointer) error {
 
 var pointerType = reflect.TypeOf(unsafe.Pointer(nil))
 
-func (c *PointerCodec) New(r *Buffer) unsafe.Pointer {
+func (c *PointerCodec) New(r *ReadBuf) unsafe.Pointer {
 	return r.Alloc(pointerType)
 }
 
@@ -37,7 +37,7 @@ func (c *PointerCodec) Omit(p unsafe.Pointer) bool {
 	return *(*unsafe.Pointer)(p) == nil
 }
 
-func (c *PointerCodec) Write(w *Writer, p unsafe.Pointer) error {
+func (c *PointerCodec) Write(w *WriteBuf, p unsafe.Pointer) error {
 	// Note this codec will normally be wrapped by a union codec, so we don't
 	// need to worry about writing the union selector.
 	pp := *(*unsafe.Pointer)(p)
