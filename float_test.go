@@ -183,9 +183,7 @@ func TestFloatRoundTrip(t *testing.T) {
 			t.Parallel()
 			w := NewWriteBuf(nil)
 			var c FloatCodec
-			if err := c.Write(w, unsafe.Pointer(&test.val)); err != nil {
-				t.Fatal(err)
-			}
+			c.Write(w, unsafe.Pointer(&test.val))
 			r := NewBuffer(w.Bytes())
 			var actual float32
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
@@ -231,9 +229,7 @@ func TestDoubleRoundTrip(t *testing.T) {
 			t.Parallel()
 			w := NewWriteBuf(nil)
 			var c DoubleCodec
-			if err := c.Write(w, unsafe.Pointer(&test.val)); err != nil {
-				t.Fatal(err)
-			}
+			c.Write(w, unsafe.Pointer(&test.val))
 			r := NewBuffer(w.Bytes())
 			var actual float64
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
@@ -279,9 +275,7 @@ func TestFloat32DoubleRoundTrip(t *testing.T) {
 			t.Parallel()
 			w := NewWriteBuf(nil)
 			var c Float32DoubleCodec
-			if err := c.Write(w, unsafe.Pointer(&test.val)); err != nil {
-				t.Fatal(err)
-			}
+			c.Write(w, unsafe.Pointer(&test.val))
 			r := NewBuffer(w.Bytes())
 			var actual float32
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {

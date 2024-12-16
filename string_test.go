@@ -81,9 +81,7 @@ func TestStringRoundTrip(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			w := NewWriteBuf(nil)
-			if err := c.Write(w, unsafe.Pointer(&test.in)); err != nil {
-				t.Fatal(err)
-			}
+			c.Write(w, unsafe.Pointer(&test.in))
 			var actual string
 			r := NewBuffer(w.Bytes())
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {

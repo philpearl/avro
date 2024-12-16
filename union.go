@@ -43,9 +43,9 @@ func (u *unionCodec) Omit(p unsafe.Pointer) bool {
 	return false
 }
 
-func (u *unionCodec) Write(w *WriteBuf, p unsafe.Pointer) error {
+func (u *unionCodec) Write(w *WriteBuf, p unsafe.Pointer) {
 	// TODO: Need a way to determine which type!
-	return fmt.Errorf("union codec not implemented!")
+	panic("union codec not implemented!")
 }
 
 type unionOneAndNullCodec struct {
@@ -97,14 +97,14 @@ func (u *unionOneAndNullCodec) Omit(p unsafe.Pointer) bool {
 	return false
 }
 
-func (u *unionOneAndNullCodec) Write(w *WriteBuf, p unsafe.Pointer) error {
+func (u *unionOneAndNullCodec) Write(w *WriteBuf, p unsafe.Pointer) {
 	if u.codec.Omit(p) {
 		// TODO: this assumes the null type is always first.
 		w.Varint(0)
-		return nil
+		return
 	}
 	w.Varint(int64(u.nonNull))
-	return u.codec.Write(w, p)
+	u.codec.Write(w, p)
 }
 
 type unionNullString struct {
@@ -154,14 +154,11 @@ func (u *unionNullString) Omit(p unsafe.Pointer) bool {
 	return false
 }
 
-func (u *unionNullString) Write(w *WriteBuf, p unsafe.Pointer) error {
+func (u *unionNullString) Write(w *WriteBuf, p unsafe.Pointer) {
 	if u.codec.Omit(p) {
 		w.Varint(0)
-		return nil
 	}
 
 	w.Varint(1)
 	u.codec.Write(w, p)
-
-	return nil
 }

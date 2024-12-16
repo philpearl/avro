@@ -103,7 +103,7 @@ func (m *MapCodec) Omit(p unsafe.Pointer) bool {
 	return m.omitEmpty && maplen(p) == 0
 }
 
-func (m *MapCodec) Write(w *WriteBuf, p unsafe.Pointer) error {
+func (m *MapCodec) Write(w *WriteBuf, p unsafe.Pointer) {
 	// p is a pointer to a map pointer, but maps are already pointery
 	p = *(*unsafe.Pointer)(p)
 
@@ -124,18 +124,12 @@ func (m *MapCodec) Write(w *WriteBuf, p unsafe.Pointer) error {
 		}
 		v := mapiterelem(iter)
 
-		if err := sc.Write(w, k); err != nil {
-			return fmt.Errorf("writing key: %w", err)
-		}
-
-		if err := m.valueCodec.Write(w, v); err != nil {
-			return fmt.Errorf("writing value: %w", err)
-		}
+		sc.Write(w, k)
+		m.valueCodec.Write(w, v)
 
 		mapiternext(iter)
 	}
 
 	// like arrays, theoretically there can be multiple blocks so we need to write a zero count to say there's no more.
 	w.Varint(0)
-	return nil
 }

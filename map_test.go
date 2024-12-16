@@ -135,9 +135,7 @@ func TestMapCodec(t *testing.T) {
 			c := MapCodec{rtype: typ, valueCodec: BytesCodec{}}
 			w := NewWriteBuf(nil)
 
-			if err := c.Write(w, (unsafe.Pointer)(&test.exp)); err != nil {
-				t.Fatal(err)
-			}
+			c.Write(w, (unsafe.Pointer)(&test.exp))
 			var actual map[string][]byte
 			r := NewBuffer(w.Bytes())
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {

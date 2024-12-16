@@ -69,11 +69,11 @@ func (c nullIntCodec) Omit(p unsafe.Pointer) bool {
 	return !ni.Valid
 }
 
-func (c nullIntCodec) Write(w *avro.WriteBuf, p unsafe.Pointer) error {
+func (c nullIntCodec) Write(w *avro.WriteBuf, p unsafe.Pointer) {
 	// I think we'll expect this codec to always be wrapped by a null union
 	// codec, so checking for empty would be done elsewhere.
 	ni := *(*null.Int)(p)
-	return c.Int64Codec.Write(w, unsafe.Pointer(&ni.Int64))
+	c.Int64Codec.Write(w, unsafe.Pointer(&ni.Int64))
 }
 
 func buildNullBoolCodec(schema avro.Schema, typ reflect.Type, omit bool) (avro.Codec, error) {
@@ -104,11 +104,11 @@ func (c nullBoolCodec) Omit(p unsafe.Pointer) bool {
 	return !ni.Valid
 }
 
-func (c nullBoolCodec) Write(w *avro.WriteBuf, p unsafe.Pointer) error {
+func (c nullBoolCodec) Write(w *avro.WriteBuf, p unsafe.Pointer) {
 	// I think we'll expect this codec to always be wrapped by a null union
 	// codec, so checking for empty would be done elsewhere.
 	ni := *(*null.Bool)(p)
-	return c.BoolCodec.Write(w, unsafe.Pointer(&ni.Bool))
+	c.BoolCodec.Write(w, unsafe.Pointer(&ni.Bool))
 }
 
 func buildNullFloatCodec(schema avro.Schema, typ reflect.Type, omit bool) (avro.Codec, error) {
@@ -144,11 +144,11 @@ func (c nullDoubleCodec) New(r *avro.ReadBuf) unsafe.Pointer {
 	return r.Alloc(floatType)
 }
 
-func (c nullDoubleCodec) Write(w *avro.WriteBuf, p unsafe.Pointer) error {
+func (c nullDoubleCodec) Write(w *avro.WriteBuf, p unsafe.Pointer) {
 	// I think we'll expect this codec to always be wrapped by a null union
 	// codec, so checking for empty would be done elsewhere.
 	ni := *(*null.Float)(p)
-	return c.DoubleCodec.Write(w, unsafe.Pointer(&ni.Float64))
+	c.DoubleCodec.Write(w, unsafe.Pointer(&ni.Float64))
 }
 
 type nullFloatCodec struct {
@@ -175,11 +175,11 @@ func (c nullFloatCodec) Omit(p unsafe.Pointer) bool {
 	return !ni.Valid
 }
 
-func (c nullFloatCodec) Write(w *avro.WriteBuf, p unsafe.Pointer) error {
+func (c nullFloatCodec) Write(w *avro.WriteBuf, p unsafe.Pointer) {
 	// I think we'll expect this codec to always be wrapped by a null union
 	// codec, so checking for empty would be done elsewhere.
 	ni := *(*null.Float)(p)
-	return c.FloatCodec.Write(w, unsafe.Pointer(&ni.Float64))
+	c.FloatCodec.Write(w, unsafe.Pointer(&ni.Float64))
 }
 
 func buildNullStringCodec(schema avro.Schema, typ reflect.Type, omit bool) (avro.Codec, error) {
@@ -210,11 +210,11 @@ func (c nullStringCodec) Omit(p unsafe.Pointer) bool {
 	return !ni.Valid
 }
 
-func (c nullStringCodec) Write(w *avro.WriteBuf, p unsafe.Pointer) error {
+func (c nullStringCodec) Write(w *avro.WriteBuf, p unsafe.Pointer) {
 	// I think we'll expect this codec to always be wrapped by a null union
 	// codec, so checking for empty would be done elsewhere.
 	ni := *(*null.String)(p)
-	return c.StringCodec.Write(w, unsafe.Pointer(&ni.String))
+	c.StringCodec.Write(w, unsafe.Pointer(&ni.String))
 }
 
 func buildNullTimeCodec(schema avro.Schema, typ reflect.Type, omit bool) (avro.Codec, error) {
@@ -245,9 +245,9 @@ func (c nullTimeCodec) Omit(p unsafe.Pointer) bool {
 	return !ni.Valid
 }
 
-func (c nullTimeCodec) Write(w *avro.WriteBuf, p unsafe.Pointer) error {
+func (c nullTimeCodec) Write(w *avro.WriteBuf, p unsafe.Pointer) {
 	// I think we'll expect this codec to always be wrapped by a null union
 	// codec, so checking for empty would be done elsewhere.
 	ni := *(*null.Time)(p)
-	return c.StringCodec.Write(w, unsafe.Pointer(&ni.Time))
+	c.StringCodec.Write(w, unsafe.Pointer(&ni.Time))
 }

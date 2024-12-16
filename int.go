@@ -50,9 +50,8 @@ func (rc IntCodec[T]) Omit(p unsafe.Pointer) bool {
 	return rc.omitEmpty && *(*T)(p) == 0
 }
 
-func (rc IntCodec[T]) Write(w *WriteBuf, p unsafe.Pointer) error {
+func (rc IntCodec[T]) Write(w *WriteBuf, p unsafe.Pointer) {
 	w.Varint(int64(*(*T)(p)))
-	return nil
 }
 
 type (

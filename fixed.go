@@ -39,8 +39,7 @@ func (rc fixedCodec) Omit(p unsafe.Pointer) bool {
 	return false
 }
 
-func (rc fixedCodec) Write(w *WriteBuf, p unsafe.Pointer) error {
+func (rc fixedCodec) Write(w *WriteBuf, p unsafe.Pointer) {
 	sh := unsafe.Slice((*byte)(p), rc.Size)
 	w.Write(sh)
-	return nil
 }

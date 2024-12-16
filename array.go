@@ -110,22 +110,18 @@ func (rc *arrayCodec) Omit(p unsafe.Pointer) bool {
 	return rc.omitEmpty && len(*(*[]byte)(p)) == 0
 }
 
-func (rc *arrayCodec) Write(w *WriteBuf, p unsafe.Pointer) error {
+func (rc *arrayCodec) Write(w *WriteBuf, p unsafe.Pointer) {
 	sh := (*sliceHeader)(p)
 
 	// TODO: you can write negative counts, which are then followed by the size
 	// of the block, then the data. That makes it easier to skip over data. TBD if we want to do that
 	w.Varint(int64(sh.Len))
 	for i := 0; i < sh.Len; i++ {
-		cursor := unsafe.Pointer(uintptr(sh.Data) + uintptr(i)*rc.itemType.Size())
-		if err := rc.itemCodec.Write(w, cursor); err != nil {
-			return fmt.Errorf("failed to write array entry %d. %w", i, err)
-		}
+		cursor := unsafe.Add(sh.Data, uintptr(i)*rc.itemType.Size())
+		rc.itemCodec.Write(w, cursor)
 	}
 
 	// Write a zero count to indicate the end of the array. This does appear to
 	// be necessary as you can write multiple blocks.
 	w.Varint(0)
-
-	return nil
 }

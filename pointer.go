@@ -27,12 +27,12 @@ func (c *PointerCodec) Omit(p unsafe.Pointer) bool {
 	return *(*unsafe.Pointer)(p) == nil
 }
 
-func (c *PointerCodec) Write(w *WriteBuf, p unsafe.Pointer) error {
+func (c *PointerCodec) Write(w *WriteBuf, p unsafe.Pointer) {
 	// Note this codec will normally be wrapped by a union codec, so we don't
 	// need to worry about writing the union selector.
 	pp := *(*unsafe.Pointer)(p)
 	if pp == nil {
-		return nil
+		return
 	}
-	return c.Codec.Write(w, pp)
+	c.Codec.Write(w, pp)
 }

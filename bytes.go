@@ -45,10 +45,9 @@ func (rc BytesCodec) Omit(p unsafe.Pointer) bool {
 	return rc.omitEmpty && len(*(*[]byte)(p)) == 0
 }
 
-func (rc BytesCodec) Write(w *WriteBuf, p unsafe.Pointer) error {
+func (rc BytesCodec) Write(w *WriteBuf, p unsafe.Pointer) {
 	sh := *(*[]byte)(p)
 
 	w.Varint(int64(len(sh)))
 	w.Write(sh)
-	return nil
 }

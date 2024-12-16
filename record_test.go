@@ -123,9 +123,7 @@ func TestRecordRoundTrip(t *testing.T) {
 
 			buf := NewWriteBuf(nil)
 
-			if err := c.Write(buf, unsafe.Pointer(&test.data)); err != nil {
-				t.Fatal(err)
-			}
+			c.Write(buf, unsafe.Pointer(&test.data))
 
 			var actual mustruct
 			r := NewBuffer(buf.Bytes())

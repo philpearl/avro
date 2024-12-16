@@ -236,9 +236,7 @@ func TestArrayCodecRoundTrip(t *testing.T) {
 			t.Parallel()
 			w := NewWriteBuf(nil)
 
-			if err := c.Write(w, unsafe.Pointer(&test.data)); err != nil {
-				t.Fatal(err)
-			}
+			c.Write(w, unsafe.Pointer(&test.data))
 
 			var out []string
 			r := NewBuffer(w.Bytes())

@@ -101,9 +101,7 @@ func TestBoolCodecRoundTrip(t *testing.T) {
 			t.Parallel()
 			var actual bool
 			w := NewWriteBuf(nil)
-			if err := c.Write(w, unsafe.Pointer(&test.data)); err != nil {
-				t.Fatal(err)
-			}
+			c.Write(w, unsafe.Pointer(&test.data))
 			r := NewBuffer(w.Bytes())
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)

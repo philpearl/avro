@@ -23,6 +23,5 @@ func (rc nullCodec) Omit(p unsafe.Pointer) bool {
 	return true
 }
 
-func (rc nullCodec) Write(w *WriteBuf, p unsafe.Pointer) error {
-	return nil
+func (rc nullCodec) Write(w *WriteBuf, p unsafe.Pointer) {
 }

@@ -80,9 +80,7 @@ func TestBytesRoundTrip(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			buf := NewWriteBuf(nil)
-			if err := c.Write(buf, unsafe.Pointer(&test.in)); err != nil {
-				t.Fatal(err)
-			}
+			c.Write(buf, unsafe.Pointer(&test.in))
 
 			var actual []byte
 			if err := c.Read(NewBuffer(buf.Bytes()), unsafe.Pointer(&actual)); err != nil {

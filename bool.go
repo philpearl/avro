@@ -31,12 +31,10 @@ func (rc BoolCodec) Omit(p unsafe.Pointer) bool {
 	return rc.omitEmpty && !*(*bool)(p)
 }
 
-func (rc BoolCodec) Write(w *WriteBuf, p unsafe.Pointer) error {
+func (rc BoolCodec) Write(w *WriteBuf, p unsafe.Pointer) {
 	if *(*bool)(p) {
 		w.Byte(1)
 	} else {
 		w.Byte(0)
 	}
-
-	return nil
 }

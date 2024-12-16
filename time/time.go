@@ -78,12 +78,12 @@ func (c DateCodec) Omit(p unsafe.Pointer) bool {
 	return t.IsZero()
 }
 
-func (c DateCodec) Write(w *avro.WriteBuf, p unsafe.Pointer) error {
+func (c DateCodec) Write(w *avro.WriteBuf, p unsafe.Pointer) {
 	t := *(*time.Time)(p)
 	// TODO: wrangle this into Time.AppendFormat?
 	day := int32(t.Unix() / (60 * 60 * 24))
 
-	return c.Int32Codec.Write(w, unsafe.Pointer(&day))
+	c.Int32Codec.Write(w, unsafe.Pointer(&day))
 }
 
 // StringCodec is a decoder from an AVRO string with RFC3339 encoding to a time.Time
@@ -128,12 +128,12 @@ func (c StringCodec) Omit(p unsafe.Pointer) bool {
 	return t.IsZero()
 }
 
-func (c StringCodec) Write(w *avro.WriteBuf, p unsafe.Pointer) error {
+func (c StringCodec) Write(w *avro.WriteBuf, p unsafe.Pointer) {
 	t := *(*time.Time)(p)
 	// TODO: wrangle this into Time.AppendFormat?
 	s := t.Format(time.RFC3339Nano)
 
-	return c.StringCodec.Write(w, unsafe.Pointer(&s))
+	c.StringCodec.Write(w, unsafe.Pointer(&s))
 }
 
 // LongCodec is a decoder from an AVRO long where the time is encoded as
@@ -163,9 +163,9 @@ func (c LongCodec) Omit(p unsafe.Pointer) bool {
 	return t.IsZero()
 }
 
-func (c LongCodec) Write(w *avro.WriteBuf, p unsafe.Pointer) error {
+func (c LongCodec) Write(w *avro.WriteBuf, p unsafe.Pointer) {
 	t := *(*time.Time)(p)
 	l := t.UnixMicro()
 
-	return c.Int64Codec.Write(w, unsafe.Pointer(&l))
+	c.Int64Codec.Write(w, unsafe.Pointer(&l))
 }

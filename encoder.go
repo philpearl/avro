@@ -59,9 +59,7 @@ func NewEncoderFor[T any](w io.Writer, compression Compression, approxBlockSize 
 }
 
 func (e *Encoder[T]) Encode(v T) error {
-	if err := e.codec.Write(e.wb, unsafe.Pointer(&v)); err != nil {
-		return fmt.Errorf("writing value: %w", err)
-	}
+	e.codec.Write(e.wb, unsafe.Pointer(&v))
 	e.count++
 
 	if e.wb.Len() > e.approxBlockSize {

@@ -53,12 +53,9 @@ func (rc *recordCodec) Omit(p unsafe.Pointer) bool {
 	return false
 }
 
-func (rc *recordCodec) Write(w *WriteBuf, p unsafe.Pointer) error {
-	for i, rf := range rc.fields {
+func (rc *recordCodec) Write(w *WriteBuf, p unsafe.Pointer) {
+	for _, rf := range rc.fields {
 		fp := unsafe.Add(p, rf.offset)
-		if err := rf.codec.Write(w, fp); err != nil {
-			return fmt.Errorf("failed writing field %d %s: %w", i, rf.name, err)
-		}
+		rf.codec.Write(w, fp)
 	}
-	return nil
 }

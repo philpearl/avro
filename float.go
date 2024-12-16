@@ -36,8 +36,8 @@ func (rc floatCodec[T]) Omit(p unsafe.Pointer) bool {
 	return rc.omitEmpty && *(*T)(p) == 0
 }
 
-func (rc floatCodec[T]) Write(w *WriteBuf, p unsafe.Pointer) error {
-	return fixedCodec{Size: int(unsafe.Sizeof(T(0)))}.Write(w, p)
+func (rc floatCodec[T]) Write(w *WriteBuf, p unsafe.Pointer) {
+	fixedCodec{Size: int(unsafe.Sizeof(T(0)))}.Write(w, p)
 }
 
 type (
@@ -66,7 +66,7 @@ func (rc Float32DoubleCodec) Omit(p unsafe.Pointer) bool {
 	return rc.omitEmpty && *(*float32)(p) == 0
 }
 
-func (rc Float32DoubleCodec) Write(w *WriteBuf, p unsafe.Pointer) error {
+func (rc Float32DoubleCodec) Write(w *WriteBuf, p unsafe.Pointer) {
 	q := float64(*(*float32)(p))
-	return fixedCodec{Size: 8}.Write(w, unsafe.Pointer(&q))
+	fixedCodec{Size: 8}.Write(w, unsafe.Pointer(&q))
 }

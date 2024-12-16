@@ -35,6 +35,5 @@ type Codec interface {
 	Omit(p unsafe.Pointer) bool
 
 	// Write writes the wire format bytes for the value that p points to to w.
-	// TOOD: do we need the error return?
-	Write(w *WriteBuf, p unsafe.Pointer) error
+	Write(w *WriteBuf, p unsafe.Pointer)
 }

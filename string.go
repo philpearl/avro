@@ -44,9 +44,8 @@ func (sc StringCodec) Omit(p unsafe.Pointer) bool {
 	return sc.omitEmpty && len(*(*string)(p)) == 0
 }
 
-func (StringCodec) Write(w *WriteBuf, p unsafe.Pointer) error {
+func (StringCodec) Write(w *WriteBuf, p unsafe.Pointer) {
 	s := *(*string)(p)
 	w.Varint(int64(len(s)))
 	w.Write([]byte(s))
-	return nil
 }
