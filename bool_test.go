@@ -31,7 +31,7 @@ func TestBoolCodec(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			var actual bool
-			r := NewBuffer(test.data)
+			r := NewReadBuf(test.data)
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
 			}
@@ -45,7 +45,7 @@ func TestBoolCodec(t *testing.T) {
 
 		t.Run(test.name+" skip", func(t *testing.T) {
 			t.Parallel()
-			r := NewBuffer(test.data)
+			r := NewReadBuf(test.data)
 			if err := c.Skip(r); err != nil {
 				t.Fatal(err)
 			}
@@ -58,7 +58,7 @@ func TestBoolCodec(t *testing.T) {
 
 func BenchmarkBoolPointer(b *testing.B) {
 	data := bytes.Repeat([]byte{1}, 1000)
-	r := NewBuffer(data)
+	r := NewReadBuf(data)
 
 	c := PointerCodec{BoolCodec{}}
 	b.ReportAllocs()
@@ -102,7 +102,7 @@ func TestBoolCodecRoundTrip(t *testing.T) {
 			var actual bool
 			w := NewWriteBuf(nil)
 			c.Write(w, unsafe.Pointer(&test.data))
-			r := NewBuffer(w.Bytes())
+			r := NewReadBuf(w.Bytes())
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
 			}

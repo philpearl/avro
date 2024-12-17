@@ -47,7 +47,7 @@ func TestRecordCodec(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	buf := NewBuffer(data)
+	buf := NewReadBuf(data)
 	if err := c.Read(buf, unsafe.Pointer(&r)); err != nil {
 		t.Fatal(err)
 	}
@@ -126,7 +126,7 @@ func TestRecordRoundTrip(t *testing.T) {
 			c.Write(buf, unsafe.Pointer(&test.data))
 
 			var actual mustruct
-			r := NewBuffer(buf.Bytes())
+			r := NewReadBuf(buf.Bytes())
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
 			}

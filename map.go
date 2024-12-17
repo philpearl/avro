@@ -109,7 +109,11 @@ func (m *MapCodec) Write(w *WriteBuf, p unsafe.Pointer) {
 
 	// Start with the count. Note the same ability to use a negative count to
 	// record a block size exists here too.
-	w.Varint(int64(maplen(p)))
+	l := maplen(p)
+	w.Varint(int64(l))
+	if l == 0 {
+		return
+	}
 
 	var iterM mapiter
 	iter := (unsafe.Pointer)(&iterM)

@@ -16,7 +16,7 @@ func TestTime(t *testing.T) {
 	data := []byte{byte(len(ts) << 1)}
 	data = append(data, ts...)
 
-	b := avro.NewBuffer(data)
+	b := avro.NewReadBuf(data)
 	c := StringCodec{}
 
 	var out time.Time
@@ -30,7 +30,7 @@ func TestTime(t *testing.T) {
 }
 
 func TestTimeEmpty(t *testing.T) {
-	b := avro.NewBuffer([]byte{0})
+	b := avro.NewReadBuf([]byte{0})
 	c := StringCodec{}
 
 	var out time.Time
@@ -49,7 +49,7 @@ func TestTimePtr(t *testing.T) {
 	data := []byte{byte(len(ts) << 1)}
 	data = append(data, ts...)
 
-	b := avro.NewBuffer(data)
+	b := avro.NewReadBuf(data)
 
 	c := avro.PointerCodec{
 		Codec: StringCodec{},
@@ -71,7 +71,7 @@ func TestTimeLong(t *testing.T) {
 	l := binary.PutVarint(data, now.UnixNano())
 	data = data[:l]
 
-	b := avro.NewBuffer(data)
+	b := avro.NewReadBuf(data)
 	c := LongCodec{mult: 1}
 
 	var out time.Time
@@ -93,7 +93,7 @@ func TestDate(t *testing.T) {
 			l := binary.PutVarint(data, int64(l))
 			data = data[:l]
 
-			b := avro.NewBuffer(data)
+			b := avro.NewReadBuf(data)
 			c := DateCodec{}
 
 			var out time.Time
@@ -114,7 +114,7 @@ func TestTimeLongPtr(t *testing.T) {
 	l := binary.PutVarint(data, now.UnixNano())
 	data = data[:l]
 
-	b := avro.NewBuffer(data)
+	b := avro.NewReadBuf(data)
 
 	c := avro.PointerCodec{
 		Codec: LongCodec{mult: 1},
@@ -136,7 +136,7 @@ func BenchmarkTime(b *testing.B) {
 	data := []byte{byte(len(ts) << 1)}
 	data = append(data, ts...)
 
-	buf := avro.NewBuffer(data)
+	buf := avro.NewReadBuf(data)
 	c := StringCodec{}
 
 	b.ReportAllocs()
@@ -158,7 +158,7 @@ func BenchmarkLongTime(b *testing.B) {
 	l := binary.PutVarint(data, now.UnixNano())
 	data = data[:l]
 
-	buf := avro.NewBuffer(data)
+	buf := avro.NewReadBuf(data)
 	c := LongCodec{mult: 1}
 
 	b.ReportAllocs()

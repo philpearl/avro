@@ -29,7 +29,7 @@ func TestUnionCodec(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			r := NewBuffer(test.data)
+			r := NewReadBuf(test.data)
 			var actual string
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
@@ -42,7 +42,7 @@ func TestUnionCodec(t *testing.T) {
 			}
 		})
 		t.Run(test.name+" skip", func(t *testing.T) {
-			r := NewBuffer(test.data)
+			r := NewReadBuf(test.data)
 			if err := c.Skip(r); err != nil {
 				t.Fatal(err)
 			}
@@ -79,7 +79,7 @@ func TestUnionOneCodec(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			r := NewBuffer(test.data)
+			r := NewReadBuf(test.data)
 			var actual string
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
@@ -92,7 +92,7 @@ func TestUnionOneCodec(t *testing.T) {
 			}
 		})
 		t.Run(test.name+" skip", func(t *testing.T) {
-			r := NewBuffer(test.data)
+			r := NewReadBuf(test.data)
 			if err := c.Skip(r); err != nil {
 				t.Fatal(err)
 			}
@@ -104,7 +104,7 @@ func TestUnionOneCodec(t *testing.T) {
 			w := NewWriteBuf(nil)
 			c.Write(w, unsafe.Pointer(&test.exp))
 			var actual string
-			r := NewBuffer(w.Bytes())
+			r := NewReadBuf(w.Bytes())
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
 			}
@@ -139,7 +139,7 @@ func TestUnionStringCodec(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			r := NewBuffer(test.data)
+			r := NewReadBuf(test.data)
 			var actual string
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
@@ -152,7 +152,7 @@ func TestUnionStringCodec(t *testing.T) {
 			}
 		})
 		t.Run(test.name+" skip", func(t *testing.T) {
-			r := NewBuffer(test.data)
+			r := NewReadBuf(test.data)
 			if err := c.Skip(r); err != nil {
 				t.Fatal(err)
 			}
@@ -164,7 +164,7 @@ func TestUnionStringCodec(t *testing.T) {
 			w := NewWriteBuf(nil)
 			c.Write(w, unsafe.Pointer(&test.exp))
 			var actual string
-			r := NewBuffer(w.Bytes())
+			r := NewReadBuf(w.Bytes())
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
 			}
@@ -181,7 +181,7 @@ func TestUnionStringCodec(t *testing.T) {
 			w := NewWriteBuf(nil)
 			c.Write(w, unsafe.Pointer(&test.exp))
 			var actual string
-			r := NewBuffer(w.Bytes())
+			r := NewReadBuf(w.Bytes())
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
 			}
@@ -202,7 +202,7 @@ func BenchmarkUnionStringCodec(b *testing.B) {
 	b.Run("read", func(b *testing.B) {
 		b.ReportAllocs()
 		b.RunParallel(func(pb *testing.PB) {
-			r := NewBuffer(nil)
+			r := NewReadBuf(nil)
 			var actual string
 			for pb.Next() {
 				r.Reset(data)
@@ -216,7 +216,7 @@ func BenchmarkUnionStringCodec(b *testing.B) {
 	b.Run("skip", func(b *testing.B) {
 		b.ReportAllocs()
 		b.RunParallel(func(pb *testing.PB) {
-			r := NewBuffer(nil)
+			r := NewReadBuf(nil)
 			for pb.Next() {
 				r.Reset(data)
 				if err := c.Skip(r); err != nil {
@@ -237,7 +237,7 @@ func BenchmarkUnionOneCodec(b *testing.B) {
 	b.Run("read", func(b *testing.B) {
 		b.ReportAllocs()
 		b.RunParallel(func(pb *testing.PB) {
-			r := NewBuffer(nil)
+			r := NewReadBuf(nil)
 			var actual string
 			for pb.Next() {
 				r.Reset(data)
@@ -251,7 +251,7 @@ func BenchmarkUnionOneCodec(b *testing.B) {
 	b.Run("skip", func(b *testing.B) {
 		b.ReportAllocs()
 		b.RunParallel(func(pb *testing.PB) {
-			r := NewBuffer(nil)
+			r := NewReadBuf(nil)
 			for pb.Next() {
 				r.Reset(data)
 				if err := c.Skip(r); err != nil {
@@ -271,7 +271,7 @@ func BenchmarkUnionCodec(b *testing.B) {
 	b.Run("read", func(b *testing.B) {
 		b.ReportAllocs()
 		b.RunParallel(func(pb *testing.PB) {
-			r := NewBuffer(nil)
+			r := NewReadBuf(nil)
 			var actual string
 			for pb.Next() {
 				r.Reset(data)
@@ -285,7 +285,7 @@ func BenchmarkUnionCodec(b *testing.B) {
 	b.Run("skip", func(b *testing.B) {
 		b.ReportAllocs()
 		b.RunParallel(func(pb *testing.PB) {
-			r := NewBuffer(nil)
+			r := NewReadBuf(nil)
 			for pb.Next() {
 				r.Reset(data)
 				if err := c.Skip(r); err != nil {

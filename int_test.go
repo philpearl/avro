@@ -44,7 +44,7 @@ func TestInt64Codec(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			r := NewBuffer(test.data)
+			r := NewReadBuf(test.data)
 			var actual int64
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
@@ -59,7 +59,7 @@ func TestInt64Codec(t *testing.T) {
 		})
 		t.Run(test.name+" skip", func(t *testing.T) {
 			t.Parallel()
-			r := NewBuffer(test.data)
+			r := NewReadBuf(test.data)
 			if err := c.Skip(r); err != nil {
 				t.Fatal(err)
 			}
@@ -106,7 +106,7 @@ func TestInt32Codec(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			r := NewBuffer(test.data)
+			r := NewReadBuf(test.data)
 			var actual int32
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
@@ -121,7 +121,7 @@ func TestInt32Codec(t *testing.T) {
 		})
 		t.Run(test.name+" skip", func(t *testing.T) {
 			t.Parallel()
-			r := NewBuffer(test.data)
+			r := NewReadBuf(test.data)
 			if err := c.Skip(r); err != nil {
 				t.Fatal(err)
 			}
@@ -134,7 +134,7 @@ func TestInt32Codec(t *testing.T) {
 
 func TestInt16TooBig(t *testing.T) {
 	var c Int16Codec
-	r := NewBuffer([]byte{128, 128, 4})
+	r := NewReadBuf([]byte{128, 128, 4})
 	var actual int16
 	err := c.Read(r, unsafe.Pointer(&actual))
 	if err == nil {
@@ -181,7 +181,7 @@ func TestInt16Codec(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			r := NewBuffer(test.data)
+			r := NewReadBuf(test.data)
 			var actual int16
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
@@ -196,7 +196,7 @@ func TestInt16Codec(t *testing.T) {
 		})
 		t.Run(test.name+" skip", func(t *testing.T) {
 			t.Parallel()
-			r := NewBuffer(test.data)
+			r := NewReadBuf(test.data)
 			if err := c.Skip(r); err != nil {
 				t.Fatal(err)
 			}
@@ -239,7 +239,7 @@ func TestInt64RoundTrip(t *testing.T) {
 			buf := NewWriteBuf(nil)
 			c.Write(buf, unsafe.Pointer(&test.in))
 			var actual int64
-			if err := c.Read(NewBuffer(buf.Bytes()), unsafe.Pointer(&actual)); err != nil {
+			if err := c.Read(NewReadBuf(buf.Bytes()), unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
 			}
 			if actual != test.in {
@@ -281,7 +281,7 @@ func TestInt32RoundTrip(t *testing.T) {
 			buf := NewWriteBuf(nil)
 			c.Write(buf, unsafe.Pointer(&test.in))
 			var actual int32
-			if err := c.Read(NewBuffer(buf.Bytes()), unsafe.Pointer(&actual)); err != nil {
+			if err := c.Read(NewReadBuf(buf.Bytes()), unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
 			}
 			if actual != test.in {
@@ -323,7 +323,7 @@ func TestInt16RoundTrip(t *testing.T) {
 			buf := NewWriteBuf(nil)
 			c.Write(buf, unsafe.Pointer(&test.in))
 			var actual int16
-			if err := c.Read(NewBuffer(buf.Bytes()), unsafe.Pointer(&actual)); err != nil {
+			if err := c.Read(NewReadBuf(buf.Bytes()), unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
 			}
 			if actual != test.in {

@@ -104,7 +104,7 @@ func TestMapCodec(t *testing.T) {
 			typ := reflect.TypeOf(m)
 			c := MapCodec{rtype: typ, valueCodec: BytesCodec{}}
 
-			r := NewBuffer(test.data)
+			r := NewReadBuf(test.data)
 
 			if err := c.Read(r, unsafe.Pointer(&m)); err != nil {
 				t.Fatal(err)
@@ -121,7 +121,7 @@ func TestMapCodec(t *testing.T) {
 
 		t.Run(test.name+" skip", func(t *testing.T) {
 			c := MapCodec{valueCodec: BytesCodec{}}
-			r := NewBuffer(test.data)
+			r := NewReadBuf(test.data)
 			if err := c.Skip(r); err != nil {
 				t.Fatal(err)
 			}
@@ -137,7 +137,7 @@ func TestMapCodec(t *testing.T) {
 
 			c.Write(w, (unsafe.Pointer)(&test.exp))
 			var actual map[string][]byte
-			r := NewBuffer(w.Bytes())
+			r := NewReadBuf(w.Bytes())
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
 			}

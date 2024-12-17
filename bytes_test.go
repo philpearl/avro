@@ -29,7 +29,7 @@ func TestBytesCodec(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			r := NewBuffer(test.data)
+			r := NewReadBuf(test.data)
 			var actual []byte
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
@@ -44,7 +44,7 @@ func TestBytesCodec(t *testing.T) {
 		})
 		t.Run(test.name+" skip", func(t *testing.T) {
 			t.Parallel()
-			r := NewBuffer(test.data)
+			r := NewReadBuf(test.data)
 			if err := c.Skip(r); err != nil {
 				t.Fatal(err)
 			}
@@ -83,7 +83,7 @@ func TestBytesRoundTrip(t *testing.T) {
 			c.Write(buf, unsafe.Pointer(&test.in))
 
 			var actual []byte
-			if err := c.Read(NewBuffer(buf.Bytes()), unsafe.Pointer(&actual)); err != nil {
+			if err := c.Read(NewReadBuf(buf.Bytes()), unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
 			}
 

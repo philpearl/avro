@@ -82,7 +82,7 @@ func TestArrayCodec(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			buf := NewBuffer(test.data)
+			buf := NewReadBuf(test.data)
 
 			if err := c.Read(buf, unsafe.Pointer(&test.out)); err != nil {
 				t.Fatal(err)
@@ -96,7 +96,7 @@ func TestArrayCodec(t *testing.T) {
 			}
 		})
 		t.Run(test.name+"_skip", func(t *testing.T) {
-			buf := NewBuffer(test.data)
+			buf := NewReadBuf(test.data)
 
 			if err := c.Skip(buf); err != nil {
 				t.Fatal(err)
@@ -174,7 +174,7 @@ func TestArrayCodecInt(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			buf := NewBuffer(test.data)
+			buf := NewReadBuf(test.data)
 
 			if err := c.Read(buf, unsafe.Pointer(&test.out)); err != nil {
 				t.Fatal(err)
@@ -189,7 +189,7 @@ func TestArrayCodecInt(t *testing.T) {
 		})
 		t.Run(test.name+"_skip", func(t *testing.T) {
 			t.Parallel()
-			buf := NewBuffer(test.data)
+			buf := NewReadBuf(test.data)
 
 			if err := c.Skip(buf); err != nil {
 				t.Fatal(err)
@@ -239,7 +239,7 @@ func TestArrayCodecRoundTrip(t *testing.T) {
 			c.Write(w, unsafe.Pointer(&test.data))
 
 			var out []string
-			r := NewBuffer(w.Bytes())
+			r := NewReadBuf(w.Bytes())
 			if err := c.Read(r, unsafe.Pointer(&out)); err != nil {
 				t.Fatal(err)
 			}

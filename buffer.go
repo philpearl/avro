@@ -49,8 +49,8 @@ type ReadBuf struct {
 	rb  *ResourceBank
 }
 
-// NewBuffer returns a new Buffer.
-func NewBuffer(data []byte) *ReadBuf {
+// NewReadBuf returns a new Buffer.
+func NewReadBuf(data []byte) *ReadBuf {
 	return &ReadBuf{buf: data, rb: newResourceBank()}
 }
 

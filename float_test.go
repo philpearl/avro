@@ -30,7 +30,7 @@ func TestFloatCodec(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			r := NewBuffer(test.data)
+			r := NewReadBuf(test.data)
 			var actual float32
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
@@ -45,7 +45,7 @@ func TestFloatCodec(t *testing.T) {
 		})
 		t.Run(test.name+" skip", func(t *testing.T) {
 			t.Parallel()
-			r := NewBuffer(test.data)
+			r := NewReadBuf(test.data)
 			if err := c.Skip(r); err != nil {
 				t.Fatal(err)
 			}
@@ -77,7 +77,7 @@ func TestDoubleCodec(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			r := NewBuffer(test.data)
+			r := NewReadBuf(test.data)
 			var actual float64
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
@@ -92,7 +92,7 @@ func TestDoubleCodec(t *testing.T) {
 		})
 		t.Run(test.name+" skip", func(t *testing.T) {
 			t.Parallel()
-			r := NewBuffer(test.data)
+			r := NewReadBuf(test.data)
 			if err := c.Skip(r); err != nil {
 				t.Fatal(err)
 			}
@@ -124,7 +124,7 @@ func TestFloat32DoubleCodec(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			r := NewBuffer(test.data)
+			r := NewReadBuf(test.data)
 			var actual float32
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
@@ -139,7 +139,7 @@ func TestFloat32DoubleCodec(t *testing.T) {
 		})
 		t.Run(test.name+" skip", func(t *testing.T) {
 			t.Parallel()
-			r := NewBuffer(test.data)
+			r := NewReadBuf(test.data)
 			if err := c.Skip(r); err != nil {
 				t.Fatal(err)
 			}
@@ -184,7 +184,7 @@ func TestFloatRoundTrip(t *testing.T) {
 			w := NewWriteBuf(nil)
 			var c FloatCodec
 			c.Write(w, unsafe.Pointer(&test.val))
-			r := NewBuffer(w.Bytes())
+			r := NewReadBuf(w.Bytes())
 			var actual float32
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
@@ -230,7 +230,7 @@ func TestDoubleRoundTrip(t *testing.T) {
 			w := NewWriteBuf(nil)
 			var c DoubleCodec
 			c.Write(w, unsafe.Pointer(&test.val))
-			r := NewBuffer(w.Bytes())
+			r := NewReadBuf(w.Bytes())
 			var actual float64
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
@@ -276,7 +276,7 @@ func TestFloat32DoubleRoundTrip(t *testing.T) {
 			w := NewWriteBuf(nil)
 			var c Float32DoubleCodec
 			c.Write(w, unsafe.Pointer(&test.val))
-			r := NewBuffer(w.Bytes())
+			r := NewReadBuf(w.Bytes())
 			var actual float32
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)

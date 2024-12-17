@@ -112,6 +112,10 @@ func (rc *arrayCodec) Omit(p unsafe.Pointer) bool {
 
 func (rc *arrayCodec) Write(w *WriteBuf, p unsafe.Pointer) {
 	sh := (*sliceHeader)(p)
+	if sh.Len == 0 {
+		w.Varint(0)
+		return
+	}
 
 	// TODO: you can write negative counts, which are then followed by the size
 	// of the block, then the data. That makes it easier to skip over data. TBD if we want to do that

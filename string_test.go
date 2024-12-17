@@ -26,7 +26,7 @@ func TestStringCodec(t *testing.T) {
 	c := StringCodec{}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			r := NewBuffer(test.data)
+			r := NewReadBuf(test.data)
 			var actual string
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
@@ -40,7 +40,7 @@ func TestStringCodec(t *testing.T) {
 		})
 
 		t.Run(test.name+" skip", func(t *testing.T) {
-			r := NewBuffer(test.data)
+			r := NewReadBuf(test.data)
 
 			if err := c.Skip(r); err != nil {
 				t.Fatal(err)
@@ -83,7 +83,7 @@ func TestStringRoundTrip(t *testing.T) {
 			w := NewWriteBuf(nil)
 			c.Write(w, unsafe.Pointer(&test.in))
 			var actual string
-			r := NewBuffer(w.Bytes())
+			r := NewReadBuf(w.Bytes())
 			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
 				t.Fatal(err)
 			}
