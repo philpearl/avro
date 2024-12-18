@@ -67,7 +67,7 @@ func schemaForType(typ reflect.Type) (Schema, error) {
 		// If this is a pointer to a basic type then we don't need to wrap in a union as all the basic types are nullable.
 		underlying, err := schemaForType(typ.Elem())
 		if err != nil {
-			return Schema{}, err
+			return Schema{}, fmt.Errorf("getting underlying schema for pointer: %w", err)
 		}
 		if underlying.Type == "union" || underlying.Type == "array" || underlying.Type == "map" {
 			return underlying, nil
@@ -99,7 +99,7 @@ func schemaForStruct(typ reflect.Type) (Schema, error) {
 
 		s, err := schemaForType(field.Type)
 		if err != nil {
-			return Schema{}, err
+			return Schema{}, fmt.Errorf("getting schema for field %s: %w", name, err)
 		}
 
 		if omitEmpty(field) && s.Type != "union" {

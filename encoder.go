@@ -3,6 +3,7 @@ package avro
 import (
 	"fmt"
 	"io"
+	"reflect"
 	"unsafe"
 
 	jsoniter "github.com/json-iterator/go"
@@ -26,7 +27,12 @@ type Encoder[T any] struct {
 func NewEncoderFor[T any](w io.Writer, compression Compression, approxBlockSize int) (*Encoder[T], error) {
 	var t T
 
-	s, err := SchemaForType(t)
+	typ := reflect.TypeFor[T]()
+	if typ.Kind() != reflect.Struct {
+		return nil, fmt.Errorf("only structs are supported, got %v", typ)
+	}
+
+	s, err := schemaForType(typ)
 	if err != nil {
 		return nil, fmt.Errorf("generating schema: %w", err)
 	}
@@ -62,8 +68,8 @@ func NewEncoderFor[T any](w io.Writer, compression Compression, approxBlockSize 
 }
 
 // Encode writes a new row to the Avro file.
-func (e *Encoder[T]) Encode(v T) error {
-	e.codec.Write(e.wb, unsafe.Pointer(&v))
+func (e *Encoder[T]) Encode(v *T) error {
+	e.codec.Write(e.wb, unsafe.Pointer(v))
 	e.count++
 
 	if e.wb.Len() >= e.approxBlockSize {

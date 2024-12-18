@@ -75,7 +75,7 @@ func TestNullRoundTrip(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := enc.Encode(mystruct{
+	if err := enc.Encode(&mystruct{
 		String: null.StringFrom("String"),
 		Int:    null.IntFrom(42),
 		Bool:   null.BoolFrom(true),
@@ -85,11 +85,11 @@ func TestNullRoundTrip(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := enc.Encode(mystruct{}); err != nil {
+	if err := enc.Encode(&mystruct{}); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := enc.Encode(mystruct{
+	if err := enc.Encode(&mystruct{
 		String: null.StringFrom(""),
 		Int:    null.IntFrom(0),
 		Bool:   null.BoolFrom(false),

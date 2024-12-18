@@ -77,7 +77,7 @@ func TestEncoder(t *testing.T) {
 	}
 
 	for i := range contents {
-		if err := enc.Encode(contents[i]); err != nil {
+		if err := enc.Encode(&contents[i]); err != nil {
 			t.Fatal(err)
 		}
 	}
