@@ -25,7 +25,8 @@ func TestPointerCodec(t *testing.T) {
 	if diff := cmp.Diff(Schema{
 		Type: "record",
 		Object: &SchemaObject{
-			Name: "myStruct",
+			Name:      "myStruct",
+			Namespace: "github.com.philpearl.avro",
 			Fields: []SchemaRecordField{
 				{
 					Name: "P",
@@ -36,7 +37,8 @@ func TestPointerCodec(t *testing.T) {
 							{
 								Type: "record",
 								Object: &SchemaObject{
-									Name: "inStruct",
+									Name:      "inStruct",
+									Namespace: "github.com.philpearl.avro",
 									Fields: []SchemaRecordField{
 										{Name: "A", Type: Schema{Type: "string"}},
 										{Name: "B", Type: Schema{Type: "long"}},

@@ -3,6 +3,7 @@ package avro
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"sync"
 )
 
@@ -115,11 +116,16 @@ func schemaForStruct(typ reflect.Type) (Schema, error) {
 	return Schema{
 		Type: "record",
 		Object: &SchemaObject{
-			Name:   typ.Name(),
-			Fields: fields,
+			Name: typ.Name(),
+			// namespace must be a valid Avro namespace, which is a
+			// dot-separated alphanumeric string.
+			Namespace: namespaceReplacer.Replace(typ.PkgPath()),
+			Fields:    fields,
 		},
 	}, nil
 }
+
+var namespaceReplacer = strings.NewReplacer("/", ".", "-", "_")
 
 func schemaForArray(typ reflect.Type) (Schema, error) {
 	elem := typ.Elem()
