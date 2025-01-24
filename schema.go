@@ -20,6 +20,10 @@ func init() {
 // Schema is a representation of AVRO schema JSON. Primitive types populate Type
 // only. UnionTypes populate Type and Union fields. All other types populate
 // Type and a subset of Object fields.
+//
+// Note that the jsoniter fuzzy decoders (github.com/json-iterator/go/extra
+// RegisterFuzzyDecoders) break decoding of Schema objects. Tolleration of
+// arrays as structs breaks decoding of unions.
 type Schema struct {
 	Type   string
 	Object *SchemaObject
