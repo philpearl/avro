@@ -6,7 +6,16 @@ import (
 	"unsafe"
 
 	jsoniter "github.com/json-iterator/go"
+	"github.com/modern-go/reflect2"
 )
+
+var json = jsoniter.Config{
+	EscapeHTML: true,
+}.Froze()
+
+func init() {
+	json.RegisterExtension(&schemaExtension{})
+}
 
 // Schema is a representation of AVRO schema JSON. Primitive types populate Type
 // only. UnionTypes populate Type and Union fields. All other types populate
@@ -30,10 +39,14 @@ func (s Schema) Codec(out interface{}) (Codec, error) {
 	return buildCodec(s, typ, false)
 }
 
+func (s *Schema) Marshal() ([]byte, error) {
+	return json.Marshal(s)
+}
+
 // SchemaFromString decodes a JSON string into a Schema
 func SchemaFromString(in string) (Schema, error) {
 	var schema Schema
-	if err := jsoniter.UnmarshalFromString(in, &schema); err != nil {
+	if err := json.UnmarshalFromString(in, &schema); err != nil {
 		return schema, fmt.Errorf("could not decode schema JSON. %w", err)
 	}
 	return schema, nil
@@ -161,7 +174,24 @@ func (schemaCodec) IsEmpty(ptr unsafe.Pointer) bool {
 	return ptr == nil
 }
 
-func init() {
-	jsoniter.RegisterTypeDecoder("avro.Schema", schemaCodec{})
-	jsoniter.RegisterTypeEncoder("avro.Schema", schemaCodec{})
+type schemaExtension struct {
+	jsoniter.DummyExtension
+}
+
+var schemaType = reflect2.TypeOf(Schema{})
+
+func (ext *schemaExtension) CreateDecoder(typ reflect2.Type) jsoniter.ValDecoder {
+	switch typ {
+	case schemaType:
+		return schemaCodec{}
+	}
+	return nil
+}
+
+func (ext *schemaExtension) CreateEncoder(typ reflect2.Type) jsoniter.ValEncoder {
+	switch typ {
+	case schemaType:
+		return schemaCodec{}
+	}
+	return nil
 }

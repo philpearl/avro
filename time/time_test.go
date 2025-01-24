@@ -7,6 +7,7 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/philpearl/avro"
 )
 
@@ -197,5 +198,63 @@ func BenchmarkParseTimeOurselves(b *testing.B) {
 		if err != nil {
 			b.Fatal(err)
 		}
+	}
+}
+
+func TestASchema(t *testing.T) {
+	RegisterCodecs()
+
+	s, err := avro.SchemaFromString(`{
+  "type": "record",
+  "name": "Root",
+  "fields": [
+    {
+      "name": "timestamp",
+      "type": [
+        "null",
+        {
+          "type": "long",
+          "logicalType": "timestamp-micros"
+        }
+      ],
+      "default": null
+    }
+	]
+}
+	`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if diff := cmp.Diff(avro.Schema{
+		Type: "record",
+		Object: &avro.SchemaObject{
+			Name: "Root",
+			Fields: []avro.SchemaRecordField{
+				{
+					Name: "timestamp",
+					Type: avro.Schema{
+						Type: "union",
+						Union: []avro.Schema{
+							{Type: "null"},
+							{
+								Type:   "long",
+								Object: &avro.SchemaObject{LogicalType: "timestamp-micros"},
+							},
+						},
+					},
+				},
+			},
+		},
+	}, s); diff != "" {
+		t.Fatal(diff)
+	}
+
+	type Thing struct {
+		Timestamp time.Time `json:"timestamp"`
+	}
+
+	if _, err := s.Codec(Thing{}); err != nil {
+		t.Fatal(err)
 	}
 }

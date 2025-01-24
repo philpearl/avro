@@ -5,8 +5,6 @@ import (
 	"io"
 	"reflect"
 	"unsafe"
-
-	jsoniter "github.com/json-iterator/go"
 )
 
 type Encoder[T any] struct {
@@ -42,7 +40,7 @@ func NewEncoderFor[T any](w io.Writer, compression Compression, approxBlockSize 
 		return nil, fmt.Errorf("generating codec: %w", err)
 	}
 
-	schemaBytes, err := jsoniter.Marshal(s)
+	schemaBytes, err := s.Marshal()
 	if err != nil {
 		return nil, fmt.Errorf("marshaling schema: %w", err)
 	}

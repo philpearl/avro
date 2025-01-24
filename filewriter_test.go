@@ -8,7 +8,6 @@ import (
 	"unsafe"
 
 	"github.com/google/go-cmp/cmp"
-	jsoniter "github.com/json-iterator/go"
 	"github.com/philpearl/avro"
 )
 
@@ -39,7 +38,7 @@ func TestWritingFile(t *testing.T) {
 		},
 	}
 
-	schemaJSON, err := jsoniter.Marshal(schema)
+	schemaJSON, err := schema.Marshal()
 	if err != nil {
 		t.Fatal(err)
 	}

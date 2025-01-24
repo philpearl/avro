@@ -14,7 +14,6 @@ import (
 	"unsafe"
 
 	"github.com/golang/snappy"
-	jsoniter "github.com/json-iterator/go"
 )
 
 // FileHeader represents an AVRO file header
@@ -271,23 +270,12 @@ func (fh FileHeader) schema() (schema Schema, err error) {
 		return schema, fmt.Errorf("no schema found in file header")
 	}
 
-	if err := jsoniter.Unmarshal(schemaJSON, &schema); err != nil {
+	if err := json.Unmarshal(schemaJSON, &schema); err != nil {
 		return schema, fmt.Errorf("could not decode schema JSON from file header. %w", err)
 	}
 
 	return schema, nil
 }
-
-/*
-000070a0  22 5d 7d 5d 7d 5d 7d 5d  7d 5d 7d 5d 7d 00
-                                                     7a 92  |"]}]}]}]}]}]}.z.|
-000070b0  f7 35 e8 98 91 bf 96 2a  20 8b 0a b3 b1 fc
-													 24
-													    d6  |.5.....* .....$.|
-000070c0  8e 02 04 02 1e 72 65 73  69 64 65 6e 74 61 64 76  |.....residentadv|
-000070d0  69 73 6f 72 02 0e 33 39  32 33 31 32 39 02 30 32  |isor..3923129.02|
-
-*/
 
 type compressionCodec interface {
 	decompress(compressed []byte) ([]byte, error)
