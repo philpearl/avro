@@ -67,7 +67,7 @@ func buildCodec(schema Schema, typ reflect.Type, omit bool) (Codec, error) {
 	case "array":
 		return buildArrayCodec(schema, typ, omit)
 	case "map":
-		return buildMapCodec(schema, typ, omit)
+		return BuildMapCodec(schema, typ, omit)
 	case "union":
 		return buildUnionCodec(schema, typ, omit)
 	case "fixed":
@@ -190,7 +190,7 @@ func buildArrayCodec(schema Schema, typ reflect.Type, omit bool) (Codec, error) 
 	return &arrayCodec{itemCodec: itemCodec, itemType: itemType, omitEmpty: omit}, nil
 }
 
-func buildMapCodec(schema Schema, typ reflect.Type, omit bool) (Codec, error) {
+func BuildMapCodec(schema Schema, typ reflect.Type, omit bool) (Codec, error) {
 	var valueType reflect.Type
 	if typ != nil {
 		if typ.Kind() != reflect.Map || typ.Key().Kind() != reflect.String {
