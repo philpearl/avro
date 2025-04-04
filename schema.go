@@ -138,31 +138,15 @@ func (s *Schema) MarshalJSONTo(enc *jsontext.Encoder) error {
 			if err := enc.WriteToken(jsontext.String("fields")); err != nil {
 				return fmt.Errorf("writing fields key: %w", err)
 			}
-			if err := enc.WriteToken(jsontext.BeginArray); err != nil {
-				return fmt.Errorf("writing begin array: %w", err)
-			}
-			for _, f := range s.Object.Fields {
-				if err := json.MarshalEncode(enc, f); err != nil {
-					return fmt.Errorf("encoding field: %w", err)
-				}
-			}
-			if err := enc.WriteToken(jsontext.EndArray); err != nil {
-				return fmt.Errorf("writing end array: %w", err)
+			if err := json.MarshalEncode(enc, s.Object.Fields); err != nil {
+				return fmt.Errorf("encoding record fields: %w", err)
 			}
 		case "enum":
 			if err := enc.WriteToken(jsontext.String("symbols")); err != nil {
 				return fmt.Errorf("writing symbols key: %w", err)
 			}
-			if err := enc.WriteToken(jsontext.BeginArray); err != nil {
-				return fmt.Errorf("writing begin array: %w", err)
-			}
-			for _, v := range s.Object.Symbols {
-				if err := enc.WriteToken(jsontext.String(v)); err != nil {
-					return fmt.Errorf("writing symbol: %w", err)
-				}
-			}
-			if err := enc.WriteToken(jsontext.EndArray); err != nil {
-				return fmt.Errorf("writing end array: %w", err)
+			if err := json.MarshalEncode(enc, s.Object.Symbols); err != nil {
+				return fmt.Errorf("encoding enum symbols: %w", err)
 			}
 		case "array":
 			if err := enc.WriteToken(jsontext.String("items")); err != nil {
