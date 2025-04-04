@@ -3,27 +3,14 @@ package avro
 import (
 	"fmt"
 	"reflect"
-	"unsafe"
 
-	jsoniter "github.com/json-iterator/go"
-	"github.com/modern-go/reflect2"
+	"github.com/go-json-experiment/json"
+	"github.com/go-json-experiment/json/jsontext"
 )
-
-var json = jsoniter.Config{
-	EscapeHTML: true,
-}.Froze()
-
-func init() {
-	json.RegisterExtension(&schemaExtension{})
-}
 
 // Schema is a representation of AVRO schema JSON. Primitive types populate Type
 // only. UnionTypes populate Type and Union fields. All other types populate
 // Type and a subset of Object fields.
-//
-// Note that the jsoniter fuzzy decoders (github.com/json-iterator/go/extra
-// RegisterFuzzyDecoders) break decoding of Schema objects. Tolleration of
-// arrays as structs breaks decoding of unions.
 type Schema struct {
 	Type   string
 	Object *SchemaObject
@@ -31,7 +18,7 @@ type Schema struct {
 }
 
 // Codec creates a codec for the given schema and output type
-func (s Schema) Codec(out interface{}) (Codec, error) {
+func (s Schema) Codec(out any) (Codec, error) {
 	typ := reflect.TypeOf(out)
 	if typ.Kind() == reflect.Ptr {
 		typ = typ.Elem()
@@ -50,7 +37,7 @@ func (s *Schema) Marshal() ([]byte, error) {
 // SchemaFromString decodes a JSON string into a Schema
 func SchemaFromString(in string) (Schema, error) {
 	var schema Schema
-	if err := json.UnmarshalFromString(in, &schema); err != nil {
+	if err := json.Unmarshal([]byte(in), &schema); err != nil {
 		return schema, fmt.Errorf("could not decode schema JSON. %w", err)
 	}
 	return schema, nil
@@ -80,122 +67,135 @@ type SchemaRecordField struct {
 	Type Schema `json:"type,omitempty"`
 }
 
-type schemaCodec struct{}
-
-func (schemaCodec) Decode(ptr unsafe.Pointer, iter *jsoniter.Iterator) {
-	s := (*Schema)(ptr)
-
-	switch iter.WhatIsNext() {
-	case jsoniter.StringValue:
-		// Primitive type
-		s.Type = iter.ReadString()
-	case jsoniter.ArrayValue:
+func (s *Schema) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
+	switch dec.PeekKind() {
+	case '"':
+		token, err := dec.ReadToken()
+		if err != nil {
+			return fmt.Errorf("reading string: %w", err)
+		}
+		s.Type = token.String()
+	case '[':
+		// This is an array of Schemas
 		s.Type = "union"
-		iter.ReadVal(&s.Union)
-	case jsoniter.ObjectValue:
+		if err := json.UnmarshalDecode(dec, &s.Union); err != nil {
+			return fmt.Errorf("decoding union: %w", err)
+		}
+	case '{':
 		s.Object = &SchemaObject{}
-		iter.ReadVal(s.Object)
+		// do we need to isolate these decoders?
+		if err := json.UnmarshalDecode(dec, s.Object); err != nil {
+			return fmt.Errorf("decoding union: %w", err)
+		}
+
 		s.Type = s.Object.Type
 		s.Object.Type = ""
+
 	default:
-		iter.ReportError("Decode schema", "must be string, array or object")
-	}
-}
-
-func (schemaCodec) Encode(ptr unsafe.Pointer, stream *jsoniter.Stream) {
-	s := (*Schema)(ptr)
-	switch {
-	case s.Object != nil:
-		stream.WriteObjectStart()
-		stream.WriteObjectField("type")
-		stream.WriteString(s.Type)
-		if s.Object.LogicalType != "" {
-			stream.WriteMore()
-			stream.WriteObjectField("logicalType")
-			stream.WriteString(s.Object.LogicalType)
-		}
-		if s.Object.Name != "" {
-			stream.WriteMore()
-			stream.WriteObjectField("name")
-			stream.WriteString(s.Object.Name)
-		}
-		if s.Object.Namespace != "" {
-			stream.WriteMore()
-			stream.WriteObjectField("namespace")
-			stream.WriteString(s.Object.Namespace)
-		}
-		switch s.Type {
-		case "record":
-			stream.WriteMore()
-			stream.WriteObjectField("fields")
-			stream.WriteArrayStart()
-			for i, f := range s.Object.Fields {
-				if i != 0 {
-					stream.WriteMore()
-				}
-				stream.WriteVal(f)
-			}
-			stream.WriteArrayEnd()
-		case "enum":
-			stream.WriteMore()
-			stream.WriteObjectField("symbols")
-			stream.WriteArrayStart()
-			for i, v := range s.Object.Symbols {
-				if i != 0 {
-					stream.WriteMore()
-				}
-				stream.WriteString(v)
-			}
-			stream.WriteArrayEnd()
-		case "array":
-			stream.WriteMore()
-			stream.WriteObjectField("items")
-			stream.WriteVal(s.Object.Items)
-		case "map":
-			stream.WriteMore()
-			stream.WriteObjectField("values")
-			stream.WriteVal(s.Object.Values)
-		case "fixed":
-			stream.WriteMore()
-			stream.WriteObjectField("size")
-			stream.WriteInt(s.Object.Size)
-		}
-		stream.WriteObjectEnd()
-	case len(s.Union) != 0:
-		stream.WriteArrayStart()
-		stream.WriteVal(s.Union[0])
-		for _, s := range s.Union[1:] {
-			stream.WriteMore()
-			stream.WriteVal(s)
-		}
-		stream.WriteArrayEnd()
-	default:
-		stream.WriteString(s.Type)
-	}
-}
-
-func (schemaCodec) IsEmpty(ptr unsafe.Pointer) bool {
-	return ptr == nil
-}
-
-type schemaExtension struct {
-	jsoniter.DummyExtension
-}
-
-var schemaType = reflect2.TypeOf(Schema{})
-
-func (ext *schemaExtension) CreateDecoder(typ reflect2.Type) jsoniter.ValDecoder {
-	switch typ {
-	case schemaType:
-		return schemaCodec{}
+		return fmt.Errorf("unexpected token unmarshalling schema: %s", dec.PeekKind())
 	}
 	return nil
 }
 
-func (ext *schemaExtension) CreateEncoder(typ reflect2.Type) jsoniter.ValEncoder {
-	switch typ {
-	case schemaType:
-		return schemaCodec{}
+func (s *Schema) MarshalJSONTo(enc *jsontext.Encoder) error {
+	switch {
+	case s.Object != nil:
+		if err := enc.WriteToken(jsontext.BeginObject); err != nil {
+			return fmt.Errorf("writing begin object: %w", err)
+		}
+		if err := enc.WriteToken(jsontext.String("type")); err != nil {
+			return fmt.Errorf("writing type key: %w", err)
+		}
+		if err := enc.WriteToken(jsontext.String(s.Type)); err != nil {
+			return fmt.Errorf("writing type value: %w", err)
+		}
+		if s.Object.LogicalType != "" {
+			if err := enc.WriteToken(jsontext.String("logicalType")); err != nil {
+				return fmt.Errorf("writing logicalType key: %w", err)
+			}
+			if err := enc.WriteToken(jsontext.String(s.Object.LogicalType)); err != nil {
+				return fmt.Errorf("writing logicalType value: %w", err)
+			}
+		}
+		if s.Object.Name != "" {
+			if err := enc.WriteToken(jsontext.String("name")); err != nil {
+				return fmt.Errorf("writing name key: %w", err)
+			}
+			if err := enc.WriteToken(jsontext.String(s.Object.Name)); err != nil {
+				return fmt.Errorf("writing name value: %w", err)
+			}
+		}
+		if s.Object.Namespace != "" {
+			if err := enc.WriteToken(jsontext.String("namespace")); err != nil {
+				return fmt.Errorf("writing namespace key: %w", err)
+			}
+			if err := enc.WriteToken(jsontext.String(s.Object.Namespace)); err != nil {
+				return fmt.Errorf("writing namespace value: %w", err)
+			}
+		}
+		switch s.Type {
+		case "record":
+			if err := enc.WriteToken(jsontext.String("fields")); err != nil {
+				return fmt.Errorf("writing fields key: %w", err)
+			}
+			if err := enc.WriteToken(jsontext.BeginArray); err != nil {
+				return fmt.Errorf("writing begin array: %w", err)
+			}
+			for _, f := range s.Object.Fields {
+				if err := json.MarshalEncode(enc, f); err != nil {
+					return fmt.Errorf("encoding field: %w", err)
+				}
+			}
+			if err := enc.WriteToken(jsontext.EndArray); err != nil {
+				return fmt.Errorf("writing end array: %w", err)
+			}
+		case "enum":
+			if err := enc.WriteToken(jsontext.String("symbols")); err != nil {
+				return fmt.Errorf("writing symbols key: %w", err)
+			}
+			if err := enc.WriteToken(jsontext.BeginArray); err != nil {
+				return fmt.Errorf("writing begin array: %w", err)
+			}
+			for _, v := range s.Object.Symbols {
+				if err := enc.WriteToken(jsontext.String(v)); err != nil {
+					return fmt.Errorf("writing symbol: %w", err)
+				}
+			}
+			if err := enc.WriteToken(jsontext.EndArray); err != nil {
+				return fmt.Errorf("writing end array: %w", err)
+			}
+		case "array":
+			if err := enc.WriteToken(jsontext.String("items")); err != nil {
+				return fmt.Errorf("writing items key: %w", err)
+			}
+			if err := json.MarshalEncode(enc, s.Object.Items); err != nil {
+				return fmt.Errorf("encoding items: %w", err)
+			}
+		case "map":
+			if err := enc.WriteToken(jsontext.String("values")); err != nil {
+				return fmt.Errorf("writing values key: %w", err)
+			}
+			if err := json.MarshalEncode(enc, s.Object.Values); err != nil {
+				return fmt.Errorf("encoding values: %w", err)
+			}
+		case "fixed":
+			if err := enc.WriteToken(jsontext.String("size")); err != nil {
+				return fmt.Errorf("writing size key: %w", err)
+			}
+			if err := enc.WriteToken(jsontext.Int(int64(s.Object.Size))); err != nil {
+				return fmt.Errorf("writing size value: %w", err)
+			}
+		}
+		if err := enc.WriteToken(jsontext.EndObject); err != nil {
+			return fmt.Errorf("writing end object: %w", err)
+		}
+
+	case len(s.Union) != 0:
+		if err := json.MarshalEncode(enc, s.Union); err != nil {
+			return fmt.Errorf("encoding union: %w", err)
+		}
+	default:
+		enc.WriteToken(jsontext.String(s.Type))
 	}
 	return nil
 }

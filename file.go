@@ -13,6 +13,7 @@ import (
 	"reflect"
 	"unsafe"
 
+	"github.com/go-json-experiment/json"
 	"github.com/golang/snappy"
 )
 

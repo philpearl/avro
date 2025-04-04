@@ -63,9 +63,9 @@ func BenchmarkBoolPointer(b *testing.B) {
 	c := PointerCodec{BoolCodec{}}
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		r.Reset(data)
-		for j := 0; j < 1000; j++ {
+		for range 1000 {
 			var out *bool
 			if err := c.Read(r, unsafe.Pointer(&out)); err != nil {
 				b.Fatal(err)

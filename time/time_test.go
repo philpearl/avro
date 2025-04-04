@@ -143,7 +143,7 @@ func BenchmarkTime(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		buf.Reset(data)
 
 		var out time.Time
@@ -165,7 +165,7 @@ func BenchmarkLongTime(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		buf.Reset(data)
 
 		var out time.Time
@@ -180,7 +180,7 @@ func BenchmarkParseTime(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, err := time.Parse(time.RFC3339, ts)
 		if err != nil {
 			b.Fatal(err)
@@ -193,7 +193,7 @@ func BenchmarkParseTimeOurselves(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, err := parseTime(ts)
 		if err != nil {
 			b.Fatal(err)
