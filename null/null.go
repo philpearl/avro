@@ -9,7 +9,7 @@ import (
 
 	"github.com/philpearl/avro"
 	avrotime "github.com/philpearl/avro/time"
-	"github.com/unravelin/null/v5"
+	"github.com/unravelin/null"
 )
 
 // RegisterCodecs registers the codecs from this package and makes them
