@@ -24,6 +24,7 @@ type FileHeader struct {
 	Sync  [16]byte          `json:"sync"`
 }
 
+// FileMagic is the magic number for AVRO files.
 var FileMagic = [4]byte{'O', 'b', 'j', 1}
 
 // Note this isn't actually used except in one test of schema encoding.

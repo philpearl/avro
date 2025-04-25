@@ -16,8 +16,8 @@ const (
 )
 
 // FileWriter provides limited support for writing AVRO files. It allows you to
-// write blocks of already encoded data. Actually encoding data as AVRO is not
-// yet supported.
+// write blocks of already encoded data. Actually encoding data as AVRO is supported
+// by the Encoder type.
 type FileWriter struct {
 	sync [16]byte
 	// It may make sense for the schema to be a Schema object. But we won't use
