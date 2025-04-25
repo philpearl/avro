@@ -92,6 +92,16 @@ type Reader interface {
 }
 
 // ReadFileFor is a type-safe version of ReadFile.
+//
+//	var records []myrecord
+//	if err := avro.ReadFileFor(f, func(val *myrecord, rb *avro.ResourceBank) error {
+//	    defer rb.Close()
+//	    records = append(records, *val)
+//	    return nil
+//	}); err != nil {
+//	       return err
+//	}
+
 func ReadFileFor[T any](r Reader, cb func(val *T, rb *ResourceBank) error) error {
 	var t T
 	return ReadFile(r, t, func(val unsafe.Pointer, rb *ResourceBank) error {
@@ -111,7 +121,7 @@ func ReadFileFor[T any](r Reader, cb func(val *T, rb *ResourceBank) error) error
 // calling strings.Clone for strings).
 //
 //	var records []myrecord
-//	if err := ReadFile(f, myrecord{}, func(val unsafe.Pointer, rb *ResourceBank) error {
+//	if err := avro.ReadFile(f, myrecord{}, func(val unsafe.Pointer, rb *avro.ResourceBank) error {
 //	    defer rb.Close()
 //	    records = append(records, *(*record)(val))
 //	    return nil

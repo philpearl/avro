@@ -7,7 +7,8 @@
 // via the out parameter to decode the records. It then passes an instance of a
 // struct of type out to the callback cb for each record in the file.
 //
-// # Use Encoder to encode a file
+// Use an Encoder to write AVRO files. Create an Encoder using NewEncoderFor, then
+// call Encode to write a record, and finally call Flush before closing the file.
 //
 // You can implement custom decoders for your own types and register them via
 // the Register function. github.com/phil/avro/null is an example of custom

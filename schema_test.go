@@ -13,6 +13,10 @@ func TestSchemaEncoding(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	if diff := cmp.Diff(`{"type":"record","name":"org.apache.avro.file.Header","fields":[{"name":"magic","type":{"type":"fixed","name":"Magic","size":4}},{"name":"meta","type":{"type":"map","values":"bytes"}},{"name":"sync","type":{"type":"fixed","name":"Sync","size":16}}]}`, string(data)); diff != "" {
+		t.Fatalf("results differ. %s", diff)
+	}
+
 	var out Schema
 	if err := json.Unmarshal(data, &out); err != nil {
 		t.Fatal(err)
