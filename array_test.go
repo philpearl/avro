@@ -77,7 +77,7 @@ func TestArrayCodec(t *testing.T) {
 
 	c := arrayCodec{
 		itemCodec: StringCodec{},
-		itemType:  reflect.TypeOf(""),
+		itemType:  reflect.TypeFor[string](),
 	}
 
 	for _, test := range tests {
@@ -167,7 +167,7 @@ func TestArrayCodecInt(t *testing.T) {
 
 	c := arrayCodec{
 		itemCodec: Int32Codec{},
-		itemType:  reflect.TypeOf(int32(0)),
+		itemType:  reflect.TypeFor[int32](),
 	}
 
 	for _, test := range tests {
@@ -228,7 +228,7 @@ func TestArrayCodecRoundTrip(t *testing.T) {
 
 	c := arrayCodec{
 		itemCodec: StringCodec{},
-		itemType:  reflect.TypeOf(""),
+		itemType:  reflect.TypeFor[string](),
 	}
 
 	for _, test := range tests {

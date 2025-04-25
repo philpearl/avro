@@ -18,8 +18,8 @@ func (floatCodec[T]) Skip(r *ReadBuf) error {
 }
 
 var (
-	floatType  = reflect.TypeOf(float32(0))
-	doubleType = reflect.TypeOf(float64(0))
+	floatType  = reflect.TypeFor[float32]()
+	doubleType = reflect.TypeFor[float64]()
 )
 
 func (floatCodec[T]) New(r *ReadBuf) unsafe.Pointer {

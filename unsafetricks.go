@@ -25,6 +25,12 @@ func mapassign(typ unsafe.Pointer, hmap unsafe.Pointer, key, val unsafe.Pointer)
 //go:noescape
 func typedmemclr(typ, ptr unsafe.Pointer)
 
+// typedarrayclear clears the array at ptr
+//
+//go:linkname typedarrayclear reflect.typedarrayclear
+//go:noescape
+func typedarrayclear(typ, ptr unsafe.Pointer, len int)
+
 // We could use the reflect version of mapiterinit, but that forces a heap
 // allocation per map iteration. Instead we can use the runtime version, but
 // then we have to allocate a runtime private struct for it to use instead. We
@@ -37,6 +43,10 @@ func typedmemclr(typ, ptr unsafe.Pointer)
 // issue if something it thought was a pointer was not. Don't attempt to access
 // any of the fields in this struct directly! On the plus side this hasn't
 // changed significantly for 6 years
+//
+// Hmm, actually, as of Go 1.24 the underlying map has changed and this only
+// works as there's an explicit shim in the Go code to allow it to! It costs a
+// single heap allocation (I think?)
 type mapiter struct {
 	key         unsafe.Pointer
 	elem        unsafe.Pointer

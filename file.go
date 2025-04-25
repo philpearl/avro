@@ -104,7 +104,7 @@ type Reader interface {
 //	 }); err != nil {
 //		    return err
 //	 }
-func ReadFile(r Reader, out interface{}, cb func(val unsafe.Pointer, rb *ResourceBank) error) error {
+func ReadFile(r Reader, out any, cb func(val unsafe.Pointer, rb *ResourceBank) error) error {
 	fh, err := readFileHeader(r)
 	if err != nil {
 		return err

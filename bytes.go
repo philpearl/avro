@@ -16,14 +16,11 @@ func (BytesCodec) Read(r *ReadBuf, ptr unsafe.Pointer) error {
 	if l == 0 {
 		return nil
 	}
-	data, err := r.Next(int(l))
+	data, err := r.NextAsBytes(int(l))
 	if err != nil {
 		return fmt.Errorf("failed to read %d bytes of bytes body. %w", l, err)
 	}
-	// We need to copy the data to avoid data issues
-	b := make([]byte, l)
-	copy(b, data)
-	*(*[]byte)(ptr) = b
+	*(*[]byte)(ptr) = data
 	return nil
 }
 
@@ -35,7 +32,7 @@ func (BytesCodec) Skip(r *ReadBuf) error {
 	return skip(r, l)
 }
 
-var bytesType = reflect.TypeOf([]byte{})
+var bytesType = reflect.TypeFor[[]byte]()
 
 func (BytesCodec) New(r *ReadBuf) unsafe.Pointer {
 	return r.Alloc(bytesType)

@@ -21,7 +21,7 @@ func (BoolCodec) Skip(r *ReadBuf) error {
 	return skip(r, 1)
 }
 
-var boolType = reflect.TypeOf(false)
+var boolType = reflect.TypeFor[bool]()
 
 func (BoolCodec) New(r *ReadBuf) unsafe.Pointer {
 	return r.Alloc(boolType)

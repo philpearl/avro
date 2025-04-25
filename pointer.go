@@ -17,7 +17,7 @@ func (c *PointerCodec) Read(r *ReadBuf, p unsafe.Pointer) error {
 	return c.Codec.Read(r, *pp)
 }
 
-var pointerType = reflect.TypeOf(unsafe.Pointer(nil))
+var pointerType = reflect.TypeFor[unsafe.Pointer]()
 
 func (c *PointerCodec) New(r *ReadBuf) unsafe.Pointer {
 	return r.Alloc(pointerType)

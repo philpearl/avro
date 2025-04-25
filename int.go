@@ -28,9 +28,9 @@ func (IntCodec[T]) Skip(r *ReadBuf) error {
 }
 
 var (
-	int64Type = reflect.TypeOf(int64(0))
-	int32Type = reflect.TypeOf(int32(0))
-	int16Type = reflect.TypeOf(int16(0))
+	int64Type = reflect.TypeFor[int64]()
+	int32Type = reflect.TypeFor[int32]()
+	int16Type = reflect.TypeFor[int16]()
 )
 
 // New creates a pointer to a new int64

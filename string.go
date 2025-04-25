@@ -34,7 +34,7 @@ func (StringCodec) Skip(r *ReadBuf) error {
 	return skip(r, l)
 }
 
-var stringType = reflect.TypeOf("")
+var stringType = reflect.TypeFor[string]()
 
 func (StringCodec) New(r *ReadBuf) unsafe.Pointer {
 	return r.Alloc(stringType)

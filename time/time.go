@@ -12,7 +12,7 @@ import (
 
 // RegisterCodecs makes the codecs in this package available to avro
 func RegisterCodecs() {
-	avro.Register(reflect.TypeOf(time.Time{}), buildTimeCodec)
+	avro.Register(reflect.TypeFor[time.Time](), buildTimeCodec)
 	avro.RegisterSchema(reflect.TypeFor[time.Time](), avro.Schema{
 		Type: "union",
 		Union: []avro.Schema{
@@ -116,7 +116,7 @@ func (c StringCodec) Read(r *avro.ReadBuf, p unsafe.Pointer) error {
 	return nil
 }
 
-var timeType = reflect.TypeOf(time.Time{})
+var timeType = reflect.TypeFor[time.Time]()
 
 // New create a pointer to a new time.Time
 func (c StringCodec) New(r *avro.ReadBuf) unsafe.Pointer {

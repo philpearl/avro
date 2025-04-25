@@ -15,19 +15,19 @@ import (
 // RegisterCodecs registers the codecs from this package and makes them
 // available to avro.
 func RegisterCodecs() {
-	avro.Register(reflect.TypeOf(null.Int{}), buildNullIntCodec)
-	avro.Register(reflect.TypeOf(null.Bool{}), buildNullBoolCodec)
-	avro.Register(reflect.TypeOf(null.Float{}), buildNullFloatCodec)
-	avro.Register(reflect.TypeOf(null.String{}), buildNullStringCodec)
-	avro.Register(reflect.TypeOf(null.Time{}), buildNullTimeCodec)
+	avro.Register(reflect.TypeFor[null.Int](), buildNullIntCodec)
+	avro.Register(reflect.TypeFor[null.Bool](), buildNullBoolCodec)
+	avro.Register(reflect.TypeFor[null.Float](), buildNullFloatCodec)
+	avro.Register(reflect.TypeFor[null.String](), buildNullStringCodec)
+	avro.Register(reflect.TypeFor[null.Time](), buildNullTimeCodec)
 
-	avro.RegisterSchema(reflect.TypeOf(null.Int{}), nullableSchema(avro.Schema{Type: "long"}))
-	avro.RegisterSchema(reflect.TypeOf(null.Bool{}), nullableSchema(avro.Schema{Type: "boolean"}))
-	avro.RegisterSchema(reflect.TypeOf(null.Float{}), nullableSchema(avro.Schema{Type: "double"}))
-	avro.RegisterSchema(reflect.TypeOf(null.String{}), nullableSchema(avro.Schema{Type: "string"}))
+	avro.RegisterSchema(reflect.TypeFor[null.Int](), nullableSchema(avro.Schema{Type: "long"}))
+	avro.RegisterSchema(reflect.TypeFor[null.Bool](), nullableSchema(avro.Schema{Type: "boolean"}))
+	avro.RegisterSchema(reflect.TypeFor[null.Float](), nullableSchema(avro.Schema{Type: "double"}))
+	avro.RegisterSchema(reflect.TypeFor[null.String](), nullableSchema(avro.Schema{Type: "string"}))
 
 	// This reflects the common use of null.Time within Ravelin, the owner of the null package.
-	avro.RegisterSchema(reflect.TypeOf(null.Time{}), nullableSchema(avro.Schema{Type: "string"}))
+	avro.RegisterSchema(reflect.TypeFor[null.Time](), nullableSchema(avro.Schema{Type: "string"}))
 }
 
 func nullableSchema(s avro.Schema) avro.Schema {
@@ -58,7 +58,7 @@ func (c nullIntCodec) Read(data *avro.ReadBuf, p unsafe.Pointer) error {
 	return c.Int64Codec.Read(data, unsafe.Pointer(&ni.Int64))
 }
 
-var intType = reflect.TypeOf(null.Int{})
+var intType = reflect.TypeFor[null.Int]()
 
 func (c nullIntCodec) New(r *avro.ReadBuf) unsafe.Pointer {
 	return r.Alloc(intType)
@@ -93,7 +93,7 @@ func (c nullBoolCodec) Read(data *avro.ReadBuf, ptr unsafe.Pointer) error {
 	return c.BoolCodec.Read(data, unsafe.Pointer(&nb.Bool))
 }
 
-var boolType = reflect.TypeOf(null.Bool{})
+var boolType = reflect.TypeFor[null.Bool]()
 
 func (c nullBoolCodec) New(r *avro.ReadBuf) unsafe.Pointer {
 	return r.Alloc(boolType)
@@ -138,7 +138,7 @@ func (c nullDoubleCodec) Omit(p unsafe.Pointer) bool {
 	return !ni.Valid
 }
 
-var floatType = reflect.TypeOf(null.Float{})
+var floatType = reflect.TypeFor[null.Float]()
 
 func (c nullDoubleCodec) New(r *avro.ReadBuf) unsafe.Pointer {
 	return r.Alloc(floatType)
@@ -199,7 +199,7 @@ func (c nullStringCodec) Read(data *avro.ReadBuf, ptr unsafe.Pointer) error {
 	return c.StringCodec.Read(data, unsafe.Pointer(&ns.String))
 }
 
-var stringType = reflect.TypeOf(null.String{})
+var stringType = reflect.TypeFor[null.String]()
 
 func (c nullStringCodec) New(r *avro.ReadBuf) unsafe.Pointer {
 	return r.Alloc(stringType)
@@ -234,7 +234,7 @@ func (c nullTimeCodec) Read(data *avro.ReadBuf, ptr unsafe.Pointer) error {
 	return c.StringCodec.Read(data, unsafe.Pointer(&nt.Time))
 }
 
-var timeType = reflect.TypeOf(null.Time{})
+var timeType = reflect.TypeFor[null.Time]()
 
 func (c nullTimeCodec) New(r *avro.ReadBuf) unsafe.Pointer {
 	return r.Alloc(timeType)

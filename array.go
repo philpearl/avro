@@ -34,11 +34,11 @@ func (rc *arrayCodec) Read(r *ReadBuf, p unsafe.Pointer) error {
 		}
 
 		// If our array is nil or undersized then we can fix it up here.
-		*sh = rc.resizeSlice(*sh, int(count))
+		*sh = rc.resizeSlice(r, *sh, int(count))
 
 		itemSize := rc.itemType.Size()
 		for i := int64(0); i < count; i++ {
-			cursor := unsafe.Pointer(uintptr(sh.Data) + uintptr(sh.Len)*itemSize)
+			cursor := unsafe.Add(sh.Data, uintptr(sh.Len)*itemSize)
 			if err := rc.itemCodec.Read(r, cursor); err != nil {
 				return fmt.Errorf("failed to decode array entry %d. %w", i, err)
 			}
@@ -81,14 +81,14 @@ func (rc *arrayCodec) Skip(r *ReadBuf) error {
 	return nil
 }
 
-var sliceType = reflect.TypeOf(sliceHeader{})
+var sliceType = reflect.TypeFor[sliceHeader]()
 
 func (rc *arrayCodec) New(r *ReadBuf) unsafe.Pointer {
 	return r.Alloc(sliceType)
 }
 
 // resizeSlice increases the length of the slice by len entries
-func (rc *arrayCodec) resizeSlice(in sliceHeader, len int) sliceHeader {
+func (rc *arrayCodec) resizeSlice(r *ReadBuf, in sliceHeader, len int) sliceHeader {
 	if in.Len+len <= in.Cap {
 		return in
 	}
@@ -97,10 +97,10 @@ func (rc *arrayCodec) resizeSlice(in sliceHeader, len int) sliceHeader {
 		Cap: in.Len + len,
 		Len: in.Len,
 	}
-	elemType := unpackEFace(rc.itemType).data
-	out.Data = unsafe_NewArray(elemType, out.Cap)
+	out.Data = r.AllocArray(rc.itemType, out.Cap)
 
 	if in.Data != nil {
+		elemType := unpackEFace(rc.itemType).data
 		typedslicecopy(elemType, out, in)
 	}
 	return out

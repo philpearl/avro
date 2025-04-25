@@ -93,9 +93,21 @@ func (d *ReadBuf) NextAsString(l int) (string, error) {
 	return d.rb.ToString(d.buf[d.i-l : d.i]), nil
 }
 
+func (d *ReadBuf) NextAsBytes(l int) ([]byte, error) {
+	if l+d.i > len(d.buf) {
+		return nil, io.EOF
+	}
+	d.i += l
+	return d.rb.ToBytes(d.buf[d.i-l : d.i]), nil
+}
+
 // Alloc allocates a pointer to the type rtyp. The data is allocated in a ResourceBank
 func (d *ReadBuf) Alloc(rtyp reflect.Type) unsafe.Pointer {
 	return d.rb.Alloc(rtyp)
+}
+
+func (d *ReadBuf) AllocArray(rtyp reflect.Type, len int) unsafe.Pointer {
+	return d.rb.AllocArray(rtyp, len)
 }
 
 // ReadByte returns the next byte from the buffer. If no bytes are left it
@@ -181,27 +193,42 @@ func newResourceBank() *ResourceBank {
 func (rb *ResourceBank) Alloc(rtyp reflect.Type) unsafe.Pointer {
 	rt := rb.findTyp(rtyp)
 
-	if rt.len == rt.cap {
-		newCap := rt.cap * 2
-		if newCap < 16 {
-			newCap = 16
-		}
+	rt.ensureSpace(1)
 
-		// We don't need to copy the old data when we make a new array. All our
-		// existing pointers can keep pointing at the old data and GC will take
-		// care of it for us. But we'll gradually right-size our array over many
-		// runs, and eventually we'll stop needing to grow.
-		rt.array = unsafe_NewArray(rt.ptyp, newCap)
-		rt.cap = newCap
-	}
-
-	i := rt.len
+	start := rt.len
 	rt.len++
-	ptr := unsafe.Pointer(uintptr(rt.array) + uintptr(i*rt.size))
+	ptr := unsafe.Add(rt.array, start*rt.size)
 	// Because we're re-using we need to clear the memory ourselves. Should perhaps
 	// do this on Close
 	typedmemclr(rt.ptyp, ptr)
 	return ptr
+}
+
+// AllocArray reserves some memory in the ResourceBank for an array of the given
+// type and length. Note that this memory may be re-used after Close is called.
+func (rb *ResourceBank) AllocArray(rtyp reflect.Type, len int) unsafe.Pointer {
+	rt := rb.findTyp(rtyp)
+	rt.ensureSpace(len)
+	start := rt.len
+	rt.len += len
+	ptr := unsafe.Add(rt.array, start*rt.size)
+	typedarrayclear(rt.ptyp, ptr, len)
+
+	return ptr
+}
+
+func (rt *resourceType) ensureSpace(len int) {
+	if rt.len+len <= rt.cap {
+		return
+	}
+	newCap := max(rt.cap*2, len)
+	if newCap < 16 {
+		newCap = 16
+	}
+
+	rt.array = unsafe_NewArray(rt.ptyp, newCap)
+	rt.cap = newCap
+	rt.len = 0
 }
 
 func (rb *ResourceBank) findTyp(rtyp reflect.Type) *resourceType {
@@ -245,5 +272,16 @@ func (rb *ResourceBank) ToString(in []byte) string {
 	// size and stop growing pretty quickly
 	rb.sData = append(rb.sData, in...)
 	out := rb.sData[start:]
-	return *(*string)(unsafe.Pointer(&out))
+
+	return unsafe.String(unsafe.SliceData(out), len(out))
+}
+
+// ToBytes saves byte data in the bank and returns a byte slice. The slice is
+// valid until someone calls Close
+func (rb *ResourceBank) ToBytes(in []byte) []byte {
+	start := len(rb.sData)
+	// append will do some unnecessary copying. But we should get to the right
+	// size and stop growing pretty quickly
+	rb.sData = append(rb.sData, in...)
+	return rb.sData[start : start+len(in) : start+len(in)]
 }
