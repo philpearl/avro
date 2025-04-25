@@ -27,8 +27,8 @@ func TestReadFile(t *testing.T) {
 	}
 
 	var actual []entry
-	if err := ReadFile(bufio.NewReader(f), entry{}, func(val unsafe.Pointer, sb *ResourceBank) error {
-		actual = append(actual, *(*entry)(val))
+	if err := ReadFileFor(bufio.NewReader(f), func(val *entry, sb *ResourceBank) error {
+		actual = append(actual, *val)
 		return nil
 	}); err != nil {
 		t.Fatal(err)

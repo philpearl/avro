@@ -289,7 +289,7 @@ func buildRecordCodec(schema Schema, typ reflect.Type) (Codec, error) {
 
 		// Build a name to field map
 		ntf = make(map[string]reflect.StructField, typ.NumField())
-		for i := 0; i < typ.NumField(); i++ {
+		for i := range typ.NumField() {
 			sf := typ.Field(i)
 			name := nameForField(sf)
 			if name == "-" {

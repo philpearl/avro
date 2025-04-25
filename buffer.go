@@ -9,11 +9,13 @@ import (
 	"unsafe"
 )
 
-// WriteBuf is a simple, append only, replacement for bytes.Buffer.
+// WriteBuf is a simple, append only, replacement for bytes.Buffer. It is used
+// by AVRO encoders. It is not safe for concurrent use.
 type WriteBuf struct {
 	buf []byte
 }
 
+// NewWriteBuf returns a new WriteBuf.
 func NewWriteBuf(buf []byte) *WriteBuf {
 	return &WriteBuf{buf: buf}
 }

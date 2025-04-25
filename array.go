@@ -37,7 +37,7 @@ func (rc *arrayCodec) Read(r *ReadBuf, p unsafe.Pointer) error {
 		*sh = rc.resizeSlice(r, *sh, int(count))
 
 		itemSize := rc.itemType.Size()
-		for i := int64(0); i < count; i++ {
+		for i := range count {
 			cursor := unsafe.Add(sh.Data, uintptr(sh.Len)*itemSize)
 			if err := rc.itemCodec.Read(r, cursor); err != nil {
 				return fmt.Errorf("failed to decode array entry %d. %w", i, err)
@@ -120,7 +120,7 @@ func (rc *arrayCodec) Write(w *WriteBuf, p unsafe.Pointer) {
 	// TODO: you can write negative counts, which are then followed by the size
 	// of the block, then the data. That makes it easier to skip over data. TBD if we want to do that
 	w.Varint(int64(sh.Len))
-	for i := 0; i < sh.Len; i++ {
+	for i := range sh.Len {
 		cursor := unsafe.Add(sh.Data, uintptr(i)*rc.itemType.Size())
 		rc.itemCodec.Write(w, cursor)
 	}

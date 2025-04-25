@@ -91,7 +91,7 @@ func nullableSchema(s Schema) Schema {
 
 func schemaForStruct(typ reflect.Type) (Schema, error) {
 	fields := make([]SchemaRecordField, 0, typ.NumField())
-	for i := 0; i < typ.NumField(); i++ {
+	for i := range typ.NumField() {
 		field := typ.Field(i)
 		name := nameForField(field)
 		if name == "-" {

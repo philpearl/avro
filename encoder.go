@@ -18,7 +18,7 @@ type Encoder[T any] struct {
 	count           int
 }
 
-// NewEncoder returns a new Encoder. Data will be written to w in Avro format,
+// NewEncoderFor returns a new Encoder. Data will be written to w in Avro format,
 // including a schema header. The data will be compressed using the specified
 // compression algorithm. Data is written in blocks of at least approxBlockSize
 // bytes. A block is written when it reaches that size, or when Flush is called.

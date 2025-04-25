@@ -91,19 +91,33 @@ type Reader interface {
 	io.ByteReader
 }
 
+// ReadFileFor is a type-safe version of ReadFile.
+func ReadFileFor[T any](r Reader, cb func(val *T, rb *ResourceBank) error) error {
+	var t T
+	return ReadFile(r, t, func(val unsafe.Pointer, rb *ResourceBank) error {
+		return cb((*T)(val), rb)
+	})
+}
+
 // ReadFile reads from an AVRO file. The records in the file are decoded into
 // structs of the type indicated by out. These are fed back to the application
-// via the cb callback. ReadFile calls cb with a pointer to the struct. The
-// pointer is converted to an unsafe.Pointer. The pointer should not be retained
-// by the application past the return of cb.
+// via the cb callback. ReadFile calls cb with a pointer to the struct and a
+// ResourceBank. The pointer is converted to an unsafe.Pointer. The pointer
+// should not be retained by the application past the return of cb.
 //
-//	 var records []myrecord
-//	 if err := ReadFile(f, myrecord{}, func(val unsafe.Pointer) error {
-//	     records = append(records, *(*record)(val))
-//	     return nil
-//	 }); err != nil {
-//		    return err
-//	 }
+// The data that val points to is allocated in a ResourceBank. When the
+// ResourceBank is closed the memory backing val is available for re-use. The
+// application should ensure data kept after that point is copied (e.g. by
+// calling strings.Clone for strings).
+//
+//	var records []myrecord
+//	if err := ReadFile(f, myrecord{}, func(val unsafe.Pointer, rb *ResourceBank) error {
+//	    defer rb.Close()
+//	    records = append(records, *(*record)(val))
+//	    return nil
+//	}); err != nil {
+//	       return err
+//	}
 func ReadFile(r Reader, out any, cb func(val unsafe.Pointer, rb *ResourceBank) error) error {
 	fh, err := readFileHeader(r)
 	if err != nil {
@@ -185,7 +199,7 @@ func ReadFile(r Reader, out any, cb func(val unsafe.Pointer, rb *ResourceBank) e
 
 		br.Reset(uncompressed)
 
-		for i := int64(0); i < count; i++ {
+		for i := range count {
 			// TODO: might be better to allocate vals in blocks
 			// Zero the data
 			typedmemclr(rtyp, p)
