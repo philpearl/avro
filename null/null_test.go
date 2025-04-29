@@ -10,7 +10,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/philpearl/avro"
-	"github.com/unravelin/null/v5"
+	"github.com/unravelin/null"
 )
 
 func TestNullThings(t *testing.T) {

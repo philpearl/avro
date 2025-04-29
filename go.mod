@@ -8,7 +8,7 @@ require (
 	github.com/go-json-experiment/json v0.0.0-20250417205406-170dfdcf87d1
 	github.com/golang/snappy v1.0.0
 	github.com/google/go-cmp v0.7.0
-	github.com/unravelin/null/v5 v5.0.1
+	github.com/unravelin/null v1.0.2
 )
 
 require (
