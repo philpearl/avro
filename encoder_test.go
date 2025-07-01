@@ -21,6 +21,7 @@ func TestEncoder(t *testing.T) {
 		W     int32  `json:"w,omitempty"`
 		Z     *int64 `json:"z"`
 		Mmm   map[string]string
+		N     uint64
 	}
 
 	buf := bytes.NewBuffer(nil)
@@ -41,6 +42,7 @@ func TestEncoder(t *testing.T) {
 			W:     0,
 			Z:     new(int64),
 			Mmm:   map[string]string{"foo": "bar", "baz": "qux"},
+			N:     99,
 		},
 		{
 			Name:  "jim",
@@ -52,6 +54,7 @@ func TestEncoder(t *testing.T) {
 			W:     0,
 			Z:     nil,
 			Mmm:   map[string]string{"foo": "bar", "baz": "qux"},
+			N:     0x7F_FF_FF_FF_FF_FF_FF_FF,
 		},
 		{
 			Name:  "jim",

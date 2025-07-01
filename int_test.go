@@ -249,6 +249,57 @@ func TestInt64RoundTrip(t *testing.T) {
 	}
 }
 
+func TestUint64RoundTrip(t *testing.T) {
+	tests := []struct {
+		name string
+		in   uint64
+	}{
+		{
+			name: "zero",
+			in:   0,
+		},
+		{
+			name: "one",
+			in:   1,
+		},
+		{
+			name: "two",
+			in:   2,
+		},
+		{
+			name: "something",
+			in:   23,
+		},
+		{
+			name: "big number",
+			in:   0x7F_FF_FF_FF_FF_FF_FF_FF, // 2^63 - 1
+		},
+		{
+			name: "bigger number",
+			in:   0x80_00_00_00_00_00_00_00, // 2^63
+		},
+
+		{
+			name: "max",
+			in:   math.MaxUint64,
+		},
+	}
+	var c Uint64Codec
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			buf := NewWriteBuf(nil)
+			c.Write(buf, unsafe.Pointer(&test.in))
+			var actual uint64
+			if err := c.Read(NewReadBuf(buf.Bytes()), unsafe.Pointer(&actual)); err != nil {
+				t.Fatal(err)
+			}
+			if actual != test.in {
+				t.Fatalf("%d does not match expected %d", actual, test.in)
+			}
+		})
+	}
+}
+
 func TestInt32RoundTrip(t *testing.T) {
 	tests := []struct {
 		name string

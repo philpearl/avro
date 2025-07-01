@@ -107,6 +107,8 @@ func buildLongCodec(typ reflect.Type, omit bool) (Codec, error) {
 	}
 
 	switch typ.Kind() {
+	case reflect.Uint64:
+		return Uint64Codec{omitEmpty: omit}, nil
 	case reflect.Int64, reflect.Int:
 		return Int64Codec{omitEmpty: omit}, nil
 	case reflect.Int32:

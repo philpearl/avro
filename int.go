@@ -6,8 +6,10 @@ import (
 	"unsafe"
 )
 
-// Int64Codec is an avro codec for int64
-type IntCodec[T int64 | int32 | int16] struct{ omitEmpty bool }
+// IntCodec is an avro codec for integers. It supports int64, int32, and int16.
+// We also support uint64, even though the AVRO spec does not specify an
+// unsigned integer type. It is not clear how this will work with BigQuery.
+type IntCodec[T uint64 | int64 | int32 | int16] struct{ omitEmpty bool }
 
 func (IntCodec[T]) Read(r *ReadBuf, p unsafe.Pointer) error {
 	i, err := r.Varint()
@@ -55,7 +57,8 @@ func (rc IntCodec[T]) Write(w *WriteBuf, p unsafe.Pointer) {
 }
 
 type (
-	Int64Codec = IntCodec[int64]
-	Int32Codec = IntCodec[int32]
-	Int16Codec = IntCodec[int16]
+	Uint64Codec = IntCodec[uint64]
+	Int64Codec  = IntCodec[int64]
+	Int32Codec  = IntCodec[int32]
+	Int16Codec  = IntCodec[int16]
 )

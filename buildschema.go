@@ -52,7 +52,7 @@ func schemaForType(typ reflect.Type) (Schema, error) {
 	switch typ.Kind() {
 	case reflect.Bool:
 		return Schema{Type: "boolean"}, nil
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint64:
 		return Schema{Type: "long"}, nil
 	case reflect.Float32, reflect.Float64:
 		return Schema{Type: "double"}, nil

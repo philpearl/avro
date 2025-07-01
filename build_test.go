@@ -24,6 +24,7 @@ func TestBuildCodec(t *testing.T) {
 		J map[string]int
 		K [4]byte
 		L int16
+		M uint64
 	}
 
 	allSchema := Schema{
@@ -98,6 +99,12 @@ func TestBuildCodec(t *testing.T) {
 				},
 				{
 					Name: "L",
+					Type: Schema{
+						Type: "long",
+					},
+				},
+				{
+					Name: "M",
 					Type: Schema{
 						Type: "long",
 					},
