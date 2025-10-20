@@ -25,7 +25,7 @@ func RegisterSchema(typ reflect.Type, s Schema) {
 // Schema that's compatible with BigQuery.
 func SchemaForType(item any) (Schema, error) {
 	typ := reflect.TypeOf(item)
-	if typ.Kind() == reflect.Ptr {
+	if typ.Kind() == reflect.Pointer {
 		typ = typ.Elem()
 	}
 	if typ.Kind() != reflect.Struct {

@@ -66,6 +66,83 @@ func TestReadFile(t *testing.T) {
 	}
 }
 
+func TestReadFileRaw(t *testing.T) {
+	f, err := os.Open("./testdata/avro1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+
+	type obj struct {
+		Typ  string  `json:"typ,omitempty"`
+		Size float64 `json:"size,omitempty"`
+	}
+	type entry struct {
+		Name   string `json:"name,omitempty"`
+		Number int64  `json:"number"`
+		Owns   []obj  `json:"owns,omitempty"`
+	}
+
+	var actual []entry
+	iter, err := ReadRaw(bufio.NewReader(f))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	schema, err := FileSchema("./testdata/avro1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	codec, err := schema.Codec(entry{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var br ReadBuf
+	for data, err := range iter {
+		if err != nil {
+			t.Fatal(err)
+		}
+		br.Reset(data)
+		var val entry
+		if err := codec.Read(&br, unsafe.Pointer(&val)); err != nil {
+			t.Fatal(err)
+		}
+		actual = append(actual, val)
+	}
+
+	exp := []entry{
+		{
+			Name:   "jim",
+			Number: 1,
+			Owns: []obj{
+				{
+					Typ:  "hat",
+					Size: 1,
+				},
+				{
+					Typ:  "shoe",
+					Size: 42,
+				},
+			},
+		},
+		{
+			Name:   "fred",
+			Number: 1,
+			Owns: []obj{
+				{
+					Typ:  "bag",
+					Size: 3.7,
+				},
+			},
+		},
+	}
+
+	if diff := cmp.Diff(exp, actual); diff != "" {
+		t.Fatalf("result differs. %s", diff)
+	}
+}
+
 func TestReadFileAlt(t *testing.T) {
 	f, err := os.Open("./testdata/avro1")
 	if err != nil {

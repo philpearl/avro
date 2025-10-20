@@ -155,7 +155,7 @@ func (d *ReadBuf) uvarint() (uint64, error) {
 }
 
 var resourceBankPool = sync.Pool{
-	New: func() interface{} {
+	New: func() any {
 		return &ResourceBank{}
 	},
 }
@@ -223,10 +223,7 @@ func (rt *resourceType) ensureSpace(len int) {
 	if rt.len+len <= rt.cap {
 		return
 	}
-	newCap := max(rt.cap*2, len)
-	if newCap < 16 {
-		newCap = 16
-	}
+	newCap := max(rt.cap*2, len, 16)
 
 	rt.array = unsafe_NewArray(rt.ptyp, newCap)
 	rt.cap = newCap

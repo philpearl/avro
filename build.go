@@ -31,7 +31,7 @@ func Register(typ reflect.Type, f CodecBuildFunc) {
 // field
 func buildCodec(schema Schema, typ reflect.Type, omit bool) (Codec, error) {
 	if schema.Type != "union" && schema.Type != "null" && typ != nil {
-		if typ.Kind() == reflect.Ptr {
+		if typ.Kind() == reflect.Pointer {
 			return buildPointerCodec(schema, typ)
 		}
 

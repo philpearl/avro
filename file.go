@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"hash/crc32"
 	"io"
+	"iter"
 	"os"
 	"reflect"
 	"unsafe"
@@ -22,6 +23,35 @@ type FileHeader struct {
 	Magic [4]byte           `json:"magic"`
 	Meta  map[string][]byte `json:"meta"`
 	Sync  [16]byte          `json:"sync"`
+}
+
+func (fh FileHeader) decoder() (compressionCodec, error) {
+	if compress, ok := fh.Meta["avro.codec"]; ok {
+		switch string(compress) {
+		case "null":
+			return nullCompression{}, nil
+		case "deflate":
+			return &deflate{}, nil
+		case "snappy":
+			return &snappyCodec{}, nil
+		default:
+			return nil, fmt.Errorf("compression codec %s not supported", string(compress))
+		}
+	}
+	return nullCompression{}, nil
+}
+
+func (fh FileHeader) schema() (schema Schema, err error) {
+	schemaJSON, ok := fh.Meta["avro.schema"]
+	if !ok {
+		return schema, fmt.Errorf("no schema found in file header")
+	}
+
+	if err := json.Unmarshal(schemaJSON, &schema); err != nil {
+		return schema, fmt.Errorf("could not decode schema JSON from file header. %w", err)
+	}
+
+	return schema, nil
 }
 
 // FileMagic is the magic number for AVRO files.
@@ -135,18 +165,9 @@ func ReadFile(r Reader, out any, cb func(val unsafe.Pointer, rb *ResourceBank) e
 		return err
 	}
 
-	var decoder compressionCodec
-	if compress, ok := fh.Meta["avro.codec"]; ok {
-		switch string(compress) {
-		case "null":
-			decoder = nullCompression{}
-		case "deflate":
-			decoder = &deflate{}
-		case "snappy":
-			decoder = &snappyCodec{}
-		default:
-			return fmt.Errorf("compression codec %s not supported", string(compress))
-		}
+	decoder, err := fh.decoder()
+	if err != nil {
+		return err
 	}
 
 	schema, err := fh.schema()
@@ -156,7 +177,7 @@ func ReadFile(r Reader, out any, cb func(val unsafe.Pointer, rb *ResourceBank) e
 
 	codec, err := schema.Codec(out)
 	if err != nil {
-		return fmt.Errorf("failed to build codec. %w", err)
+		return fmt.Errorf("building codec: %w", err)
 	}
 
 	// At this point we know out is either a struct or a pointer to a struct.
@@ -164,7 +185,7 @@ func ReadFile(r Reader, out any, cb func(val unsafe.Pointer, rb *ResourceBank) e
 	typ := reflect.TypeOf(out)
 	var rtyp, p unsafe.Pointer
 
-	if typ.Kind() == reflect.Ptr {
+	if typ.Kind() == reflect.Pointer {
 		// Pointer to a struct is what we really want. We can write to this as
 		// Go semantics would allow us to write to the underlying struct without
 		// weird unsafe tricks
@@ -181,36 +202,14 @@ func ReadFile(r Reader, out any, cb func(val unsafe.Pointer, rb *ResourceBank) e
 		p = unsafe_New(rtyp)
 	}
 
-	var compressed []byte
 	br := &ReadBuf{}
-	for {
-		count, err := binary.ReadVarint(r)
+	for block, err := range readFileBlocks(r, decoder, fh.Sync) {
 		if err != nil {
-			if errors.Is(err, io.EOF) {
-				return nil
-			}
-			return fmt.Errorf("reading item count. %w", err)
+			return err
 		}
-		dataLength, err := binary.ReadVarint(r)
-		if err != nil {
-			return fmt.Errorf("reading data block length. %w", err)
-		}
-		if cap(compressed) < int(dataLength) {
-			compressed = make([]byte, dataLength)
-		} else {
-			compressed = compressed[:dataLength]
-		}
-		if n, err := io.ReadFull(r, compressed); err != nil {
-			return fmt.Errorf("reading %d bytes of compressed data: %w after %d bytes", dataLength, err, n)
-		}
-		uncompressed, err := decoder.decompress(compressed)
-		if err != nil {
-			return fmt.Errorf("decompress failed: %w", err)
-		}
+		br.Reset(block.data)
 
-		br.Reset(uncompressed)
-
-		for i := range count {
+		for i := range block.count {
 			// TODO: might be better to allocate vals in blocks
 			// Zero the data
 			typedmemclr(rtyp, p)
@@ -222,18 +221,119 @@ func ReadFile(r Reader, out any, cb func(val unsafe.Pointer, rb *ResourceBank) e
 				return err
 			}
 		}
+	}
+	return nil
+}
 
-		// Check the signature.
-		var sig [16]byte
-		if _, err := io.ReadFull(r, sig[:]); err != nil {
-			return fmt.Errorf("failed reading block signature. %w", err)
+// ReadRaw reads raw AVRO records from a file, passing each record's bytes to
+// the callback cb.
+func ReadRaw(r Reader) (iter.Seq2[[]byte, error], error) {
+	fh, err := readFileHeader(r)
+	if err != nil {
+		return nil, err
+	}
+
+	decoder, err := fh.decoder()
+	if err != nil {
+		return nil, err
+	}
+
+	schema, err := fh.schema()
+	if err != nil {
+		return nil, err
+	}
+
+	codec, err := schema.Codec(nil)
+	if err != nil {
+		return nil, fmt.Errorf("building codec: %w", err)
+	}
+
+	return func(yield func([]byte, error) bool) {
+		br := &ReadBuf{}
+		for block, err := range readFileBlocks(r, decoder, fh.Sync) {
+			if err != nil {
+				if !yield(nil, err) {
+					return
+				}
+			}
+			br.Reset(block.data)
+
+			for i := range block.count {
+				start := br.i
+				if err := codec.Skip(br); err != nil {
+					if !yield(nil, fmt.Errorf("failed to read item %d in file. %w", i, err)) {
+						return
+					}
+				}
+
+				if !yield(br.buf[start:br.i], nil) {
+					return
+				}
+			}
 		}
-		if sig != fh.Sync {
-			return fmt.Errorf("sync block does not match. Have %X, want %X", sig, fh.Sync)
+	}, nil
+}
+
+type block struct {
+	data  []byte
+	count int64
+}
+
+// readFileBlocks reads blocks from an AVRO file, yielding each block's data
+// and count of records.
+func readFileBlocks(r Reader, decoder compressionCodec, hdrSig [16]byte) iter.Seq2[block, error] {
+	return func(yield func(block, error) bool) {
+		var compressed []byte
+		for {
+			count, err := binary.ReadVarint(r)
+			if err != nil {
+				if errors.Is(err, io.EOF) {
+					return
+				}
+				yield(block{}, fmt.Errorf("reading item count. %w", err))
+				return
+			}
+			dataLength, err := binary.ReadVarint(r)
+			if err != nil {
+				yield(block{}, fmt.Errorf("reading data block length. %w", err))
+				return
+			}
+			if cap(compressed) < int(dataLength) {
+				compressed = make([]byte, dataLength)
+			} else {
+				compressed = compressed[:dataLength]
+			}
+			if n, err := io.ReadFull(r, compressed); err != nil {
+				yield(block{}, fmt.Errorf("reading %d bytes of compressed data: %w after %d bytes", dataLength, err, n))
+				return
+			}
+
+			// Check the signature before processing the data, as an extra integrity
+			// check
+			var sig [16]byte
+			if _, err := io.ReadFull(r, sig[:]); err != nil {
+				yield(block{}, fmt.Errorf("failed reading block signature. %w", err))
+				return
+			}
+			if sig != hdrSig {
+				yield(block{}, fmt.Errorf("sync block does not match. Have %X, want %X", sig, hdrSig))
+				return
+			}
+
+			uncompressed, err := decoder.decompress(compressed)
+			if err != nil {
+				yield(block{}, fmt.Errorf("decompress failed: %w", err))
+				return
+			}
+
+			if !yield(block{data: uncompressed, count: count}, nil) {
+				return
+			}
 		}
 	}
 }
 
+// readFileHeader reads an AVRO file header from r.
 func readFileHeader(r Reader) (fh FileHeader, err error) {
 	// It would kind of make sense to use our codecs to read the header, but for
 	// perf reasons we don't want to use a normal reader there
@@ -288,19 +388,6 @@ func readBytes(r Reader) ([]byte, error) {
 	v := make([]byte, l)
 	_, err = io.ReadFull(r, v)
 	return v, err
-}
-
-func (fh FileHeader) schema() (schema Schema, err error) {
-	schemaJSON, ok := fh.Meta["avro.schema"]
-	if !ok {
-		return schema, fmt.Errorf("no schema found in file header")
-	}
-
-	if err := json.Unmarshal(schemaJSON, &schema); err != nil {
-		return schema, fmt.Errorf("could not decode schema JSON from file header. %w", err)
-	}
-
-	return schema, nil
 }
 
 type compressionCodec interface {

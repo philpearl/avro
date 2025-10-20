@@ -20,11 +20,13 @@ type Schema struct {
 // Codec creates a codec for the given schema and output type
 func (s Schema) Codec(out any) (Codec, error) {
 	typ := reflect.TypeOf(out)
-	if typ.Kind() == reflect.Ptr {
-		typ = typ.Elem()
-	}
-	if typ.Kind() != reflect.Struct {
-		return nil, fmt.Errorf("out must be a struct or pointer to a struct")
+	if typ != nil {
+		if typ.Kind() == reflect.Pointer {
+			typ = typ.Elem()
+		}
+		if typ.Kind() != reflect.Struct {
+			return nil, fmt.Errorf("out must be a struct or pointer to a struct")
+		}
 	}
 
 	return buildCodec(s, typ, false)

@@ -201,29 +201,25 @@ func BenchmarkUnionStringCodec(b *testing.B) {
 
 	b.Run("read", func(b *testing.B) {
 		b.ReportAllocs()
-		b.RunParallel(func(pb *testing.PB) {
-			r := NewReadBuf(nil)
-			var actual string
-			for pb.Next() {
-				r.Reset(data)
-				if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
-					b.Fatal(err)
-				}
-				r.ExtractResourceBank().Close()
+		r := NewReadBuf(nil)
+		var actual string
+		for b.Loop() {
+			r.Reset(data)
+			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
+				b.Fatal(err)
 			}
-		})
+			r.ExtractResourceBank().Close()
+		}
 	})
 	b.Run("skip", func(b *testing.B) {
 		b.ReportAllocs()
-		b.RunParallel(func(pb *testing.PB) {
-			r := NewReadBuf(nil)
-			for pb.Next() {
-				r.Reset(data)
-				if err := c.Skip(r); err != nil {
-					b.Fatal(err)
-				}
+		r := NewReadBuf(nil)
+		for b.Loop() {
+			r.Reset(data)
+			if err := c.Skip(r); err != nil {
+				b.Fatal(err)
 			}
-		})
+		}
 	})
 }
 
@@ -236,29 +232,25 @@ func BenchmarkUnionOneCodec(b *testing.B) {
 
 	b.Run("read", func(b *testing.B) {
 		b.ReportAllocs()
-		b.RunParallel(func(pb *testing.PB) {
-			r := NewReadBuf(nil)
-			var actual string
-			for pb.Next() {
-				r.Reset(data)
-				if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
-					b.Fatal(err)
-				}
-				r.ExtractResourceBank().Close()
+		r := NewReadBuf(nil)
+		var actual string
+		for b.Loop() {
+			r.Reset(data)
+			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
+				b.Fatal(err)
 			}
-		})
+			r.ExtractResourceBank().Close()
+		}
 	})
 	b.Run("skip", func(b *testing.B) {
 		b.ReportAllocs()
-		b.RunParallel(func(pb *testing.PB) {
-			r := NewReadBuf(nil)
-			for pb.Next() {
-				r.Reset(data)
-				if err := c.Skip(r); err != nil {
-					b.Fatal(err)
-				}
+		r := NewReadBuf(nil)
+		for b.Loop() {
+			r.Reset(data)
+			if err := c.Skip(r); err != nil {
+				b.Fatal(err)
 			}
-		})
+		}
 	})
 }
 
@@ -270,28 +262,24 @@ func BenchmarkUnionCodec(b *testing.B) {
 
 	b.Run("read", func(b *testing.B) {
 		b.ReportAllocs()
-		b.RunParallel(func(pb *testing.PB) {
-			r := NewReadBuf(nil)
-			var actual string
-			for pb.Next() {
-				r.Reset(data)
-				if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
-					b.Fatal(err)
-				}
-				r.ExtractResourceBank().Close()
+		r := NewReadBuf(nil)
+		var actual string
+		for b.Loop() {
+			r.Reset(data)
+			if err := c.Read(r, unsafe.Pointer(&actual)); err != nil {
+				b.Fatal(err)
 			}
-		})
+			r.ExtractResourceBank().Close()
+		}
 	})
 	b.Run("skip", func(b *testing.B) {
 		b.ReportAllocs()
-		b.RunParallel(func(pb *testing.PB) {
-			r := NewReadBuf(nil)
-			for pb.Next() {
-				r.Reset(data)
-				if err := c.Skip(r); err != nil {
-					b.Fatal(err)
-				}
+		r := NewReadBuf(nil)
+		for b.Loop() {
+			r.Reset(data)
+			if err := c.Skip(r); err != nil {
+				b.Fatal(err)
 			}
-		})
+		}
 	})
 }
