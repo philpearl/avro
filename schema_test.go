@@ -1,9 +1,9 @@
 package avro
 
 import (
+	"encoding/json/v2"
 	"testing"
 
-	"github.com/go-json-experiment/json"
 	"github.com/google/go-cmp/cmp"
 )
 

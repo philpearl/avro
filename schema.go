@@ -1,11 +1,10 @@
 package avro
 
 import (
+	"encoding/json/jsontext"
+	"encoding/json/v2"
 	"fmt"
 	"reflect"
-
-	"github.com/go-json-experiment/json"
-	"github.com/go-json-experiment/json/jsontext"
 )
 
 // Schema is a representation of AVRO schema JSON. Primitive types populate Type

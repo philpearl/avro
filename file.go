@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"compress/flate"
 	"encoding/binary"
+	"encoding/json/v2"
 	"errors"
 	"fmt"
 	"hash/crc32"
@@ -14,7 +15,6 @@ import (
 	"reflect"
 	"unsafe"
 
-	"github.com/go-json-experiment/json"
 	"github.com/golang/snappy"
 )
 
