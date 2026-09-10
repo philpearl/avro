@@ -26,7 +26,6 @@ func TestBytesCodec(t *testing.T) {
 	}
 	var c BytesCodec
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			r := NewReadBuf(test.data)

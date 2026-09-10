@@ -27,7 +27,6 @@ func TestFloatCodec(t *testing.T) {
 	}
 	var c FloatCodec
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			r := NewReadBuf(test.data)
@@ -74,7 +73,6 @@ func TestDoubleCodec(t *testing.T) {
 	}
 	var c DoubleCodec
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			r := NewReadBuf(test.data)
@@ -121,7 +119,6 @@ func TestFloat32DoubleCodec(t *testing.T) {
 	}
 	var c Float32DoubleCodec
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			r := NewReadBuf(test.data)

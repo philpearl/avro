@@ -53,9 +53,9 @@ type SchemaObject struct {
 	// Fields in a record
 	Fields []SchemaRecordField `json:"fields,omitempty"`
 	// The type of each item in an array
-	Items Schema `json:"items,omitempty"`
+	Items Schema `json:"items,omitzero"`
 	// The value types of a map (keys are strings)
-	Values Schema `json:"values,omitempty"`
+	Values Schema `json:"values,omitzero"`
 	// The size of a fixed type
 	Size int `json:"size,omitempty"`
 	// The values of an enum
@@ -65,7 +65,7 @@ type SchemaObject struct {
 // SchemaRecordField represents one field of a Record schema
 type SchemaRecordField struct {
 	Name string `json:"name,omitempty"`
-	Type Schema `json:"type,omitempty"`
+	Type Schema `json:"type"`
 }
 
 func (s *Schema) UnmarshalJSONFrom(dec *jsontext.Decoder) error {

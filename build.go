@@ -135,7 +135,7 @@ func buildDoubleCodec(typ reflect.Type, omit bool) (Codec, error) {
 
 	switch typ.Kind() {
 	case reflect.Float32:
-		return Float32DoubleCodec{DoubleCodec: DoubleCodec{omitEmpty: omit}}, nil
+		return Float32DoubleCodec{omitEmpty: omit}, nil
 	case reflect.Float64:
 		return DoubleCodec{omitEmpty: omit}, nil
 	}
@@ -291,8 +291,7 @@ func buildRecordCodec(schema Schema, typ reflect.Type) (Codec, error) {
 
 		// Build a name to field map
 		ntf = make(map[string]reflect.StructField, typ.NumField())
-		for i := range typ.NumField() {
-			sf := typ.Field(i)
+		for sf := range typ.Fields() {
 			name := nameForField(sf)
 			if name == "-" {
 				continue

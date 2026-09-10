@@ -41,7 +41,6 @@ func TestInt64Codec(t *testing.T) {
 	}
 	var c Int64Codec
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			r := NewReadBuf(test.data)
@@ -103,7 +102,6 @@ func TestInt32Codec(t *testing.T) {
 	}
 	var c Int32Codec
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			r := NewReadBuf(test.data)
@@ -178,7 +176,6 @@ func TestInt16Codec(t *testing.T) {
 	}
 	var c Int16Codec
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			r := NewReadBuf(test.data)
