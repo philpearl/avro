@@ -2,6 +2,8 @@ package avro
 
 import (
 	"bufio"
+	"bytes"
+	"fmt"
 	"os"
 	"testing"
 	"unsafe"
@@ -261,5 +263,62 @@ func TestFileSchema(t *testing.T) {
 		},
 	}, schema); diff != "" {
 		t.Fatalf("not as expected: %s", diff)
+	}
+}
+
+func TestWriteReadFile(t *testing.T) {
+	for _, blockRepeats := range []bool{false, true} {
+		t.Run(fmt.Sprintf("blockRepeats=%t", blockRepeats), func(t *testing.T) {
+			DoNotRedefineSchemas.Store(!blockRepeats)
+
+			type Inner struct {
+				IA int
+			}
+			type Record struct {
+				A Inner
+				B Inner
+			}
+
+			exp := []Record{
+				{
+					A: Inner{IA: 1},
+					B: Inner{IA: 2},
+				},
+				{
+					A: Inner{IA: 2},
+					B: Inner{IA: 3},
+				},
+			}
+
+			var out bytes.Buffer
+
+			enc, err := NewEncoderFor[Record](&out, CompressionSnappy, 1024)
+			if err != nil {
+				t.Fatal(enc)
+			}
+
+			for i := range exp {
+				if err := enc.Encode(&exp[i]); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if err := enc.Flush(); err != nil {
+				t.Fatal(err)
+			}
+
+			var actual []Record
+
+			if err := ReadFileFor(&out, func(val *Record, rb *ResourceBank) error {
+				actual = append(actual, *val)
+				rb.Close()
+				return nil
+			}); err != nil {
+				t.Fatal(err)
+			}
+
+			if diff := cmp.Diff(exp, actual); diff != "" {
+				t.Fatal(diff)
+			}
+		})
 	}
 }

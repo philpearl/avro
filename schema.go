@@ -28,7 +28,8 @@ func (s Schema) Codec(out any) (Codec, error) {
 		}
 	}
 
-	return buildCodec(s, typ, false)
+	cb := newCodecBuilder()
+	return cb.buildCodec(s, typ, false)
 }
 
 func (s *Schema) Marshal() ([]byte, error) {

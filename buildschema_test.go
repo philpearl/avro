@@ -8,10 +8,15 @@ import (
 )
 
 func TestBuildSchema(t *testing.T) {
+	type Internal struct {
+		B int
+	}
+
 	tests := []struct {
-		name string
-		in   any
-		exp  avro.Schema
+		name                 string
+		in                   any
+		exp                  avro.Schema
+		doNotRedefineSchemas bool
 	}{
 		{
 			name: "int",
@@ -360,10 +365,58 @@ func TestBuildSchema(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "double-nested",
+			in: struct {
+				A Internal
+				B Internal
+			}{},
+			exp: avro.Schema{
+				Type: "record",
+				Object: &avro.SchemaObject{
+					Fields: []avro.SchemaRecordField{
+						{Name: "A", Type: avro.Schema{Type: "record", Object: &avro.SchemaObject{
+							Name:      "Internal",
+							Namespace: "github.com.philpearl.avro_test",
+							Fields:    []avro.SchemaRecordField{{Name: "B", Type: avro.Schema{Type: "long"}}},
+						}}},
+						{Name: "B", Type: avro.Schema{Type: "record", Object: &avro.SchemaObject{
+							Name:      "Internal",
+							Namespace: "github.com.philpearl.avro_test",
+							Fields:    []avro.SchemaRecordField{{Name: "B", Type: avro.Schema{Type: "long"}}},
+						}}},
+					},
+				},
+			},
+		},
+		{
+			name: "double-nested no duplicates",
+			in: struct {
+				A Internal
+				B Internal
+			}{},
+			exp: avro.Schema{
+				Type: "record",
+				Object: &avro.SchemaObject{
+					Fields: []avro.SchemaRecordField{
+						{Name: "A", Type: avro.Schema{Type: "record", Object: &avro.SchemaObject{
+							Name:      "Internal",
+							Namespace: "github.com.philpearl.avro_test",
+							Fields:    []avro.SchemaRecordField{{Name: "B", Type: avro.Schema{Type: "long"}}},
+						}}},
+						{Name: "B", Type: avro.Schema{Type: "github.com.philpearl.avro_test.Internal"}},
+					},
+				},
+			},
+
+			doNotRedefineSchemas: true,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			avro.DoNotRedefineSchemas.Store(tt.doNotRedefineSchemas)
+
 			got, err := avro.SchemaForType(tt.in)
 			if err != nil {
 				t.Fatal(err)

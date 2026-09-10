@@ -42,7 +42,8 @@ func TestRecordCodec(t *testing.T) {
 	}
 
 	var r record
-	c, err := buildRecordCodec(schema, reflect.TypeOf(r))
+	cb := newCodecBuilder()
+	c, err := cb.buildRecordCodec(schema, reflect.TypeOf(r))
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -5,11 +5,22 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"sync/atomic"
 )
 
 var (
 	schemaRegistryMutex sync.RWMutex
 	schemaRegistry      = make(map[reflect.Type]Schema)
+
+	// DoNotRefineSchemas when true stops avro from generating a full schema
+	// definition for a record that's already been defined in the schema.
+	// Setting this to true makes this library more compliant with the AVRO
+	// spec, but will break interoperation with older versions of the library.
+	//
+	// The intention is that I will remove this once sufficient time has passed
+	// since I deliver a version of the library that works with Schemas
+	// generated in this way.
+	DoNotRedefineSchemas atomic.Bool
 )
 
 // Call RegisterSchema to indicate what schema should be used for a given type.
@@ -19,6 +30,11 @@ func RegisterSchema(typ reflect.Type, s Schema) {
 	schemaRegistryMutex.Lock()
 	defer schemaRegistryMutex.Unlock()
 	schemaRegistry[typ] = s
+}
+
+type schemaKey struct {
+	name      string
+	namespace string
 }
 
 // SchemaForType returns a Schema for the given type. It aims to produce a
@@ -32,7 +48,21 @@ func SchemaForType(item any) (Schema, error) {
 		return Schema{}, fmt.Errorf("item must be a struct or pointer to a struct")
 	}
 
-	return schemaForType(typ)
+	// definedSchemas is a mechanism for us to spot when we've already defined
+	// the schema for a record type earlier in the schema.
+	//
+	// At the moment using this is optional and off by default. But using it
+	// gives the correct schema according to the AVRO spec. We're leaving it off
+	// by default until the code to cope with a schema generated like this is
+	// sufficiently out in the world. At that point we can remove the variable.
+	// That will also break people's builds, but frankly that's just Ravelin and
+	// we can cope.
+	var definedSchemas map[schemaKey]struct{}
+	if DoNotRedefineSchemas.Load() {
+		definedSchemas = make(map[schemaKey]struct{})
+	}
+
+	return schemaForType(typ, definedSchemas)
 }
 
 func isInSchemaRegistry(typ reflect.Type) (Schema, bool) {
@@ -42,7 +72,7 @@ func isInSchemaRegistry(typ reflect.Type) (Schema, bool) {
 	return s, ok
 }
 
-func schemaForType(typ reflect.Type) (Schema, error) {
+func schemaForType(typ reflect.Type, definedSchemas map[schemaKey]struct{}) (schema Schema, err error) {
 	if s, ok := isInSchemaRegistry(typ); ok {
 		return s, nil
 	}
@@ -59,14 +89,14 @@ func schemaForType(typ reflect.Type) (Schema, error) {
 	case reflect.String:
 		return Schema{Type: "string"}, nil
 	case reflect.Struct:
-		return schemaForStruct(typ)
+		return schemaForStruct(typ, definedSchemas)
 	case reflect.Array, reflect.Slice:
-		return schemaForArray(typ)
+		return schemaForArray(typ, definedSchemas)
 	case reflect.Map:
-		return schemaForMap(typ)
+		return schemaForMap(typ, definedSchemas)
 	case reflect.Pointer:
 		// If this is a pointer to a basic type then we don't need to wrap in a union as all the basic types are nullable.
-		underlying, err := schemaForType(typ.Elem())
+		underlying, err := schemaForType(typ.Elem(), definedSchemas)
 		if err != nil {
 			return Schema{}, fmt.Errorf("getting underlying schema for pointer: %w", err)
 		}
@@ -89,7 +119,18 @@ func nullableSchema(s Schema) Schema {
 	}
 }
 
-func schemaForStruct(typ reflect.Type) (Schema, error) {
+func schemaForStruct(typ reflect.Type, definedSchemas map[schemaKey]struct{}) (Schema, error) {
+	name := typ.Name()
+	namespace := namespaceReplacer.Replace(typ.PkgPath())
+	if definedSchemas != nil {
+		if _, alreadySeen := definedSchemas[schemaKey{name: name, namespace: namespace}]; alreadySeen {
+			return Schema{
+				Type: namespace + "." + name,
+			}, nil
+		}
+		definedSchemas[schemaKey{name: name, namespace: namespace}] = struct{}{}
+	}
+
 	fields := make([]SchemaRecordField, 0, typ.NumField())
 	for field := range typ.Fields() {
 		name := nameForField(field)
@@ -97,7 +138,7 @@ func schemaForStruct(typ reflect.Type) (Schema, error) {
 			continue
 		}
 
-		s, err := schemaForType(field.Type)
+		s, err := schemaForType(field.Type, definedSchemas)
 		if err != nil {
 			return Schema{}, fmt.Errorf("getting schema for field %s: %w", name, err)
 		}
@@ -115,10 +156,10 @@ func schemaForStruct(typ reflect.Type) (Schema, error) {
 	return Schema{
 		Type: "record",
 		Object: &SchemaObject{
-			Name: typ.Name(),
+			Name: name,
 			// namespace must be a valid Avro namespace, which is a
 			// dot-separated alphanumeric string.
-			Namespace: namespaceReplacer.Replace(typ.PkgPath()),
+			Namespace: namespace,
 			Fields:    fields,
 		},
 	}, nil
@@ -126,7 +167,7 @@ func schemaForStruct(typ reflect.Type) (Schema, error) {
 
 var namespaceReplacer = strings.NewReplacer("/", ".", "-", "_")
 
-func schemaForArray(typ reflect.Type) (Schema, error) {
+func schemaForArray(typ reflect.Type, definedSchemas map[schemaKey]struct{}) (Schema, error) {
 	elem := typ.Elem()
 	if elem.Kind() == reflect.Uint8 {
 		return Schema{
@@ -134,7 +175,7 @@ func schemaForArray(typ reflect.Type) (Schema, error) {
 		}, nil
 	}
 
-	s, err := schemaForType(elem)
+	s, err := schemaForType(elem, definedSchemas)
 	if err != nil {
 		return Schema{}, fmt.Errorf("building array schema: %w", err)
 	}
@@ -147,8 +188,8 @@ func schemaForArray(typ reflect.Type) (Schema, error) {
 	}, nil
 }
 
-func schemaForMap(typ reflect.Type) (Schema, error) {
-	s, err := schemaForType(typ.Elem())
+func schemaForMap(typ reflect.Type, definedSchemas map[schemaKey]struct{}) (Schema, error) {
+	s, err := schemaForType(typ.Elem(), definedSchemas)
 	if err != nil {
 		return Schema{}, err
 	}

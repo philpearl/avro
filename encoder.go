@@ -30,7 +30,12 @@ func NewEncoderFor[T any](w io.Writer, compression Compression, approxBlockSize 
 		return nil, fmt.Errorf("only structs are supported, got %v", typ)
 	}
 
-	s, err := schemaForType(typ)
+	var definedSchemas map[schemaKey]struct{}
+	if DoNotRedefineSchemas.Load() {
+		definedSchemas = make(map[schemaKey]struct{})
+	}
+
+	s, err := schemaForType(typ, definedSchemas)
 	if err != nil {
 		return nil, fmt.Errorf("generating schema: %w", err)
 	}

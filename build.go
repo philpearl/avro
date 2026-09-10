@@ -26,13 +26,27 @@ func Register(typ reflect.Type, f CodecBuildFunc) {
 	registry[typ] = f
 }
 
+// codecBuilder exists so we can deal with repeated records, where the schema
+// for the record is only defined the first time it is encountered, then later
+// referenced only by name.
+type codecBuilder struct {
+	// recordsByName is a map of (name, namespace) to schema object for records.
+	recordsByName map[schemaKey]*SchemaObject
+}
+
+func newCodecBuilder() *codecBuilder {
+	return &codecBuilder{
+		recordsByName: make(map[schemaKey]*SchemaObject),
+	}
+}
+
 // buildCodec builds a codec for use with a schema and type. Note that typ can
 // be nil, in which case we still need a codec to know how to skip over the
 // field
-func buildCodec(schema Schema, typ reflect.Type, omit bool) (Codec, error) {
+func (cb *codecBuilder) buildCodec(schema Schema, typ reflect.Type, omit bool) (Codec, error) {
 	if schema.Type != "union" && schema.Type != "null" && typ != nil {
 		if typ.Kind() == reflect.Pointer {
-			return buildPointerCodec(schema, typ)
+			return cb.buildPointerCodec(schema, typ)
 		}
 
 		registryMutex.RLock()
@@ -61,24 +75,32 @@ func buildCodec(schema Schema, typ reflect.Type, omit bool) (Codec, error) {
 	case "string":
 		return buildStringCodec(typ, omit)
 	case "record":
-		return buildRecordCodec(schema, typ)
+		return cb.buildRecordCodec(schema, typ)
 	case "enum":
 		return nil, fmt.Errorf("enum not currently supported")
 	case "array":
-		return buildArrayCodec(schema, typ, omit)
+		return cb.buildArrayCodec(schema, typ, omit)
 	case "map":
-		return BuildMapCodec(schema, typ, omit)
+		return cb.buildMapCodec(schema, typ, omit)
 	case "union":
-		return buildUnionCodec(schema, typ, omit)
+		return cb.buildUnionCodec(schema, typ, omit)
 	case "fixed":
 		return buildFixedCodec(schema, typ)
+	default:
+		namespace, name, ok := strings.CutLast(schema.Type, ".")
+		if ok {
+			obj, ok := cb.recordsByName[schemaKey{name: name, namespace: namespace}]
+			if ok {
+				return cb.buildRecordCodec(Schema{Object: obj}, typ)
+			}
+		}
 	}
 
 	return nil, fmt.Errorf("%s not currently supported", schema.Type)
 }
 
-func buildPointerCodec(schema Schema, typ reflect.Type) (Codec, error) {
-	c, err := buildCodec(schema, typ.Elem(), false)
+func (cb *codecBuilder) buildPointerCodec(schema Schema, typ reflect.Type) (Codec, error) {
+	c, err := cb.buildCodec(schema, typ.Elem(), false)
 	if err != nil {
 		return nil, err
 	}
@@ -175,7 +197,7 @@ func buildStringCodec(typ reflect.Type, omit bool) (Codec, error) {
 	return StringCodec{omitEmpty: omit}, nil
 }
 
-func buildArrayCodec(schema Schema, typ reflect.Type, omit bool) (Codec, error) {
+func (cb *codecBuilder) buildArrayCodec(schema Schema, typ reflect.Type, omit bool) (Codec, error) {
 	var itemType reflect.Type
 	if typ != nil {
 		if typ.Kind() != reflect.Slice {
@@ -184,7 +206,7 @@ func buildArrayCodec(schema Schema, typ reflect.Type, omit bool) (Codec, error) 
 		itemType = typ.Elem()
 	}
 
-	itemCodec, err := buildCodec(schema.Object.Items, itemType, false)
+	itemCodec, err := cb.buildCodec(schema.Object.Items, itemType, false)
 	if err != nil {
 		return nil, fmt.Errorf("could not build array item codec: %w", err)
 	}
@@ -192,7 +214,17 @@ func buildArrayCodec(schema Schema, typ reflect.Type, omit bool) (Codec, error) 
 	return &arrayCodec{itemCodec: itemCodec, itemType: itemType, omitEmpty: omit}, nil
 }
 
+// BuildMapCodec allows an external entity to build a codec for an explicit map
+// type.
+//
+// I don't quite remember why this had to exist, and I'm not at all convinced it
+// is the right solution!
 func BuildMapCodec(schema Schema, typ reflect.Type, omit bool) (Codec, error) {
+	cb := newCodecBuilder()
+	return cb.buildMapCodec(schema, typ, omit)
+}
+
+func (cb *codecBuilder) buildMapCodec(schema Schema, typ reflect.Type, omit bool) (Codec, error) {
 	var valueType reflect.Type
 	if typ != nil {
 		if typ.Kind() != reflect.Map || typ.Key().Kind() != reflect.String {
@@ -201,7 +233,7 @@ func BuildMapCodec(schema Schema, typ reflect.Type, omit bool) (Codec, error) {
 		valueType = typ.Elem()
 	}
 
-	valueCodec, err := buildCodec(schema.Object.Values, valueType, false)
+	valueCodec, err := cb.buildCodec(schema.Object.Values, valueType, false)
 	if err != nil {
 		return nil, fmt.Errorf("could not build map value codec: %w", err)
 	}
@@ -209,7 +241,7 @@ func BuildMapCodec(schema Schema, typ reflect.Type, omit bool) (Codec, error) {
 	return &MapCodec{valueCodec: valueCodec, rtype: typ, omitEmpty: omit}, nil
 }
 
-func buildUnionCodec(schema Schema, typ reflect.Type, omit bool) (Codec, error) {
+func (cb *codecBuilder) buildUnionCodec(schema Schema, typ reflect.Type, omit bool) (Codec, error) {
 	if len(schema.Union) == 2 {
 		if schema.Union[0].Type == "null" || schema.Union[1].Type == "null" {
 			var c unionOneAndNullCodec
@@ -217,7 +249,7 @@ func buildUnionCodec(schema Schema, typ reflect.Type, omit bool) (Codec, error) 
 				c.nonNull = 1
 			}
 			u := schema.Union[c.nonNull]
-			sc, err := buildCodec(u, typ, omit)
+			sc, err := cb.buildCodec(u, typ, omit)
 			if err != nil {
 				return nil, fmt.Errorf("failed to build union sub-codec %q: %w", u.Type, err)
 			}
@@ -235,7 +267,7 @@ func buildUnionCodec(schema Schema, typ reflect.Type, omit bool) (Codec, error) 
 	// We're only really expecting unions that are unions of a thing and null,
 	// so we can only cope with pointers for now
 	for i, u := range schema.Union {
-		sc, err := buildCodec(u, typ, omit)
+		sc, err := cb.buildCodec(u, typ, omit)
 		if err != nil {
 			return nil, fmt.Errorf("failed to build union sub-codec %q: %w", u.Type, err)
 		}
@@ -278,7 +310,7 @@ func omitEmpty(sf reflect.StructField) bool {
 	return false
 }
 
-func buildRecordCodec(schema Schema, typ reflect.Type) (Codec, error) {
+func (cb *codecBuilder) buildRecordCodec(schema Schema, typ reflect.Type) (Codec, error) {
 	if schema.Object == nil {
 		return nil, fmt.Errorf("record schema does not have object")
 	}
@@ -314,7 +346,7 @@ func buildRecordCodec(schema Schema, typ reflect.Type) (Codec, error) {
 			fieldType = sf.Type
 		}
 
-		codec, err := buildCodec(schemaf.Type, fieldType, omitEmpty(sf))
+		codec, err := cb.buildCodec(schemaf.Type, fieldType, omitEmpty(sf))
 		if err != nil {
 			return nil, fmt.Errorf("failed to get codec for field %q: %w", schemaf.Name, err)
 		}
@@ -324,6 +356,10 @@ func buildRecordCodec(schema Schema, typ reflect.Type) (Codec, error) {
 			offset: offset,
 			name:   schemaf.Name,
 		})
+	}
+
+	if _, ok := cb.recordsByName[schemaKey{name: schema.Object.Name, namespace: schema.Object.Namespace}]; !ok {
+		cb.recordsByName[schemaKey{name: schema.Object.Name, namespace: schema.Object.Namespace}] = schema.Object
 	}
 
 	return &rc, nil
